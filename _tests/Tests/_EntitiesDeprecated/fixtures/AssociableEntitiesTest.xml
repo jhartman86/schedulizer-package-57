@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<dataset>
+    <table name="SchedulizerCalendar">
+
+    </table>
+
+    <table name="SchedulizerEvent">
+
+    </table>
+
+    <table name="SchedulizerEventRepeat">
+
+    </table>
+</dataset>

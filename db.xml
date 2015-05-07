@@ -1,0 +1,315 @@
+<?xml version="1.0"?>
+<schema version="0.3">
+
+    <table name="SchedulizerCalendar">
+        <field name="id" type="I">
+            <autoincrement />
+            <key />
+            <unsigned />
+        </field>
+        <field name="createdUTC" type="T">
+            <NOTNULL/>
+        </field>
+        <field name="modifiedUTC" type="T">
+            <NOTNULL/>
+        </field>
+        <field name="title" type="C" size="255" />
+        <field name="defaultTimezone" type="C" size="255">
+            <NOTNULL/>
+            <DEFAULT value="UTC"/>
+        </field>
+        <field name="ownerID" type="I">
+            <KEY/>
+            <UNSIGNED />
+            <NOTNULL />
+            <DEFAULT value="0"/>
+        </field>
+
+        <index name="title">
+            <col>title</col>
+            <FULLTEXT />
+        </index>
+        <index name="defaultTimezone">
+            <col>defaultTimezone</col>
+        </index>
+        <index name="ownerID">
+            <col>ownerID</col>
+        </index>
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+    <table name="SchedulizerEvent">
+        <field name="id" type="I">
+            <autoincrement />
+            <key />
+            <unsigned />
+        </field>
+        <field name="createdUTC" type="T">
+            <NOTNULL/>
+        </field>
+        <field name="modifiedUTC" type="T">
+            <NOTNULL/>
+        </field>
+        <field name="calendarID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <KEY/>
+        </field>
+        <field name="ownerID" type="I">
+            <KEY/>
+            <UNSIGNED />
+            <NOTNULL />
+            <DEFAULT value="0"/>
+        </field>
+        <field name="pageID" type="I" size="11">
+            <unsigned />
+        </field>
+    </table>
+
+    <table name="SchedulizerEventVersion">
+        <field name="id" type="I">
+            <autoincrement />
+            <key />
+            <unsigned />
+        </field>
+        <field name="eventID" type="I">
+            <key />
+            <unsigned />
+        </field>
+        <field name="versionID" type="I">
+            <key/>
+            <default value="1" />
+            <unsigned />
+        </field>
+        <field name="title" type="C" size="255" />
+        <field name="description" type="X2" />
+        <field name="useCalendarTimezone" type="I1">
+            <NOTNULL/>
+            <default value="1" />
+        </field>
+        <field name="timezoneName" type="C" size="255">
+            <NOTNULL />
+            <default value="UTC" />
+        </field>
+        <field name="eventColor" type="C" size="10">
+            <default value="#E1E1E1" />
+        </field>
+        <field name="fileID" type="I">
+            <UNSIGNED />
+        </field>
+
+        <index name="title">
+            <col>title</col>
+            <FULLTEXT />
+        </index>
+        <index name="description">
+            <col>description</col>
+            <FULLTEXT />
+        </index>
+        <index name="titleDescription">
+            <col>title</col>
+            <col>description</col>
+            <FULLTEXT />
+        </index>
+    </table>
+
+    <table name="SchedulizerEventTime">
+        <field name="id" type="I">
+            <autoincrement />
+            <key />
+            <unsigned />
+        </field>
+        <field name="eventID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <KEY/>
+        </field>
+        <field name="versionID" type="I">
+            <key/>
+            <unsigned />
+        </field>
+        <field name="startUTC" type="T">
+            <NOTNULL/>
+        </field>
+        <field name="endUTC" type="T">
+            <NOTNULL/>
+        </field>
+        <field name="isOpenEnded" type="I1">
+            <notnull />
+            <default value="0" />
+        </field>
+        <field name="isAllDay" type="I1">
+            <notnull />
+            <default value="0" />
+        </field>
+        <field name="isRepeating" type="I1">
+            <notnull />
+            <default value="0" />
+        </field>
+        <field name="repeatTypeHandle" type="C" size="255" />
+        <field name="repeatEvery" type="I" size="11">
+            <unsigned />
+        </field>
+        <field name="repeatIndefinite" type="I1" />
+        <field name="repeatEndUTC" type="T" /><!-- nullable! -->
+        <field name="repeatMonthlyMethod" type="C" size="255" />
+        <field name="repeatMonthlySpecificDay" type="I" size="11">
+            <unsigned />
+        </field>
+        <field name="repeatMonthlyOrdinalWeek" type="I" size="11">
+            <unsigned />
+        </field>
+        <field name="repeatMonthlyOrdinalWeekday" type="I" size="11">
+            <unsigned />
+        </field>
+
+        <index name="startUTC">
+            <col>startUTC</col>
+        </index>
+        <index name="endUTC">
+            <col>endUTC</col>
+        </index>
+        <index name="repeatTypeHandle">
+            <col>repeatTypeHandle</col>
+        </index>
+        <index name="repeatEndUTC">
+            <col>repeatEndUTC</col>
+        </index>
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+
+    <table name="SchedulizerEventTimeWeekdays">
+        <field name="id" type="I">
+            <autoincrement />
+            <key />
+            <unsigned />
+        </field>
+        <field name="eventTimeID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <KEY/>
+        </field>
+        <field name="repeatWeeklyDay" type="I" size="2">
+            <unsigned />
+        </field>
+
+        <index name="repeatWeeklyday">
+            <col>repeatWeeklyday</col>
+        </index>
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+
+    <table name="SchedulizerEventTimeNullify">
+        <field name="id" type="I">
+            <autoincrement />
+            <key />
+            <unsigned />
+        </field>
+        <field name="eventTimeID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <KEY/>
+        </field>
+        <field name="hideOnDate" type="T">
+            <NOTNULL/>
+        </field>
+
+        <!-- indices -->
+        <index name="hideOnDate">
+            <col>hideOnDate</col>
+        </index>
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+    <table name="SchedulizerEventTag">
+        <field name="id" type="I">
+            <autoincrement />
+            <key />
+            <unsigned />
+        </field>
+        <field name="displayText" type="C" size="255">
+            <NOTNULL />
+        </field>
+        <field name="handle" type="C" size="255">
+            <NOTNULL />
+        </field>
+
+        <!-- indices -->
+        <index name="handle">
+            <col>handle</col>
+            <unique/>
+        </index>
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+    <table name="SchedulizerTaggedEvents">
+        <field name="eventID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <KEY/>
+        </field>
+        <field name="versionID" type="I">
+            <NOTNULL/>
+            <key/>
+            <unsigned />
+        </field>
+        <field name="eventTagID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <KEY/>
+        </field>
+
+        <!-- indices -->
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+    <!-- Event attributes -->
+    <table name="SchedulizerEventAttributeValues">
+        <field name="eventID" type="I">
+            <KEY/>
+            <DEFAULT value="0"/>
+            <UNSIGNED />
+            <NOTNULL />
+        </field>
+        <field name="akID" type="I">
+            <KEY/>
+            <UNSIGNED />
+            <NOTNULL />
+            <DEFAULT value="0"/>
+        </field>
+        <field name="avID" type="I">
+            <KEY/>
+            <UNSIGNED />
+            <NOTNULL />
+            <DEFAULT value="0"/>
+        </field>
+    </table>
+
+    <!-- Permissions -->
+    <table name="SchedulizerCalendarPermissionAssignments">
+        <field name="calendarID" type="I" size="11">
+            <KEY/>
+            <NOTNULL/>
+            <UNSIGNED/>
+        </field>
+        <field name="paID" type="I" size="11">
+            <KEY/>
+            <NOTNULL/>
+            <UNSIGNED/>
+        </field>
+        <field name="pkID" type="I" size="11">
+            <KEY/>
+            <NOTNULL/>
+            <UNSIGNED/>
+        </field>
+    </table>
+
+</schema>

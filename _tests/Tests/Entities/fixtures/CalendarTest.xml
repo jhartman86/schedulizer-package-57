@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<dataset>
+    <table name="SchedulizerCalendar">
+        <column>id</column>
+        <column>title</column>
+        <column>ownerID</column>
+        <column>defaultTimezone</column>
+        <column>createdUTC</column>
+        <column>modifiedUTC</column>
+        <row>
+            <value>1</value>
+            <value>Title 1</value>
+            <value>12</value>
+            <value>UTC</value>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+        </row>
+        <row>
+            <value>2</value>
+            <value>Second</value>
+            <value>2</value>
+            <value>America/Denver</value>
+            <value>2015-02-01 14:00:00</value>
+            <value>2015-02-01 14:00:00</value>
+        </row>
+        <row>
+            <value>3</value>
+            <value>Second</value>
+            <value>12332</value>
+            <value>America/New_York</value>
+            <value>2015-02-01 14:00:00</value>
+            <value>2015-02-01 14:00:00</value>
+        </row>
+    </table>
+
+    <table name="SchedulizerEvent">
+        <column>createdUTC</column>
+        <column>modifiedUTC</column>
+        <column>calendarID</column>
+        <column>title</column>
+        <column>description</column>
+        <column>startUTC</column>
+        <column>endUTC</column>
+        <column>isOpenEnded</column>
+        <column>isAllDay</column>
+        <column>useCalendarTimezone</column>
+        <column>timezoneName</column>
+        <column>eventColor</column>
+        <column>isRepeating</column>
+        <column>repeatTypeHandle</column>
+        <column>repeatEvery</column>
+        <column>repeatIndefinite</column>
+        <column>repeatEndUTC</column>
+        <column>repeatMonthlyMethod</column>
+        <column>ownerID</column>
+        <row>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+            <value>1</value>
+            <value>First Event Name</value>
+            <value>Lorem ipsum dolor sit amet consect</value>
+            <value>2015-02-16 14:30:00</value>
+            <value>2015-02-16 17:45:00</value>
+            <value>0</value>
+            <value>0</value>
+            <value>1</value>
+            <value>America/Denver</value>
+            <value>#c9c9c9</value>
+            <value>0</value>
+            <null/>
+            <null/><!-- repeatEvery -->
+            <value>0</value>
+            <value>2015-02-16 17:45:00</value>
+            <null/>
+            <value>2</value><!-- ownerID -->
+        </row>
+        <row>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+            <value>1</value>
+            <value>Second Event Name</value>
+            <value>Lorem ipsum dolor sit amet consect</value>
+            <value>2015-02-17 09:00:00</value>
+            <value>2015-02-17 17:00:00</value>
+            <value>0</value>
+            <value>0</value>
+            <value>1</value>
+            <value>America/Los_Angeles</value>
+            <value>#bc52da</value>
+            <value>0</value>
+            <null/>
+            <null/><!-- repeatEvery -->
+            <value>0</value>
+            <value>2015-02-16 17:45:00</value>
+            <null/>
+            <value>2</value><!-- ownerID -->
+        </row>
+
+        <row>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+            <value>3</value>
+            <value>SecondCalendarEvent1</value>
+            <value>Lorem ipsum dolor sit amet consect</value>
+            <value>2015-02-16 14:30:00</value>
+            <value>2015-02-16 17:45:00</value>
+            <value>0</value>
+            <value>0</value>
+            <value>1</value>
+            <value>America/Denver</value>
+            <value>#c9c9c9</value>
+            <value>0</value>
+            <null/>
+            <null/><!-- repeatEvery -->
+            <value>0</value>
+            <value>2015-02-16 17:45:00</value>
+            <null/>
+            <value>2</value><!-- ownerID -->
+        </row>
+        <row>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+            <value>3</value>
+            <value>SecondCalendarEvent2</value>
+            <value>Lorem ipsum dolor sit amet consect</value>
+            <value>2015-02-17 09:00:00</value>
+            <value>2015-02-17 17:00:00</value>
+            <value>0</value>
+            <value>0</value>
+            <value>1</value>
+            <value>America/Los_Angeles</value>
+            <value>#bc52da</value>
+            <value>0</value>
+            <null/>
+            <null/><!-- repeatEvery -->
+            <value>0</value>
+            <value>2015-02-16 17:45:00</value>
+            <null/>
+            <value>2</value><!-- ownerID -->
+        </row>
+    </table>
+</dataset>

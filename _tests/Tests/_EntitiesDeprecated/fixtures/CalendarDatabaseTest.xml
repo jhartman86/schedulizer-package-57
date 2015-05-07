@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<dataset>
+    <table name="SchedulizerCalendar">
+        <column>id</column>
+        <column>title</column>
+        <column>ownerID</column>
+        <column>defaultTimezone</column>
+        <column>createdUTC</column>
+        <column>modifiedUTC</column>
+        <row>
+            <value>1</value>
+            <value>Title 1</value>
+            <value>12</value>
+            <value>UTC</value>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+        </row>
+        <row>
+            <value>2</value>
+            <value>Second</value>
+            <value>2</value>
+            <value>America/Denver</value>
+            <value>2015-02-01 14:00:00</value>
+            <value>2015-02-01 14:00:00</value>
+        </row>
+        <row>
+            <value>3</value>
+            <value>Third</value>
+            <value>212</value>
+            <value>America/New_York</value>
+            <value>2015-02-01 14:00:00</value>
+            <value>2015-02-01 14:00:00</value>
+        </row>
+        <row>
+            <value>4</value>
+            <value>Fourth</value>
+            <value>78</value>
+            <value>America/Denver</value>
+            <value>2015-02-01 14:00:00</value>
+            <value>2015-02-01 14:00:00</value>
+        </row>
+    </table>
+</dataset>

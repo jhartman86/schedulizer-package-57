@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<schema version="0.3">
+    <table name="btSchedulizerEvent">
+        <field name="bID" type="I">
+            <key />
+            <unsigned />
+        </field>
+        <!-- just store everything as json and parse it. lazy but effective -->
+        <field name="eventID" type="I" size="11" />
+    </table>
+</schema>

@@ -1,0 +1,196 @@
+$border-radius-base:        0;
+$border-radius-large:       0;
+$border-radius-small:       0;
+$input-border:              #ddd;
+$image-path:                '/packages/schedulizer/images/';
+$icomoon-font-path:         '/packages/schedulizer/css/_fonts';
+
+@import 'compass';
+@import 'dependencies/icomoon';
+@import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/variables';
+@import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins';
+
+// Enable calendar @ 100% fluid
+//html,
+//#ccm-dashboard-page.ccm-ui,
+//#ccm-dashboard-page.ccm-ui #ccm-dashboard-content.container-fluid,
+//.schedulizer-app,
+//#ccm-dashboard-page.ccm-ui #ccm-dashboard-content.container-fluid .ccm-dashboard-content-full,
+//.schedulizer-app .calendar-wrap,
+//.calendry-instance {height:100%;padding-bottom:0;}
+//.schedulizer-app .app-wrap {height:calc(100% - 66px);}
+//body {height:calc(100% - 49px);}
+
+.ccm-ui .schedulizer-app {
+  // Override concrete5 defaults
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/forms';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/buttons';
+}
+
+.schedulizer-app {margin:0 -20px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-moz-font-smoothing: antialiased;
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/scaffolding';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/normalize';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/type';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/grid';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/buttons';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/button-groups';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/forms';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/navs';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/utilities';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/responsive-utilities';
+  @import 'dependencies/angular-strap';
+  @import 'dependencies/calendry';
+  @import 'dependencies/selectjs';
+
+  // Remove highlights
+  input, select, textarea, button, a {&:focus {outline:none !important;}}
+
+  .not-stupid-header-style {padding:1rem 0;background:#f1f1f1;position:relative;z-index:2;
+    h3 {margin:0;padding:4px 0;position:relative;cursor:pointer;color:#006699;
+      i {position:absolute;top:0;left:100%;margin-left:2px;font-size:20px;opacity:0;@include transform(translateX(-100%));@include transition(all 0.25s ease);}
+      &:hover {text-decoration:underline;
+        i {opacity:1;@include transform(translateX(0));}
+      }
+    }
+  }
+
+  .ccm-dashboard-content-full {margin: 0 !important;
+    .app-wrap {position:relative;@include transition(all 0.25s ease);@include transform(translateY(0));
+      .calendar-event-search {padding:1rem 0;height:150px;background:#414d59;color:#97aabc;position:absolute;bottom:100%;left:0;right:0;width:100%;
+        .clear-fields {position:absolute;top:0;right:0;}
+      }
+    }
+    &.search-open {overflow:hidden;
+      .app-wrap {@include transform(translateY(150px));}
+    }
+  }
+
+  // Custom Styles within .schedulizer-app
+  label {font-weight:normal;
+    &.btn input[type="checkbox"] {visibility:hidden;position:absolute;}
+    &.color-thumb {position:relative;display:inline-block;width:auto;height:auto;padding:15px;margin:0 0 0 7px;cursor:pointer;@include border-radius(50%);
+      &.active::before {display:inline-block;content:"\e116";font-family:'icomoon';font-size:20px;color:$brand-success;position:absolute;top:50%;left:50%;@include transform(translate(-50%,-50%));}
+      input {visibility:hidden;position:absolute;}
+    }
+  }
+
+  [select-wrap]{display:inline-block;position:relative;z-index:2;
+    &::after {content: "\e608";font-family:'icomoon';position:absolute;top:50%;right:5px;font-size:24px;z-index:-1;@include transform(translateY(-50%));}
+    &.block {display:block;}
+    select {padding-right:25px;text-transform:capitalize;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:transparent;@include border-radius(0);}
+  }
+
+  .calendar-wrap {
+    &.updating::after {position:absolute;display:block;content:'';top:0;right:0;bottom:0;left:0;width:100%;height:100%;background:rgba(50,50,50,0.35) url('#{$image-path}/spinner.svg') no-repeat 50% 50%;z-index:5;}
+  }
+}
+
+@media screen and (min-width:992px){
+  .schedulizer-app {
+    .ccm-dashboard-content-full {padding-left:20px;margin:0 0 0 -97px !important;}
+  }
+}
+
+@media screen and (min-width:1000px) and (min-height:820px){
+  html {overflow:hidden;}
+}
+
+.ui-select-widget {
+  .ui-select-container.ui-select-multiple {padding:4px 3px 3px 3px;
+    &.open ul {padding:3px 0;}
+    .ui-select-match-item {margin:0 3px 0 0;}
+  }
+
+  input[type="text"]{@include box-shadow(none);}
+  ul {list-style:none;padding:0;margin:0;
+    a {padding-left:10px;}
+  }
+}
+
+// Custom modal
+[modal-window]{font-family:$font-family-sans-serif;font-size:16px;width:100%;height:100%;margin:0;visibility:hidden;opacity:0;display:block;position:fixed;top:0;left:0;background:rgba(240,240,240,0.95);z-index:-1;@include transform(translateX(-100%) translateZ(0));@include transition(all 0.25s ease);
+  a {cursor:pointer;}
+  &.open {visibility:visible;opacity:1;z-index:999;@include transform(translateX(0) translateZ(0));}
+  .default-closer {position:absolute;top:49px;right:0;font-size:3rem;line-height:1;padding:0;z-index:2;cursor:pointer;@include transform(rotate(0));@include transition(all 0.25s ease);
+    &:hover {text-decoration:none;@include transform(rotate(-90deg));}
+  }
+  .loading {
+    img {padding-bottom:20px;}
+  }
+  .modal-inner {padding:30px 0;height:calc(100% - 48px);position:relative;top:48px;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  //.modal-inner {padding-top:34px;display:table-cell;width:100%;height:100%;vertical-align:middle;text-align:center;}
+  .container-fluid {width:90%;text-align:left;}
+
+  form {
+    .form-group {position:relative;
+      &.white {background:#fff;}
+    }
+
+    &.calendar {max-width:650px;}
+
+    &.event {
+      .tab-pane {padding:15px 15px 0;margin-bottom:($grid-gutter-width/2);border:1px solid #ddd;border-top:0;position:relative;background:#fff;
+        .remove-time-entity {position:absolute;top:0;right:0;}
+      }
+
+      .ccm-file-selector {@include border-radius(0);}
+      .redactor_editor {padding:10px;max-height:350px;}
+      .input-title {font-weight:200;border:0;outline:0;padding:5px;margin-bottom:($grid-gutter-width/2);border-bottom:1px solid $input-border;height:auto;font-size:180%;background:transparent;@include box-shadow(none);}
+
+      // start/end time display
+      .row {
+        &.is-all-day {
+          .form-group {display:none;}
+          .form-group:first-of-type {display:block;width:auto;}
+          .end-dt {display:none;}
+        }
+        &.is-open-ended {
+          .end-dt {display:none;}
+        }
+      }
+
+      // Nullifiers
+      .has-nullifiers {font-size:13px;display:inline-block;padding:0 5px;}
+      .nullifiers-list {
+        .btn {width:25%;position:relative;
+          i {font-size:18px;line-height:0;position:relative;top:4px;margin-left:4px;}
+        }
+      }
+    }
+  }
+}
+
+@media screen and (min-width:$screen-sm){
+  [modal-window]{
+    form.event {
+      .delete-event {padding-right:($grid-gutter-width/2);}
+      .save-event img {max-height:18px;}
+      .time-widgets {font-size:0;line-height:0;
+        .form-group {display:inline-block;width:50%;font-size:$font-size-base;line-height:1;
+          &:nth-of-type(2) input {border-left:0;}
+        }
+      }
+    }
+  }
+}
+
+@media screen and (min-width:$screen-md){
+  [modal-window]{
+    form.event {
+//      .nav-tabs {border-bottom:0;
+//        li {display:none;
+//          &.add-time-entity {display:block;float:none;margin-bottom:($grid-gutter-width/2);background:#fff;border:1px solid $input-border;text-align:center;
+//            a {margin:0;}
+//            span {padding-left:5px;}
+//          }
+//        }
+//      }
+//      .tab-content .tab-pane {display:block;visibility:visible;border-top:1px solid $input-border;}
+    }
+  }
+}
+
+// Overflow stuff for the modal
+html.schedulizer-modal {overflow-y:hidden;
+  //.event-form-wrapper {padding:15px 0;max-height:100%;width:100%;overflow-y:scroll;}
+}

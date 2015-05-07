@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<schema version="0.3">
+    <table name="btSchedulizer">
+        <field name="bID" type="I">
+            <key />
+            <unsigned />
+        </field>
+        <!-- just store everything as json and parse it. lazy but effective -->
+        <field name="blockData" type="X2" />
+    </table>
+</schema>

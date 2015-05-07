@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<dataset>
+    <table name="SchedulizerCalendar">
+        <column>id</column>
+        <column>title</column>
+        <column>ownerID</column>
+        <column>defaultTimezone</column>
+        <column>createdUTC</column>
+        <column>modifiedUTC</column>
+        <row>
+            <value>1</value>
+            <value>Title 1</value>
+            <value>12</value>
+            <value>UTC</value>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+        </row>
+    </table>
+
+    <table name="SchedulizerEvent">
+        <column>id</column>
+        <column>createdUTC</column>
+        <column>modifiedUTC</column>
+        <column>calendarID</column>
+        <column>title</column>
+        <column>description</column>
+        <column>useCalendarTimezone</column>
+        <column>timezoneName</column>
+        <column>eventColor</column>
+        <column>ownerID</column>
+        <row>
+            <value>1</value>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+            <value>1</value>
+            <value>First Event Name</value>
+            <value>Lorem ipsum dolor sit amet consect</value>
+            <value>1</value>
+            <value>America/Denver</value>
+            <value>#c9c9c9</value>
+            <value>2</value>
+        </row>
+    </table>
+
+    <table name="SchedulizerEventTime">
+        <column>id</column>
+        <column>eventID</column>
+        <column>startUTC</column>
+        <column>endUTC</column>
+        <column>isOpenEnded</column>
+        <column>isAllDay</column>
+        <column>isRepeating</column>
+        <column>repeatTypeHandle</column>
+        <column>repeatEvery</column>
+        <column>repeatIndefinite</column>
+        <column>repeatEndUTC</column>
+        <column>repeatMonthlyMethod</column>
+        <column>repeatMonthlySpecificDay</column>
+        <column>repeatMonthlyOrdinalWeek</column>
+        <column>repeatMonthlyOrdinalWeekday</column>
+        <row>
+            <value>1</value>
+            <value>1</value>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+            <value>1</value>
+            <value>1</value><!-- isAllDay -->
+            <value>0</value>
+            <value>daily</value>
+            <value>1</value>
+            <value>1</value>
+            <value>2015-02-01 15:00:00</value>
+            <null/>
+            <null/>
+            <null/>
+            <null/>
+        </row>
+        <row>
+            <value>2</value>
+            <value>1</value>
+            <value>2015-03-02 12:00:00</value>
+            <value>2015-03-04 15:00:00</value>
+            <value>1</value>
+            <value>1</value><!-- isAllDay -->
+            <value>1</value>
+            <value>daily</value>
+            <value>1</value>
+            <value>1</value>
+            <value>2015-02-01 15:00:00</value>
+            <null/>
+            <null/>
+            <null/>
+            <null/>
+        </row>
+        <row>
+            <value>3</value>
+            <value>1</value>
+            <value>2015-03-02 12:00:00</value>
+            <value>2015-03-04 15:00:00</value>
+            <value>1</value>
+            <value>1</value><!-- isAllDay -->
+            <value>1</value>
+            <value>weekly</value>
+            <value>1</value>
+            <value>1</value>
+            <value>2015-02-01 15:00:00</value>
+            <null/>
+            <null/>
+            <null/>
+            <null/>
+        </row>
+    </table>
+
+    <table name="SchedulizerEventTimeWeekdays">
+        <column>eventTimeID</column>
+        <column>repeatWeeklyDay</column>
+        <row>
+            <value>3</value>
+            <value>2</value>
+        </row>
+        <row>
+            <value>3</value>
+            <value>5</value>
+        </row>
+    </table>
+</dataset>

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<dataset>
+    <table name="SchedulizerCalendar">
+        <column>id</column>
+        <column>title</column>
+        <column>ownerID</column>
+        <column>defaultTimezone</column>
+        <column>createdUTC</column>
+        <column>modifiedUTC</column>
+        <row>
+            <value>1</value>
+            <value>FancyPants</value>
+            <value>1999</value>
+            <value>Canada</value>
+            <value>2015-02-01 12:00:00</value>
+            <value>2015-02-01 15:00:00</value>
+        </row>
+    </table>
+</dataset>

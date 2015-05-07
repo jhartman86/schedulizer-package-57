@@ -1,0 +1,172 @@
+@font-face {
+  font-family: 'icomoon';
+  src:url('#{$icomoon-font-path}/icomoon.eot?-6k0ytw');
+  src:url('#{$icomoon-font-path}/icomoon.eot?#iefix-6k0ytw') format('embedded-opentype'),
+  url('#{$icomoon-font-path}/icomoon.woff?-6k0ytw') format('woff'),
+  url('#{$icomoon-font-path}/icomoon.ttf?-6k0ytw') format('truetype'),
+  url('#{$icomoon-font-path}/icomoon.svg?-6k0ytw#icomoon') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  font-family: 'icomoon';
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-check2:before {
+  content: "\e116";
+}
+
+.icon-diamond:before {
+  content: "\e61b";
+}
+
+.icon-plugin:before {
+  content: "\e61c";
+}
+
+.icon-refresh-2:before {
+  content: "\e61d";
+}
+
+.icon-close:before {
+  content: "\e600";
+}
+
+.icon-close-circle:before {
+  content: "\e601";
+}
+
+.icon-angle-up:before {
+  content: "\e602";
+}
+
+.icon-angle-up-circle:before {
+  content: "\e603";
+}
+
+.icon-angle-right:before {
+  content: "\e604";
+}
+
+.icon-angle-right-circle:before {
+  content: "\e605";
+}
+
+.icon-angle-left:before {
+  content: "\e606";
+}
+
+.icon-angle-left-circle:before {
+  content: "\e607";
+}
+
+.icon-angle-down:before {
+  content: "\e608";
+}
+
+.icon-angle-down-circle:before {
+  content: "\e609";
+}
+
+.icon-unlock:before {
+  content: "\e60a";
+}
+
+.icon-trash:before {
+  content: "\e61e";
+}
+
+.icon-tools:before {
+  content: "\e60b";
+}
+
+.icon-ticket:before {
+  content: "\e60c";
+}
+
+.icon-shuffle:before {
+  content: "\e61f";
+}
+
+.icon-search:before {
+  content: "\e620";
+}
+
+.icon-power:before {
+  content: "\e60d";
+}
+
+.icon-plus:before {
+  content: "\e61a";
+}
+
+.icon-paper-plane:before {
+  content: "\e60e";
+}
+
+.icon-map-marker:before {
+  content: "\e60f";
+}
+
+.icon-mail:before {
+  content: "\e610";
+}
+
+.icon-loop:before {
+  content: "\e611";
+}
+
+.icon-lock:before {
+  content: "\e621";
+}
+
+.icon-link:before {
+  content: "\e612";
+}
+
+.icon-less:before {
+  content: "\e613";
+}
+
+.icon-info:before {
+  content: "\e614";
+}
+
+.icon-expand1:before {
+  content: "\e615";
+}
+
+.icon-edit:before {
+  content: "\e622";
+}
+
+.icon-download:before {
+  content: "\e616";
+}
+
+.icon-config:before {
+  content: "\e617";
+}
+
+.icon-check:before {
+  content: "\e618";
+}
+
+.icon-box2:before {
+  content: "\e619";
+}
+
+.icon-attention:before {
+  content: "\e623";
+}
