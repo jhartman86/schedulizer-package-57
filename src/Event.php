@@ -234,6 +234,32 @@
             return $executedStatement->fetchAll(\PDO::FETCH_OBJ);
         }
 
+
+        /**
+         * Get an event by its page ID
+         * @param $pageID
+         * @param null $versionID
+         * @return $this|void
+         */
+        public static function getByPageID( $pageID, $versionID = null ){
+            return static::fetchOneBy(function(\PDO $connection) use ($pageID, $versionID){
+                // Are we getting a specific event version? Append to where clause if so
+                $versionSpecificity = ((int)$versionID > 0) ? "AND sev.versionID = :versionID" : '';
+                // Prepare query
+                $statement = $connection->prepare("SELECT se.*, sev.eventID, sev.versionID,
+                sev.title, sev.description, sev.useCalendarTimezone,
+                sev.timezoneName, sev.eventColor, sev.fileID
+                FROM SchedulizerEvent se LEFT JOIN SchedulizerEventVersion sev
+                ON se.id = sev.eventID
+                WHERE se.pageID = :pageID {$versionSpecificity} ORDER BY sev.versionID DESC LIMIT 1");
+                $statement->bindValue(':pageID', $pageID);
+                if( (int)$versionID > 0 ){
+                    $statement->bindValue(':versionID', (int)$versionID);
+                }
+                return $statement;
+            });
+        }
+
     }
 
 }
