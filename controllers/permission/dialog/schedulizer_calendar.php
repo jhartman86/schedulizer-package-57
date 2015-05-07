@@ -1,6 +1,6 @@
 <?php namespace Concrete\Package\Schedulizer\Controller\Permission\Dialog {
 
-    use Loader, Permissions;
+    use Loader, Permissions, PermissionKey;
 
     class SchedulizerCalendar extends \Concrete\Core\Controller\Controller {
 
