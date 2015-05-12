@@ -17,8 +17,20 @@ if( !( $this instanceof \Concrete\Package\Schedulizer\Src\EventList ) ){
 // Variables passed into the query
 $startDateString    = $queryData->startDTO->format('Y-m-d');
 $queryDaySpan       = $queryData->queryDaySpan;
-$selectColumns      = join(',', array_keys($queryData->selectableColumns));
 $limitPerDay        = ($queryData->limitPerDay >= 1) ? " LIMIT {$queryData->limitPerDay}" : '';
+$selectColumns      = join(',', array_keys($queryData->selectableColumns));
+
+/**
+ * Is eventGrouping happening? Then add to the select columns.
+ * @note: THIS AUTOMATICALLY MAKES THE occurrences COLUMN AVAILABLE,
+ * WHICH IS A COUNT OF THE TIMES THE EVENT HAPPENS (it replaces the actual 'occurrences'
+ * column with count() AS occurrences)
+ */
+$groupByClause = '';
+if( $queryData->doEventGrouping === true ){
+    $selectColumns = str_replace('occurrences', 'count(isSynthetic) AS occurrences', $selectColumns);
+    $groupByClause = " GROUP BY eventID ";
+}
 
 /**
  * Restriction on internal join.
@@ -220,7 +232,7 @@ $sql = <<<SQL
         OR (
           (_events.isRepeating = 0 AND _synthesized._syntheticDate = DATE(_events.startUTC))
         )
-    ) AS _eventList ORDER BY computedStartUTC;
+    ) AS _eventList $groupByClause ORDER BY computedStartUTC;
 SQL;
 
 // Return the fully composed SQL query

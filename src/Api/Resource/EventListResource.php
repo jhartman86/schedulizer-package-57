@@ -24,6 +24,7 @@
                 $this->setFetchColumns($eventListObj);
                 $this->setIncludeFilePath($eventListObj);
                 $this->setIncludePagePath($eventListObj);
+                $this->setGrouping($eventListObj);
                 $this->setResponseData($eventListObj->getSerializable());
             }catch(\Exception $e){
                 throw ApiException::generic($e->getMessage());
@@ -109,6 +110,15 @@
         private function setIncludePagePath( EventList $eventList ){
             if( !empty($this->requestParams()->pagepath) ){
                 $eventList->setIncludePagePathInResults(true);
+            }
+        }
+
+        /**
+         * @param EventList $eventList
+         */
+        private function setGrouping( EventList $eventList ){
+            if( !empty($this->requestParams()->grouping) ){
+                $eventList->setEventGrouping(true);
             }
         }
 

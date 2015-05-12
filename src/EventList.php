@@ -28,6 +28,7 @@
         protected $includeFilePathInResults = false;
         protected $includePagePathInResults = false;
 
+        protected $doEventGrouping = false; // Groups by eventID, showing only most recent
         protected $startDTO; // set or calculated
         protected $endDTO; // set or calculated
         protected $limitPerDay  = null;
@@ -68,7 +69,10 @@
             'repeatMonthlyOrdinalWeek'      => array(false, self::COLUMN_CAST_INT),
             'repeatMonthlyOrdinalWeekday'   => array(false, self::COLUMN_CAST_INT),
             'repeatWeeklyDay'               => array(false, self::COLUMN_CAST_INT),
-            'isSynthetic'                   => array(false, self::COLUMN_CAST_BOOL)
+            'isSynthetic'                   => array(false, self::COLUMN_CAST_BOOL),
+            // THIS IS A SPECIAL COLUMN THAT IS ONLY AVAILABLE WHEN GROUPING HAPPENS.
+            // IT'S AUTOMATICALLY SET TO FALSE BEFORE THE QUERY GETS BUILT IF GROUPING = DISABLED
+            'occurrences'                   => array(false, self::COLUMN_CAST_INT)
         );
 
         /**
@@ -87,7 +91,8 @@
         public function includeColumns( array $columns = array() ){
             $available = array_keys($this->fetchColumns);
             foreach($columns AS $columnName){
-                if( in_array($columnName, $available) ){
+                // 'occurrences' can only be turned on internally by having Grouping enabled
+                if( in_array($columnName, $available) && $columnName !== 'occurrences' ){
                     $this->fetchColumns[$columnName][0] = true;
                 }
             }
@@ -215,6 +220,16 @@
             if( $to === true ){
                 $this->includeColumns(array('fileID'));
             }
+        }
+
+        /**
+         * If you only want to list events by the most recent (say from today forward),
+         * but not have them listed as an occurrence on every day, this lets you do so.
+         * @param bool $to
+         */
+        public function setEventGrouping( $to = true ){
+            $this->doEventGrouping = $to;
+            $this->fetchColumns['occurrences'][0] = true;
         }
 
         /**
@@ -370,7 +385,8 @@
                 'endDTO'            => $this->endDTO,
                 'queryDaySpan'      => (int)$this->queryDaySpan,
                 'limitPerDay'       => (int)$this->limitPerDay,
-                'fullTextSearch'    => $this->fullTextSearch
+                'fullTextSearch'    => $this->fullTextSearch,
+                'doEventGrouping'   => $this->doEventGrouping
             );
             return (require sprintf("%s/_eventListQuery.php", __DIR__));
         }
