@@ -1,6 +1,6 @@
 angular.module('schedulizer.app').
 
-    directive('redactorized', [function(){
+    directive('redactorized', ['$q', function( $q ){
 
         /**
          * Redactor settings, pulled from Concrete5 defaults
@@ -10,10 +10,11 @@ angular.module('schedulizer.app').
             minHeight: 200,
             concrete5: {
                 filemanager: true,
-                sitemap: true,
-                lightbox: true
+                sitemap: true
+                //,lightbox: true
             },
-            plugins: ['fontcolor', 'concrete5','underline']
+            //plugins: ['fontcolor', 'concrete5','underline', 'undoredo', 'concrete5magic']
+            plugins: ["concrete5lightbox","undoredo","specialcharacters","table","concrete5magic"]
         };
 
         /**
@@ -23,22 +24,29 @@ angular.module('schedulizer.app').
          * @param Controller ngModel controller
          * @private
          */
-        function _link( scope, $elem, attrs, Controller ){
-            // ngModel's $render function
-            Controller.$render = function(){
-                // Set the initial value, if any
-                $elem.val(Controller.$viewValue);
+        function _link( scope, $elem, attrs, ngModelController ){
+            var initialized = false;
 
-                // Initialize redactor, binding change callback
-                $elem.redactor(angular.extend(settings, {
-                    changeCallback: function(){
-                        Controller.$setViewValue(this.get());
-                        //scope.$apply(Controller.$setViewValue(this.get()));
-                    }
-                }));
+            ngModelController.$render = function(){
+                // Init if not done so yet
+                if( ! initialized ){
+                    $elem.redactor(angular.extend(settings, {
+                        initCallback: function(){
+                            initialized = true;
+                            if( angular.isDefined(ngModelController.$viewValue) ){
+                                this.code.set(ngModelController.$viewValue);
+                            }
+                        },
+                        changeCallback: function(){
+                            ngModelController.$setViewValue(this.code.get());
+                        }
+                    }));
+                    return;
+                }
 
-                if( Controller.$viewValue ){
-                    $elem.redactor('set', Controller.$viewValue);
+                // If view value is defined, set it
+                if( angular.isDefined(ngModelController.$viewValue) ){
+                    $elem.redactor('code.set', ngModelController.$viewValue);
                 }
             };
         }
