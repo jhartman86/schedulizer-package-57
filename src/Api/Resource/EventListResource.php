@@ -22,6 +22,7 @@
                 $this->setStartDate($eventListObj);
                 $this->setEndDate($eventListObj);
                 $this->setFetchColumns($eventListObj);
+                $this->setIncludeFilePath($eventListObj);
                 $this->setResponseData($eventListObj->getSerializable());
             }catch(\Exception $e){
                 throw ApiException::generic($e->getMessage());
@@ -86,6 +87,17 @@
         private function setFetchColumns( EventList $eventList ){
             if( !empty($this->requestParams()->fields) ){
                 $eventList->includeColumns(explode(',', $this->requestParams()->fields));
+            }
+        }
+
+        /**
+         * Simply needs to be set and we'll fetch the relative file path
+         * and include it in the results.
+         * @param EventList $eventList
+         */
+        private function setIncludeFilePath( EventList $eventList ){
+            if( !empty($this->requestParams()->filepath) ){
+                $eventList->setIncludeFilePathInResults(true);
             }
         }
 

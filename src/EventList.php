@@ -24,6 +24,9 @@
               COLUMN_CAST_STRING        = 'str',
               COLUMN_CAST_BOOL          = 'bool';
 
+        // used by the serializer/parser only
+        protected $includeFilePathInResults = false;
+
         protected $startDTO; // set or calculated
         protected $endDTO; // set or calculated
         protected $limitPerDay  = null;
@@ -43,10 +46,12 @@
             'calendarID'                    => array(false, self::COLUMN_CAST_INT),
             'eventTimeID'                   => array(false, self::COLUMN_CAST_INT),
             'title'                         => array(true, self::COLUMN_CAST_STRING),
+            'description'                   => array(false, self::COLUMN_CAST_STRING),
             'useCalendarTimezone'           => array(false, self::COLUMN_CAST_BOOL),
             'derivedTimezone'               => array(true, self::COLUMN_CAST_STRING),
             'eventColor'                    => array(false, self::COLUMN_CAST_STRING),
             'ownerID'                       => array(false, self::COLUMN_CAST_INT),
+            'pageID'                        => array(false, self::COLUMN_CAST_INT),
             'fileID'                        => array(false, self::COLUMN_CAST_INT),
             'startUTC'                      => array(false, self::COLUMN_CAST_TIME, self::COLUMN_CAST_TIME_UTC),
             'endUTC'                        => array(false, self::COLUMN_CAST_TIME, self::COLUMN_CAST_TIME_UTC),
@@ -196,6 +201,27 @@
             }
             $this->queryDaySpan = (int)$number;
             return $this;
+        }
+
+        /**
+         * We never do a join against the files table to get the path,
+         * but this will indicate to the serializer that the filepath
+         * should be included.
+         * @param bool $to
+         */
+        public function setIncludeFilePathInResults( $to = true ){
+            $this->includeFilePathInResults = $to;
+            if( $to === true ){
+                $this->includeColumns(array('fileID'));
+            }
+        }
+
+        /**
+         * Are we including the filepath?
+         * @return bool
+         */
+        public function doIncludeFilePaths(){
+            return $this->includeFilePathInResults;
         }
 
         /**

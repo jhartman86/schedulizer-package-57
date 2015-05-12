@@ -64,6 +64,15 @@
                             break;
                     }
                 }
+
+                if( $this->eventList->doIncludeFilePaths() ){
+                    if( $row['fileID'] ){
+                        $data->filePath = \Concrete\Core\File\File::getByID($row['fileID'])->getRelativePath();
+                    }else{
+                        $data->filePath = null;
+                    }
+                }
+
                 array_push($this->formatted, $data);
             }
         }

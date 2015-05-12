@@ -30,6 +30,9 @@
         /** @return string|null */
         public function __toString(){ return $this->displayText;}
 
+        /** @return string|null */
+        public function getDisplayText(){ return $this->displayText; }
+
         protected function onBeforePersist(){
             if( $this->handle === null ){
                 $this->handle = Loader::helper('text')->handle($this->displayText);
