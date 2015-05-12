@@ -157,6 +157,35 @@
 
 
             function _link( $scope, $element, attrs, Controller, transcludeFn ){
+
+                /**
+                 * --- THIS IS SUPER IMPORTANT TO PREVENT MEMORY LEAKS: ---
+                 * These keep track of the transcluded scopes and dom nodes
+                 * so that we can clean them up on each re-render to prevent massive
+                 * memory leaks.
+                 */
+                var transcludeNodes  = [],
+                    transcludeScopes = [];
+
+                /**
+                 * This function gets called every time the calendar changes between
+                 * months so we can purge nodes/scopes that might be sticking around and
+                 * causing memory leaks. This should be called in the renderCalendarLayout()
+                 * method as that is what removes everything from the DOM and recreates a
+                 * fragment for adding events to.
+                 */
+                function cleanupDomNodesAndScopes(){
+                    var _node;
+                    while(_node= transcludeNodes.pop()){
+                        _node.remove();
+                    }
+
+                    var _scope;
+                    while(_scope = transcludeScopes.pop()){
+                        _scope.$destroy();
+                    }
+                }
+
                 /**
                  * Pass in the directive element and the monthMap we use to generate the
                  * calendar DOM elements.
@@ -165,6 +194,8 @@
                  * @returns null
                  */
                 function renderCalendarLayout( monthMap ){
+                    cleanupDomNodesAndScopes();
+
                     // Rebuild the calendar layout (no events attached, just days)
                     var $renderTo = angular.element($element[0].querySelector('.calendar-render')),
                         weekRows  = Math.ceil( monthMap.calendarDayCount / 7 );
@@ -216,8 +247,10 @@
                      * @param $cloned
                      * @private
                      */
-                    function _transcluder( $dayNode, $cloned ){
+                    function _transcluder( $dayNode, $cloned, _scope ){
                         $dayNode.append($cloned);
+                        transcludeNodes.push($cloned);
+                        transcludeScopes.push(_scope);
                     }
 
                     /**
