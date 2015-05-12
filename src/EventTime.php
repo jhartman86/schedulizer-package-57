@@ -95,36 +95,6 @@
             $this->mergePropertiesFrom($setters);
         }
 
-        /**
-         * Execute before persisting to the database.
-         * @throws \Exception
-         */
-        protected function onBeforePersist(){
-            // If no calendar ID is set, throw an exception
-//            if( $this->calendarID === null ){
-//                throw new \Exception('Event cannot be saved without a CalendarID');
-//            }
-//            // Set startUTC if not already set
-//            if( ! $this->startUTC ){
-//                $this->startUTC = new DateTime($this->startUTC, new DateTimeZone('UTC'));
-//            }
-//            // Set endUTC if not already set
-//            if( ! $this->endUTC ){
-//                $this->endUTC = new DateTime($this->endUTC, new DateTimeZone('UTC'));
-//            }
-//            // Set repeatEndUTC if not already set
-//            if( ! $this->repeatEndUTC ){
-//                $this->repeatEndUTC = new DateTime($this->repeatEndUTC, new DateTimeZone('UTC'));
-//            }
-//            // If event should inherit calendar timezone. Note, when trying to fetch the calendar,
-//            // if the calendarID is invalid (calendar record doesn't exist), an exception will
-//            // implicitly be thrown.
-//            if( $this->useCalendarTimezone === self::USE_CALENDAR_TIMEZONE_TRUE ){
-//                $this->timezoneName = $this->getCalendar()->getDefaultTimezone();
-//            }
-        }
-
-
         /** @return int|null */
         public function getEventID(){ return $this->eventID; }
 
@@ -198,29 +168,6 @@
         }
 
 
-        public function updateWithWeeklyRepeatSettings( $data ){
-            $eventTimeObj = $this->update($data);
-            // Does the EventTime have weekly day settings? Handle them
-            if( is_array($data->weeklyDays) && !empty($data->weeklyDays) ){
-                // We're updating, so purge first and then we'll recreate after
-                self::adhocQuery(function(\PDO $connection) use($eventTimeObj){
-                    $statement = $connection->prepare("DELETE FROM SchedulizerEventTimeWeekdays WHERE eventTimeID=:eventTimeID");
-                    $statement->bindvalue(':eventTimeID', $eventTimeObj->getID());
-                    return $statement;
-                });
-                foreach($data->weeklyDays AS $weekdayValue){
-                    self::adhocQuery(function(\PDO $connection) use ($eventTimeObj, $weekdayValue){
-                        $statement = $connection->prepare("INSERT INTO SchedulizerEventTimeWeekdays (eventTimeID, repeatWeeklyDay) VALUES (:eventTimeID,:repeatWeeklyDay)");
-                        $statement->bindValue(':eventTimeID', $eventTimeObj->getID());
-                        $statement->bindValue(':repeatWeeklyDay', (int)$weekdayValue);
-                        return $statement;
-                    });
-                }
-            }
-            return $eventTimeObj;
-        }
-
-
         /**
          * Return properties for JSON serialization
          * @return array|mixed
@@ -245,20 +192,6 @@
         /****************************************************************
          * Fetch Methods
          ***************************************************************/
-
-        /**
-         * Delete all by eventID. This happens every time an event is updated; note, because
-         * ...eventTimeWeekdays table references eventTimeID as a foreign key, it'll automatically
-         * cascade deletion whenever an EventTime is nuked.
-         * @param $eventID
-         */
-        public static function purgeAllByEventID( $eventID ){
-            self::adhocQuery(function(\PDO $connection, $tableName) use ($eventID){
-                $statement = $connection->prepare("DELETE FROM {$tableName} WHERE eventID=:eventID");
-                $statement->bindValue(':eventID', $eventID);
-                return $statement;
-            });
-        }
 
         /**
          * Get an instance by ID, AND join weeklyDays as concat'd column (2,5,7)

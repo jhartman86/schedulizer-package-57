@@ -15,12 +15,12 @@
             <li ng-click="setMasterTabActive(1)" ng-class="{'active':activeMasterTab[1]}"><a>Basic Info</a></li>
             <li ng-click="setMasterTabActive(2)" ng-class="{'active':activeMasterTab[2]}"><a>Other</a></li>
             <li class="pull-right">
-                <button type="button" class="btn btn-success save-event" ng-click="submitHandler()">
+                <button type="button" class="btn btn-success save-entity" ng-click="submitHandler()">
                     <span ng-hide="_requesting">Save</span>
                     <img ng-show="_requesting" src="<?php echo SCHEDULIZER_IMAGE_PATH; ?>spinner.svg" />
                 </button>
             </li>
-            <li class="pull-right delete-event" ng-show="entity.id">
+            <li class="pull-right delete-entity" ng-show="entity.id">
                 <button type="button" class="btn btn-warning" ng-click="confirmDelete = !confirmDelete" ng-hide="confirmDelete">
                     Delete Event
                 </button>

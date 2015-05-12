@@ -1,9 +1,11 @@
 <?php namespace Concrete\Package\Schedulizer\Src\Api\Resource {
 
     use Permissions;
+    use \Concrete\Package\Schedulizer\Src\Bin\EntityCloner;
     use \Concrete\Package\Schedulizer\Src\Calendar;
     use \Concrete\Package\Schedulizer\Src\Event;
     use \Concrete\Package\Schedulizer\Src\EventTime;
+    use \Concrete\Package\Schedulizer\Src\EventTimeNullify;
     use \Concrete\Package\Schedulizer\Src\EventTag;
     use \Concrete\Package\Schedulizer\Src\Attribute\Key\SchedulizerEventKey;
     use \Concrete\Package\Schedulizer\Src\Api\ApiException;
@@ -97,21 +99,27 @@
             foreach((array)$data->_timeEntities AS $timeEntityData){
                 $timeEntityData->eventID   = $eventObj->getID();
                 $timeEntityData->versionID = $eventObj->getVersionID();
-                EventTime::createWithWeeklyRepeatSettings($timeEntityData);
+                $newEventTimeObj = EventTime::createWithWeeklyRepeatSettings($timeEntityData);
+
+                // Clone existing nullifiers to the new EventTime
+                if( !empty($timeEntityData->id) ){
+                    $existingTimeEntityObj = EventTime::getByID($timeEntityData->id);
+                    if( is_object($existingTimeEntityObj) ){
+                        $nullifiers = $existingTimeEntityObj->getEventTimeNullifiers();
+                        if( !empty($nullifiers) ){
+                            foreach($nullifiers AS $nullifierObj){
+                                $cloned = EntityCloner::cloneInMemoryAndSetProps($nullifierObj, array(
+                                    'id'          => null,
+                                    'eventTimeID' => $newEventTimeObj->getID()
+                                ));
+                                $cloned->save();
+                            }
+                        }
+                    }
+                }
             }
-            // Update or create new time entities
-//            foreach((array)$data->_timeEntities AS $timeEntityData){
-//                // Update an existing time entity
-//                if( isset($timeEntityData->id) && ((int)$timeEntityData->eventID === $eventObj->getID()) ){
-//                    EventTime::getByID($timeEntityData->id)->updateWithWeeklyRepeatSettings($timeEntityData);
-//                // Create a new one
-//                }else{
-//                    $timeEntityData->eventID = $eventObj->getID();
-//                    EventTime::createWithWeeklyRepeatSettings($timeEntityData);
-//                }
-//            }
+
             // Handle tags
-            //EventTag::purgeAllEventTags($eventObj);
             foreach((array)$data->_tags AS $tagEntityData){
                 /** @var $tagObj EventTag */
                 $tagObj = EventTag::createOrGetExisting($tagEntityData);

@@ -8,31 +8,53 @@
  * context of an instance method (the EventList class). That is to say,
  * that by requiring this file in a method, its treated like copying/pasting
  * this code directly within the method.
+ * @todo: why does this installation of the package fail w/out this check? funky autoloading of the src/ directory?
  */
-// @todo: why does this installation of the package fail w/out this check? funky
-// autoloading of the src/ directory?
 if( !( $this instanceof \Concrete\Package\Schedulizer\Src\EventList ) ){
     return;
 }
 
-$startDate      = $this->startDTO->format(self::DATE_FORMAT);
-$restrictor     = $this->subqueryRestrictions();
-$queryDaySpan   = $this->queryDaySpan;
-$selectColumns  = join(',', array_keys($this->getQueryColumnSettings()));
-// By default, we don't setup a limit per day...
-$limitPerDay = '';
-if( (int)$this->limitPerDay >= 1 ){
-    $limitPerDay = sprintf(' LIMIT %s', (int)$this->limitPerDay);
-}
-$joinForTagFilters = '';
-$groupByInternalRestrictor = '';
-//if( $this->_setupQueryForTagFilter === true ){
-//    $joinForTagFilters = " RIGHT JOIN SchedulizerTaggedEvents stag ON stag.eventID = sevt.eventID ";
-//    // When we right join tags against the internal subquery results, it'll generate
-//    // more duplicate results. This will make those results just get merged by ID
-//    $groupByInternalRestrictor = " GROUP BY sev.id";
-//}
+// Variables passed into the query
+$startDateString    = $queryData->startDTO->format('Y-m-d');
+$queryDaySpan       = $queryData->queryDaySpan;
+$selectColumns      = join(',', array_keys($queryData->selectableColumns));
+$limitPerDay        = ($queryData->limitPerDay >= 1) ? " LIMIT {$queryData->limitPerDay}" : '';
 
+/**
+ * Restriction on internal join.
+ */
+$restrictor = sprintf(
+    "sev.calendarID IN (%s) AND (DATE(sevt.startUTC) < DATE('%s'))",
+    join(',', $queryData->calendarIDs),
+    $queryData->endDTO->format('Y-m-d')
+);
+
+/**
+ * Are we also restricting by eventIDs?
+ */
+if( !empty($queryData->eventIDs) ){
+    $restrictor .= sprintf(
+        " AND sev.id IN (%s)",
+        join(',', $queryData->eventIDs)
+    );
+}
+
+/**
+ * Full text search? This is NOT part of the restrictor, but instead gets run on
+ * the $latestEventRecords join below.
+ */
+$fullTextSearch = '';
+if( !empty($queryData->fullTextSearch) ){
+    $fullTextSearch = sprintf(
+        " AND (MATCH (_eventVersions.title, _eventVersions.description) AGAINST ('%s'))",
+        $queryData->fullTextSearch
+    );
+}
+
+/**
+ * This is effectively the "inner-most" query on top of which everything is joined and filtered
+ * against; this is responsible for getting the event and LATEST version info
+ */
 $latestEventRecords = <<<SQL
     SELECT
         _events.id,
@@ -54,8 +76,21 @@ $latestEventRecords = <<<SQL
       ) _eventVersions2
       ON _eventVersions.eventID = _eventVersions2.eventID
       AND _eventVersions.versionID = _eventVersions2.highestVersionID
+      $fullTextSearch
     ) AS _versionInfo ON _events.id = _versionInfo.eventID
 SQL;
+
+/**
+ * If we're filtering by tags, do a join on the latestEventRecords to filter at that
+ * level before any other outer joins occur higher up.
+ */
+if( !empty($queryData->tagIDs) ){
+$tagIDs = join(',', $queryData->tagIDs);
+$latestEventRecords .= <<<SQL
+    RIGHT JOIN SchedulizerTaggedEvents stag ON stag.eventID = _events.id AND stag.versionID = _versionInfo.versionID
+    WHERE stag.eventTagID IN ($tagIDs) GROUP BY _events.id
+SQL;
+}
 
 /**
  * This query is freaking atrocious - so break it out into a new file where we can
@@ -91,7 +126,7 @@ $sql = <<<SQL
         FROM (
             /* Where the magic happens for dynamically generating a series of dates into the future
              against which we can join event records. */
-            SELECT DATE('$startDate' + INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY) AS _syntheticDate
+            SELECT DATE('$startDateString' + INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY) AS _syntheticDate
             FROM (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as a
             CROSS JOIN (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as b
             CROSS JOIN (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as c
@@ -100,6 +135,7 @@ $sql = <<<SQL
         JOIN (
             SELECT
               sev.id AS eventID,
+              sev.versionID AS versionID,
               sec.id AS calendarID,
               sevt.id AS eventTimeID,
               sev.title,
@@ -141,10 +177,13 @@ $sql = <<<SQL
                 NOTE: eventTimes are versioned along w/ EventVersions
               */
               JOIN SchedulizerEventTime sevt ON sevt.eventID = sev.id AND sevt.versionID = sev.versionID
-
+              /*
+               Join weekday data (if applicable) against the previous joins
+               */
               LEFT JOIN SchedulizerEventTimeWeekdays sevtwd ON sevtwd.eventTimeID = sevt.id
-              $joinForTagFilters
-            WHERE ($restrictor) $groupByInternalRestrictor ORDER BY sevt.startUTC asc $limitPerDay
+
+            /* Filter the results from all the internal joins */
+            WHERE ($restrictor) ORDER BY sevt.startUTC asc $limitPerDay
         ) AS _events
         WHERE(_events.isRepeating = 1
             AND (_events.repeatIndefinite = 1 OR (_synthesized._syntheticDate <= _events.repeatEndUTC AND _events.repeatIndefinite = 0))
@@ -178,7 +217,7 @@ $sql = <<<SQL
         OR (
           (_events.isRepeating = 0 AND _synthesized._syntheticDate = DATE(_events.startUTC))
         )
-    ) AS _eventList;
+    ) AS _eventList ORDER BY computedStartUTC;
 SQL;
 
 // Return the fully composed SQL query

@@ -94,837 +94,6 @@
 angular.module('calendry', []);
 
 angular.module('schedulizer.app', []);
-;(function( window, angular, undefined ){
-    'use strict';
-
-    angular.module('calendry').
-
-
-    /**
-     * Wrap 'moment' from the global scope for angular DI, or set to false if unavailable.
-     */
-    factory('MomentJS', ['$window', '$log', function( $window, $log ){
-        return $window['moment'] ||
-            ($log.warn('Moment.JS not available in global scope, Calendry will be unavailable.'), false);
-    }]).
-
-    /**
-     * Calendry directive
-     */
-    directive('calendry', ['$cacheFactory', '$document', '$log', '$q', 'MomentJS',
-        function factory( $cacheFactory, $document, $log, $q, momentJS ){
-
-            // If momentJS is not available, don't initialize the directive!
-            if( ! momentJS ){
-                $log.warn('Calendry not instantiated due to missing momentJS library');
-                return;
-            }
-
-
-            var _document       = $document[0],
-                _monthMapCache  = $cacheFactory('monthMap'),
-                _docFragsCache  = $cacheFactory('docFrags'),
-                // Cache keys
-                _monthMapKey    = 'YYYY_MM',
-                _eventMapKey    = 'YYYY_MM_DD',
-                // Default settings
-                _defaults       = {
-                    forceListView   : false,
-                    daysOfWeek      : momentJS.weekdaysShort(),
-                    currentMonth    : momentJS(),
-                    dayCellClass    : 'day-node',
-                    parseDateField  : 'startDate',
-                    onMonthChange   : function(){},
-                    onDropEnd       : function(){}
-                };
-
-
-            /**
-             * Instantiable method for creating month maps.
-             * @param monthStartMoment
-             * @constructor
-             */
-            function MonthMap( monthStartMoment ){
-                this.monthStart         = monthStartMoment;
-                this.monthEnd           = momentJS(this.monthStart).endOf('month');
-                this.calendarStart      = momentJS(this.monthStart).subtract(this.monthStart.day(), 'day');
-                this.calendarEnd        = momentJS(this.monthEnd).add((6 - this.monthEnd.day()), 'day');
-                this.calendarDayCount   = Math.abs(this.calendarEnd.diff(this.calendarStart, 'days'));
-                this.calendarDays       = (function( daysInCalendar, calendarStart, _array ){
-                    for( var _i = 0; _i <= daysInCalendar; _i++ ){
-                        _array.push(momentJS(calendarStart).add('days', _i));
-                    }
-                    return _array;
-                })( this.calendarDayCount, this.calendarStart, []);
-            }
-
-
-            /**
-             * Generate a list of moment objects, grouped by weeks visible on the calendar.
-             * @param MomentJS _month : Pass in a moment object to derive the month, or the current month will be
-             * used automatically.
-             * @returns {Array}
-             */
-            function getMonthMap( _month ){
-                var monthStart = momentJS.isMoment(_month) ? momentJS(_month).startOf('month') : momentJS({day:1}),
-                    _cacheKey  = monthStart.format(_monthMapKey);
-
-                // In cache?
-                if( _monthMapCache.get(_cacheKey) ){
-                    return _monthMapCache.get(_cacheKey);
-                }
-
-                // Hasn't been created yet, do so now.
-                _monthMapCache.put(_cacheKey, new MonthMap(monthStart));
-
-                // Return the cache item
-                return _monthMapCache.get(_cacheKey);
-            }
-
-
-            /**
-             * Get the id attribute for a day cell.
-             * @param MomentJS | MomentObj
-             * @returns {string}
-             */
-            function getDayCellID( MomentObj ){
-                return _defaults.dayCellClass + '-' + MomentObj.format('YYYY_MM_DD');
-            }
-
-
-            /**
-             * Passing in a monthMapObj, this will return a document fragment of the
-             * composed calendar DOM elements.
-             * @note: This caches documentFragments the first time they're generated, and
-             * returns CLONED elements each time thereafter.
-             * @param MonthMap | monthMapObj
-             * @returns {DocumentFragment|Object|*}
-             */
-            function getCalendarFragment( monthMapObj ){
-                var momentNow   = momentJS(),
-                    cacheKey    = monthMapObj.monthStart.format('YYYY_MM');
-
-                // If already exists in the cache, just return a cloned instance immediately
-                if( _docFragsCache.get(cacheKey) ){
-                    return _docFragsCache.get(cacheKey).cloneNode(true);
-                }
-
-                // Hasn't been created yet, do so now.
-                var docFragment = _document.createDocumentFragment();
-
-                for( var _i = 0, _len = monthMapObj.calendarDays.length; _i < _len; _i++ ){
-                    var cell    = _document.createElement('div'),
-                        inMonth = monthMapObj.calendarDays[_i].isSame(monthMapObj.monthStart, 'month') ? 'month-incl' : 'month-excl',
-                        isToday = monthMapObj.calendarDays[_i].isSame(momentNow, 'day') ? 'is-today' : '';
-
-                    cell.setAttribute('id', getDayCellID(monthMapObj.calendarDays[_i]));
-                    cell.className = _defaults.dayCellClass + ' ' + inMonth + ' ' + isToday;
-                    cell.innerHTML = '<span class="date-num">'+monthMapObj.calendarDays[_i].format('DD')+'<small>'+monthMapObj.calendarDays[_i].format('MMM')+'</small></span>';
-
-                    docFragment.appendChild(cell);
-                }
-
-                _docFragsCache.put(cacheKey, docFragment);
-
-                // Return a CLONED instance of the document fragment
-                return _docFragsCache.get(cacheKey).cloneNode(true);
-            }
-
-
-            /**
-             * Hex to RGB conversion utility
-             * @param hex
-             * @returns {{r: number, g: number, b: number}}
-             */
-            function hexToRgb(hex) {
-                // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-                var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-                hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-                    return r + r + g + g + b + b;
-                });
-
-                var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                return result ? {
-                    r: parseInt(result[1], 16),
-                    g: parseInt(result[2], 16),
-                    b: parseInt(result[3], 16)
-                } : null;
-            }
-
-
-            function _link( $scope, $element, attrs, Controller, transcludeFn ){
-                /**
-                 * Pass in the directive element and the monthMap we use to generate the
-                 * calendar DOM elements.
-                 * @param $element
-                 * @param monthMap
-                 * @returns null
-                 */
-                function renderCalendarLayout( monthMap ){
-                    // Rebuild the calendar layout (no events attached, just days)
-                    var $renderTo = angular.element($element[0].querySelector('.calendar-render')),
-                        weekRows  = Math.ceil( monthMap.calendarDayCount / 7 );
-
-                    // Set row classes on calendar-body
-                    angular.element($element[0].querySelector('.calendry-body'))
-                        .removeClass('week-rows-4 week-rows-5 week-rows-6')
-                        .addClass('week-rows-' + weekRows);
-
-                    // Render the calendar body
-                    //$renderTo.empty().append( getCalendarFragment(monthMap) );
-                    var fragment = getCalendarFragment(monthMap);
-
-                    // DECORATE EVERY DAY ELEMENT WITH A _moment PROPERTY VIA .data()
-                    Array.prototype.slice.call(fragment.childNodes).forEach(function(node, index){
-                        fragment.childNodes[index] = angular.element(node).data('_moment', monthMap.calendarDays[index]);
-                    });
-
-                    $renderTo.empty().append(fragment);
-                }
-
-
-                /**
-                 * Receive an event list as an array, and update the UI.
-                 * @param eventList array
-                 */
-                function renderEvents( eventList ){
-                    // Clear all previously rendered events
-                    angular.element($element[0].querySelectorAll('.event-cell')).remove();
-
-                    // Variables
-                    var mapped = {};
-
-                    // Loop through every event object and create _moment property, and
-                    // append to mapped
-                    eventList.forEach(function(eventObj){
-                        eventObj._moment = momentJS(eventObj[$scope.instance.parseDateField], momentJS.ISO_8601);
-                        var mappedKey    = eventObj._moment.format(_eventMapKey);
-                        if( ! mapped[mappedKey] ){
-                            mapped[mappedKey] = [];
-                        }
-                        mapped[eventObj._moment.format(_eventMapKey)].push(eventObj);
-                    });
-
-                    /**
-                     * Transclude function callback; note the $cloned element is implicitly
-                     * set by the transcludeFn, and below we use .bind() to pass in the $dayNode
-                     * @param $dayNode
-                     * @param $cloned
-                     * @private
-                     */
-                    function _transcluder( $dayNode, $cloned ){
-                        $dayNode.append($cloned);
-                    }
-
-                    /**
-                     * Loop through every day in the calendar and look for events to
-                     * render.
-                     * @note: the transcluder function in the loop, by default, passes in
-                     * $cloned as the first argument. but since we're using .bind(), it
-                     * re-orders the arguments so that $dayNode is the first arg, THEN
-                     * $cloned
-                     */
-                    $scope.instance.monthMap.calendarDays.forEach(function( dayMoment ){
-                        var eventsForDay = mapped[dayMoment.format(_eventMapKey)];
-                        if( eventsForDay ){
-                            var $dayNode = angular.element($element[0].querySelector('#' + getDayCellID(dayMoment)));
-                            if( $dayNode ){
-                                for(var _i = 0, _len = eventsForDay.length; _i < _len; _i++){
-                                    var $newScope       = $scope.$new(/*true*/);
-                                    $newScope.eventObj  = eventsForDay[_i];
-                                    transcludeFn($newScope, _transcluder.bind(null, $dayNode));
-                                }
-                            }
-                        }
-                    });
-                }
-
-
-                // Any time the monthMap model changes, re-render.
-                $scope.$watch('instance.monthMap', function( monthMapObj ){
-                    if( monthMapObj ){
-                        renderCalendarLayout(monthMapObj);
-                    }
-                });
-
-
-                // Watch for changes to events property
-                $scope.$watch('events', function(eventList){
-                    if( angular.isArray(eventList) ){
-                        renderEvents(eventList);
-                    }
-                });
-
-                // Event click handler
-//                angular.element($element[0].querySelector('.calendry-body')).on('click', function(event){
-//                    // Ghetto delegation from the parent
-//                    var delegator = this,
-//                        target    = (function( _target ){
-//                            while( ! _target.classList.contains('event-cell') ){
-//                                if(_target === delegator){_target = null; break;}
-//                                _target = _target.parentNode;
-//                            }
-//                            return _target;
-//                        })(event.target);
-//
-//                    //console.log(target);
-//                });
-
-            }
-
-
-            return {
-                restrict: 'A',
-                scope: {
-                    instance: '=calendry'
-                },
-                replace: true,
-                templateUrl: '/calendry',
-                transclude: true,
-                link: _link,
-                controller: ['$scope', function( $scope ){
-
-                    var Controller = this;
-
-                    $scope.instance = angular.extend(Controller, _defaults, ($scope.instance || {}));
-
-                    this.goToCurrentMonth = $scope.goToCurrentMonth = function(){
-                        $scope.instance.currentMonth = momentJS();
-                    };
-
-                    this.goToPrevMonth = $scope.goToPrevMonth = function(){
-                        $scope.instance.currentMonth = momentJS($scope.instance.currentMonth).subtract({months:1});
-                    };
-
-                    this.goToNextMonth = $scope.goToNextMonth = function(){
-                        $scope.instance.currentMonth = momentJS($scope.instance.currentMonth).add({months:1});
-                    };
-
-                    this.toggleListView = $scope.toggleListView = function(){
-                        $scope.instance.forceListView = !$scope.instance.forceListView;
-                    };
-
-                    $scope.$watch('instance.currentMonth', function( monthMoment ){
-                        if( monthMoment ){
-                            $scope.instance.monthMap = getMonthMap(monthMoment);
-                            // Dispatch callback
-                            $scope.instance.onMonthChange.apply(Controller, [$scope.instance.monthMap]);
-                        }
-                    });
-
-                    $scope.$watch('instance.events', function( events ){
-                        if( events ){
-                            $scope.events = events;
-                        }
-                    });
-
-                    $scope.helpers = {
-                        eventFontColor: function( color ){
-                            var rgb = hexToRgb(color),
-                                val = Math.round(((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000);
-                            return (val > 125) ? '#000000' : '#FFFFFF';
-                        }
-                    };
-                }]
-            };
-        }
-    ]);
-
-})( window, window.angular );
-angular.module('schedulizer.app').
-
-    directive('eventTimeForm', [function(){
-
-        function _link( scope, $elem, attrs, Controller ){
-            // Nothing done here, everything via the controller
-        }
-
-        return {
-            restrict:       'A',
-            templateUrl:    '/event_timing_form',
-            scope:          {_timeEntity:'=eventTimeForm'},
-            link:           _link,
-            controller: ['$rootScope', '$scope', '$filter', 'API', 'Helpers', '_moment',
-                function( $rootScope, $scope, $filter, API, Helpers, _moment ){
-                    // Option setters
-                    $scope.repeatTypeHandleOptions              = Helpers.repeatTypeHandleOptions();
-                    $scope.repeatIndefiniteOptions              = Helpers.repeatIndefiniteOptions();
-                    $scope.weekdayRepeatOptions                 = Helpers.weekdayRepeatOptions();
-                    $scope.repeatMonthlyMethodOptions           = Helpers.repeatMonthlyMethodOptions();
-                    $scope.repeatMonthlySpecificDayOptions      = Helpers.range(1,31);
-                    $scope.repeatMonthlyDynamicWeekdayOptions   = Helpers.repeatMonthlyDynamicWeekdayOptions();
-                    $scope.repeatMonthlyDynamicWeekOptions      = Helpers.repeatMonthlyDynamicWeekOptions();
-
-                    /**
-                     * Weekday selection is tracked in a different object on the $scope, so we
-                     * use that to determine what to put into entity.weeklyDays.
-                     */
-                    $scope.selectedWeekdays = function(){
-                        var selected = $filter('filter')($scope.weekdayRepeatOptions, {checked: true});
-                        $scope._timeEntity.weeklyDays = selected.map(function( obj ){
-                            return obj.value;
-                        });
-                    };
-
-                    /**
-                     * If weeklyDays has values, set selected values in the scope tracker.
-                     */
-                    if( angular.isArray($scope._timeEntity.weeklyDays) && $scope._timeEntity.weeklyDays.length >= 1 ){
-                        angular.forEach($scope.weekdayRepeatOptions, function( obj ){
-                            obj.checked = $scope._timeEntity.weeklyDays.indexOf(obj.value) > -1;
-                        });
-                    }
-
-                    /**
-                     * These setters will only run if the user clicks "repeat" and all the
-                     * current repeat settings are null.
-                     */
-                    function onChangeRepeatMethodAdjustValuesIfNull(){
-                        // Set repeatEvery frequency
-                        if( $scope._timeEntity.repeatEvery === null ){
-                            $scope._timeEntity.repeatEvery = $scope.repeatEveryOptions[0];
-                        }
-                        // Set repeatIndefinite values
-                        if( $scope._timeEntity.repeatIndefinite === null ){
-                            $scope._timeEntity.repeatIndefinite = $scope.repeatIndefiniteOptions[0].value;
-                        }
-                        // If repeat type is set to monthly and the monthly settings are null...
-                        if( $scope._timeEntity.repeatTypeHandle === $scope.repeatTypeHandleOptions[2].value ){
-                            if( $scope._timeEntity.repeatMonthlyMethod === null ){
-                                $scope._timeEntity.repeatMonthlyMethod = $scope.repeatMonthlyMethodOptions.specific;
-                            }
-                            if( $scope._timeEntity.repeatMonthlySpecificDay === null ){
-                                $scope._timeEntity.repeatMonthlySpecificDay = $scope.repeatMonthlySpecificDayOptions[0];
-                            }
-                            if( $scope._timeEntity.repeatMonthlyOrdinalWeek === null ){
-                                $scope._timeEntity.repeatMonthlyOrdinalWeek = $scope.repeatMonthlyDynamicWeekOptions[0].value;
-                            }
-                            if( $scope._timeEntity.repeatMonthlyOrdinalWeekday === null ){
-                                $scope._timeEntity.repeatMonthlyOrdinalWeekday = $scope.repeatMonthlyDynamicWeekdayOptions[0].value;
-                            }
-                        }
-                    }
-
-                    /**
-                     * Nullify monthly repeat settings.
-                     */
-                    function nullifyMonthlySettings(){
-                        $scope._timeEntity.repeatMonthlyMethod = null;
-                        $scope._timeEntity.repeatMonthlyOrdinalWeek = null;
-                        $scope._timeEntity.repeatMonthlyOrdinalWeekday = null;
-                        $scope._timeEntity.repeatMonthlySpecificDay = null;
-                    }
-
-                    /**
-                     * Nullify weekly repeat settings.
-                     */
-                    function nullifyWeeklySettings(){
-                        $scope._timeEntity.weeklyDays = [];
-                        angular.forEach($scope.weekdayRepeatOptions, function( obj ){
-                            obj.checked = false;
-                        });
-                    }
-
-                    /**
-                     * Nullify all repeat settings.
-                     */
-                    function nullifyAllRepeatSettings(){
-                        nullifyMonthlySettings();
-                        nullifyWeeklySettings();
-                        $scope._timeEntity.repeatEndUTC = null;
-                        $scope._timeEntity.repeatEvery = null;
-                        $scope._timeEntity.repeatIndefinite = null;
-                        $scope._timeEntity.repeatTypeHandle = null;
-                    }
-
-                    /**
-                     * When the repeat type handle is switched, set default values
-                     * if some are existing, and nullify others.
-                     */
-                    $scope.$watch('_timeEntity.repeatTypeHandle', function( val ){
-                        switch(val){
-                            case $scope.repeatTypeHandleOptions[0].value: // daily
-                                $scope.repeatEveryOptions = Helpers.range(1,31);
-                                nullifyMonthlySettings();
-                                nullifyWeeklySettings();
-                                break;
-                            case $scope.repeatTypeHandleOptions[1].value: // weekly
-                                $scope.repeatEveryOptions = Helpers.range(1,30);
-                                nullifyMonthlySettings();
-                                break;
-                            case $scope.repeatTypeHandleOptions[2].value: // monthly
-                                $scope.repeatEveryOptions = Helpers.range(1,11);
-                                nullifyWeeklySettings();
-                                break;
-                            case $scope.repeatTypeHandleOptions[3].value: // yearly
-                                $scope.repeatEveryOptions = Helpers.range(1,5);
-                                nullifyMonthlySettings();
-                                nullifyWeeklySettings();
-                                break;
-                        }
-                        if( $scope._timeEntity.repeatTypeHandle !== null ){
-                            onChangeRepeatMethodAdjustValuesIfNull();
-                        }
-                    });
-
-                    /**
-                     * If set to repeat indefinitely, nullify repeatEndUTC.
-                     */
-                    $scope.$watch('_timeEntity.repeatIndefinite', function( value ){
-                        if( value === true ){
-                            $scope._timeEntity.repeatEndUTC = null;
-                        }
-                    });
-
-                    /**
-                     * Update the endUTC when startUTC is adjusted.
-                     */
-                    $scope.$watch('_timeEntity.startUTC', function( dateObj ){
-                        if( dateObj ){
-                            $scope.calendarEndMinDate = _moment(dateObj).subtract(1, 'day');
-                            if( _moment($scope._timeEntity.endUTC).isBefore(_moment($scope._timeEntity.startUTC)) ){
-                                $scope._timeEntity.endUTC = _moment($scope._timeEntity.startUTC);
-                            }
-                        }
-                    });
-
-                    /**
-                     * This takes care of syncronizing repeat settings, including when
-                     * the time form is initialized.
-                     */
-                    $scope.$watch('_timeEntity.isRepeating', function( value ){
-                        if( value === true && $scope._timeEntity.repeatTypeHandle === null ){
-                            $scope._timeEntity.repeatTypeHandle = $scope.repeatTypeHandleOptions[0].value;
-                        }
-                        if( value === false ){
-                            nullifyAllRepeatSettings();
-                        }
-                    });
-
-                    /**
-                     * Nullifiers
-                     */
-                    $scope.showNullifiers = false;
-                    API.eventNullify.query({eventTimeID:$scope._timeEntity.id}, function( resp ){
-                        $scope.hasNullifiers = resp.length >= 1;
-                        angular.forEach(resp, function( resource ){
-                            resource._moment = _moment.utc(resource.hideOnDate);
-                        });
-                        $scope.configuredNullifiers = resp;
-                    });
-
-                    /**
-                     * Delete an existing nullifer record.
-                     * @param resource
-                     */
-                    $scope.cancelNullifier = function( resource ){
-                        resource.$delete(function( resp ){
-                            $rootScope.$emit('calendar.refresh');
-                        });
-                    };
-                }
-            ]
-        };
-    }]);
-angular.module('schedulizer.app').
-
-    /**
-     * Will automatically initialize modalWindow directive; and we don't have to worry about
-     * leaving this in HTML somewhere.
-     */
-    run([function(){
-        angular.element(document.querySelector('body')).append('<div modal-window class="schedulizer-app" ng-class="manager.classes"><a class="icon-close default-closer" modal-close></a><div class="modal-inner" ng-include="manager.data.source"></div></div>');
-    }]).
-
-    /**
-     * ModalManager
-     */
-    factory('ModalManager', [function(){
-        return {
-            classes : {open: false},
-            data    : {source: null}
-        };
-    }]).
-
-    /**
-     * Elements that should trigger opening a modal window
-     * @returns {{restrict: string, scope: boolean, link: Function, controller: Array}}
-     */
-    directive('modalize', [function(){
-
-            /**
-             * @param scope
-             * @param $element
-             * @param attrs
-             * @private
-             */
-            function _link( scope, $element, attrs ){
-                $element.on('click', function(){
-                    scope.$apply(function(){
-                        scope.manager.data = angular.extend({
-                            source: attrs.modalize
-                        }, scope.using);
-                    });
-                });
-            }
-
-            return {
-                restrict:   'A',
-                scope:      {using: '=using'},
-                link:       _link,
-                controller: ['$scope', 'ModalManager', function( $scope, ModalManager ){
-                    $scope.manager = ModalManager;
-                }]
-            };
-        }
-    ]).
-
-    /**
-     * Close the modal window
-     */
-    directive('modalClose', ['ModalManager', function( ModalManager ){
-
-        function _link( scope, $elem, attrs ){
-            $elem.on('click', function(){
-                scope.$apply(function(){
-                    ModalManager.classes.open = false;
-                    ModalManager.data = null;
-                });
-            });
-        }
-
-        return {
-            restrict: 'A',
-            link: _link
-        };
-    }]).
-
-    /**
-     * Actual ModalWindow directive handler
-     * @param Tween
-     * @returns {{restrict: string, scope: boolean, link: Function, controller: Array}}
-     */
-    directive('modalWindow', [function(){
-
-        /**
-         * Link function with ModalManager service bound to the scope
-         * @param scope
-         * @param $elem
-         * @param attrs
-         * @private
-         */
-        function _link( scope, $elem, attrs ){
-            scope.$watch('manager.classes.open', function(_val){
-                angular.element(document.documentElement).toggleClass('schedulizer-modal', _val);
-                if( ! _val ){
-                    scope.manager.data = null;
-                }
-            });
-        }
-
-        return {
-            restrict:   'A',
-            scope:      true,
-            link:       _link,
-            controller: ['$scope', 'ModalManager', function( $scope, ModalManager ){
-                $scope.manager = ModalManager;
-
-                $scope.$on('$includeContentLoaded', function(){
-                    $scope.manager.classes.open = true;
-                });
-            }]
-        };
-        }
-    ]);
-
-angular.module('schedulizer.app').
-
-    directive('redactorized', [function(){
-
-        /**
-         * Redactor settings, pulled from Concrete5 defaults
-         * @type {{minHeight: number, concrete5: {filemanager: boolean, sitemap: boolean, lightbox: boolean}, plugins: Array}}
-         */
-        var settings = {
-            minHeight: 200,
-            concrete5: {
-                filemanager: true,
-                sitemap: true,
-                lightbox: true
-            },
-            plugins: ['fontcolor', 'concrete5','underline']
-        };
-
-        /**
-         * @param scope
-         * @param $element
-         * @param attrs
-         * @param Controller ngModel controller
-         * @private
-         */
-        function _link( scope, $elem, attrs, Controller ){
-            // ngModel's $render function
-            Controller.$render = function(){
-                // Set the initial value, if any
-                $elem.val(Controller.$viewValue);
-
-                // Initialize redactor, binding change callback
-                $elem.redactor(angular.extend(settings, {
-                    changeCallback: function(){
-                        Controller.$setViewValue(this.get());
-                        //scope.$apply(Controller.$setViewValue(this.get()));
-                    }
-                }));
-
-                if( Controller.$viewValue ){
-                    $elem.redactor('set', Controller.$viewValue);
-                }
-            };
-        }
-
-        return {
-            priority:   0,
-            require:    '?ngModel',
-            restrict:   'A',
-            link:       _link
-        };
-    }]);
-angular.module('schedulizer.app').
-
-    factory('Helpers', ['_moment', function factory(_moment){
-
-        this.range = function( start, end ){
-            var arr = [];
-            for(var i = start; i <= end; i++){
-                arr.push(i);
-            }
-            return arr;
-        };
-
-        this.repeatTypeHandleOptions = function(){
-            return [
-                {label: 'Days', value: 'daily'},
-                {label: 'Weeks', value: 'weekly'},
-                {label: 'Months', value: 'monthly'},
-                {label: 'Years', value: 'yearly'}
-            ];
-        };
-
-        this.repeatIndefiniteOptions = function(){
-            return [
-                {label: 'Forever', value: true},
-                {label: 'Until', value: false}
-            ];
-        };
-
-        this.weekdayRepeatOptions = function(){
-            return [
-                {label: 'Sun', value: 1},
-                {label: 'Mon', value: 2},
-                {label: 'Tue', value: 3},
-                {label: 'Wed', value: 4},
-                {label: 'Thu', value: 5},
-                {label: 'Fri', value: 6},
-                {label: 'Sat', value: 7}
-            ];
-        };
-
-        this.repeatMonthlyMethodOptions = function(){
-            return {
-                specific    : 'specific',
-                dynamic     : 'ordinal'
-            };
-        };
-
-        this.repeatMonthlyDynamicWeekOptions = function(){
-            return [
-                {label: 'First', value: 1},
-                {label: 'Second', value: 2},
-                {label: 'Third', value: 3},
-                {label: 'Fourth', value: 4},
-                {label: 'Last', value: 5}
-            ];
-        };
-
-        this.repeatMonthlyDynamicWeekdayOptions = function(){
-            return [
-                {label: 'Sunday', value: 1},
-                {label: 'Monday', value: 2},
-                {label: 'Tuesday', value: 3},
-                {label: 'Wednesday', value: 4},
-                {label: 'Thursday', value: 5},
-                {label: 'Friday', value: 6},
-                {label: 'Saturday', value: 7}
-            ];
-        };
-
-        this.eventColorOptions = function(){
-            return [
-                {value: '#A3D900'},
-                {value: '#3A87AD'},
-                {value: '#DE4E56'},
-                {value: '#BFBFFF'},
-                {value: '#FFFF73'},
-                {value: '#FFA64D'},
-                {value: '#CCCCCC'},
-                {value: '#00B7FF'},
-                {value: '#222222'}
-            ];
-        };
-
-        return this;
-    }]);
-angular.module('schedulizer.app').
-
-    filter('numberContraction', function($filter) {
-
-        var suffixes = ["th", "st", "nd", "rd"];
-
-        return function(input) {
-            var relevant = (input < 20) ? input : input % (Math.floor(input / 10) * 10);
-            var suffix   = (relevant <= 3) ? suffixes[relevant] : suffixes[0];
-            return suffix;
-        };
-    });
-angular.module('schedulizer.app').
-
-    /**
-     * AngularJS default filter with the following expression:
-     * "person in people | filter: {name: $select.search, age: $select.search}"
-     * performs a AND between 'name: $select.search' and 'age: $select.search'.
-     * We want to perform a OR.
-     * @link: https://github.com/angular-ui/ui-select/blob/master/examples/demo.js#L134
-     */
-    filter('propsFilter', function() {
-        return function(items, props) {
-            var out = [];
-
-            if (angular.isArray(items)) {
-                items.forEach(function(item) {
-                    var itemMatches = false;
-
-                    var keys = Object.keys(props);
-                    for (var i = 0; i < keys.length; i++) {
-                        var prop = keys[i];
-                        var text = props[prop].toLowerCase();
-                        if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
-                            itemMatches = true;
-                            break;
-                        }
-                    }
-
-                    if (itemMatches) {
-                        out.push(item);
-                    }
-                });
-            } else {
-                // Let the output be the input untouched
-                out = items;
-            }
-
-            return out;
-        };
-    });
 angular.module('schedulizer.app').
 
     controller('CtrlCalendarForm', ['$scope', '$q', '$window', 'ModalManager', 'API',
@@ -970,6 +139,18 @@ angular.module('schedulizer.app').
                         $window.location.href = API._routes.generate('dashboard',['calendars','manage',resp.id]);
                     }
                 );
+            };
+
+            /**
+             * Delete the entity.
+             */
+            $scope.confirmDelete = false;
+            $scope.deleteEvent = function(){
+                $scope.entity.$delete().then(function( resp ){
+                    if( resp.ok ){
+                        $window.location.href = API._routes.generate('dashboard', ['calendars']);
+                    }
+                });
             };
         }
     ]);
@@ -1387,6 +568,500 @@ angular.module('schedulizer.app').
     ]);
 angular.module('schedulizer.app').
 
+    filter('numberContraction', function($filter) {
+
+        var suffixes = ["th", "st", "nd", "rd"];
+
+        return function(input) {
+            var relevant = (input < 20) ? input : input % (Math.floor(input / 10) * 10);
+            var suffix   = (relevant <= 3) ? suffixes[relevant] : suffixes[0];
+            return suffix;
+        };
+    });
+angular.module('schedulizer.app').
+
+    /**
+     * AngularJS default filter with the following expression:
+     * "person in people | filter: {name: $select.search, age: $select.search}"
+     * performs a AND between 'name: $select.search' and 'age: $select.search'.
+     * We want to perform a OR.
+     * @link: https://github.com/angular-ui/ui-select/blob/master/examples/demo.js#L134
+     */
+    filter('propsFilter', function() {
+        return function(items, props) {
+            var out = [];
+
+            if (angular.isArray(items)) {
+                items.forEach(function(item) {
+                    var itemMatches = false;
+
+                    var keys = Object.keys(props);
+                    for (var i = 0; i < keys.length; i++) {
+                        var prop = keys[i];
+                        var text = props[prop].toLowerCase();
+                        if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                            itemMatches = true;
+                            break;
+                        }
+                    }
+
+                    if (itemMatches) {
+                        out.push(item);
+                    }
+                });
+            } else {
+                // Let the output be the input untouched
+                out = items;
+            }
+
+            return out;
+        };
+    });
+angular.module('schedulizer.app').
+
+    factory('Helpers', ['_moment', function factory(_moment){
+
+        this.range = function( start, end ){
+            var arr = [];
+            for(var i = start; i <= end; i++){
+                arr.push(i);
+            }
+            return arr;
+        };
+
+        this.repeatTypeHandleOptions = function(){
+            return [
+                {label: 'Days', value: 'daily'},
+                {label: 'Weeks', value: 'weekly'},
+                {label: 'Months', value: 'monthly'},
+                {label: 'Years', value: 'yearly'}
+            ];
+        };
+
+        this.repeatIndefiniteOptions = function(){
+            return [
+                {label: 'Forever', value: true},
+                {label: 'Until', value: false}
+            ];
+        };
+
+        this.weekdayRepeatOptions = function(){
+            return [
+                {label: 'Sun', value: 1},
+                {label: 'Mon', value: 2},
+                {label: 'Tue', value: 3},
+                {label: 'Wed', value: 4},
+                {label: 'Thu', value: 5},
+                {label: 'Fri', value: 6},
+                {label: 'Sat', value: 7}
+            ];
+        };
+
+        this.repeatMonthlyMethodOptions = function(){
+            return {
+                specific    : 'specific',
+                dynamic     : 'ordinal'
+            };
+        };
+
+        this.repeatMonthlyDynamicWeekOptions = function(){
+            return [
+                {label: 'First', value: 1},
+                {label: 'Second', value: 2},
+                {label: 'Third', value: 3},
+                {label: 'Fourth', value: 4},
+                {label: 'Last', value: 5}
+            ];
+        };
+
+        this.repeatMonthlyDynamicWeekdayOptions = function(){
+            return [
+                {label: 'Sunday', value: 1},
+                {label: 'Monday', value: 2},
+                {label: 'Tuesday', value: 3},
+                {label: 'Wednesday', value: 4},
+                {label: 'Thursday', value: 5},
+                {label: 'Friday', value: 6},
+                {label: 'Saturday', value: 7}
+            ];
+        };
+
+        this.eventColorOptions = function(){
+            return [
+                {value: '#A3D900'},
+                {value: '#3A87AD'},
+                {value: '#DE4E56'},
+                {value: '#BFBFFF'},
+                {value: '#FFFF73'},
+                {value: '#FFA64D'},
+                {value: '#CCCCCC'},
+                {value: '#00B7FF'},
+                {value: '#222222'}
+            ];
+        };
+
+        return this;
+    }]);
+angular.module('schedulizer.app').
+
+    directive('eventTimeForm', [function(){
+
+        function _link( scope, $elem, attrs, Controller ){
+            // Nothing done here, everything via the controller
+        }
+
+        return {
+            restrict:       'A',
+            templateUrl:    '/event_timing_form',
+            scope:          {_timeEntity:'=eventTimeForm'},
+            link:           _link,
+            controller: ['$rootScope', '$scope', '$filter', 'API', 'Helpers', '_moment',
+                function( $rootScope, $scope, $filter, API, Helpers, _moment ){
+                    // Option setters
+                    $scope.repeatTypeHandleOptions              = Helpers.repeatTypeHandleOptions();
+                    $scope.repeatIndefiniteOptions              = Helpers.repeatIndefiniteOptions();
+                    $scope.weekdayRepeatOptions                 = Helpers.weekdayRepeatOptions();
+                    $scope.repeatMonthlyMethodOptions           = Helpers.repeatMonthlyMethodOptions();
+                    $scope.repeatMonthlySpecificDayOptions      = Helpers.range(1,31);
+                    $scope.repeatMonthlyDynamicWeekdayOptions   = Helpers.repeatMonthlyDynamicWeekdayOptions();
+                    $scope.repeatMonthlyDynamicWeekOptions      = Helpers.repeatMonthlyDynamicWeekOptions();
+
+                    /**
+                     * Weekday selection is tracked in a different object on the $scope, so we
+                     * use that to determine what to put into entity.weeklyDays.
+                     */
+                    $scope.selectedWeekdays = function(){
+                        var selected = $filter('filter')($scope.weekdayRepeatOptions, {checked: true});
+                        $scope._timeEntity.weeklyDays = selected.map(function( obj ){
+                            return obj.value;
+                        });
+                    };
+
+                    /**
+                     * If weeklyDays has values, set selected values in the scope tracker.
+                     */
+                    if( angular.isArray($scope._timeEntity.weeklyDays) && $scope._timeEntity.weeklyDays.length >= 1 ){
+                        angular.forEach($scope.weekdayRepeatOptions, function( obj ){
+                            obj.checked = $scope._timeEntity.weeklyDays.indexOf(obj.value) > -1;
+                        });
+                    }
+
+                    /**
+                     * These setters will only run if the user clicks "repeat" and all the
+                     * current repeat settings are null.
+                     */
+                    function onChangeRepeatMethodAdjustValuesIfNull(){
+                        // Set repeatEvery frequency
+                        if( $scope._timeEntity.repeatEvery === null ){
+                            $scope._timeEntity.repeatEvery = $scope.repeatEveryOptions[0];
+                        }
+                        // Set repeatIndefinite values
+                        if( $scope._timeEntity.repeatIndefinite === null ){
+                            $scope._timeEntity.repeatIndefinite = $scope.repeatIndefiniteOptions[0].value;
+                        }
+                        // If repeat type is set to monthly and the monthly settings are null...
+                        if( $scope._timeEntity.repeatTypeHandle === $scope.repeatTypeHandleOptions[2].value ){
+                            if( $scope._timeEntity.repeatMonthlyMethod === null ){
+                                $scope._timeEntity.repeatMonthlyMethod = $scope.repeatMonthlyMethodOptions.specific;
+                            }
+                            if( $scope._timeEntity.repeatMonthlySpecificDay === null ){
+                                $scope._timeEntity.repeatMonthlySpecificDay = $scope.repeatMonthlySpecificDayOptions[0];
+                            }
+                            if( $scope._timeEntity.repeatMonthlyOrdinalWeek === null ){
+                                $scope._timeEntity.repeatMonthlyOrdinalWeek = $scope.repeatMonthlyDynamicWeekOptions[0].value;
+                            }
+                            if( $scope._timeEntity.repeatMonthlyOrdinalWeekday === null ){
+                                $scope._timeEntity.repeatMonthlyOrdinalWeekday = $scope.repeatMonthlyDynamicWeekdayOptions[0].value;
+                            }
+                        }
+                    }
+
+                    /**
+                     * Nullify monthly repeat settings.
+                     */
+                    function nullifyMonthlySettings(){
+                        $scope._timeEntity.repeatMonthlyMethod = null;
+                        $scope._timeEntity.repeatMonthlyOrdinalWeek = null;
+                        $scope._timeEntity.repeatMonthlyOrdinalWeekday = null;
+                        $scope._timeEntity.repeatMonthlySpecificDay = null;
+                    }
+
+                    /**
+                     * Nullify weekly repeat settings.
+                     */
+                    function nullifyWeeklySettings(){
+                        $scope._timeEntity.weeklyDays = [];
+                        angular.forEach($scope.weekdayRepeatOptions, function( obj ){
+                            obj.checked = false;
+                        });
+                    }
+
+                    /**
+                     * Nullify all repeat settings.
+                     */
+                    function nullifyAllRepeatSettings(){
+                        nullifyMonthlySettings();
+                        nullifyWeeklySettings();
+                        $scope._timeEntity.repeatEndUTC = null;
+                        $scope._timeEntity.repeatEvery = null;
+                        $scope._timeEntity.repeatIndefinite = null;
+                        $scope._timeEntity.repeatTypeHandle = null;
+                    }
+
+                    /**
+                     * When the repeat type handle is switched, set default values
+                     * if some are existing, and nullify others.
+                     */
+                    $scope.$watch('_timeEntity.repeatTypeHandle', function( val ){
+                        switch(val){
+                            case $scope.repeatTypeHandleOptions[0].value: // daily
+                                $scope.repeatEveryOptions = Helpers.range(1,31);
+                                nullifyMonthlySettings();
+                                nullifyWeeklySettings();
+                                break;
+                            case $scope.repeatTypeHandleOptions[1].value: // weekly
+                                $scope.repeatEveryOptions = Helpers.range(1,30);
+                                nullifyMonthlySettings();
+                                break;
+                            case $scope.repeatTypeHandleOptions[2].value: // monthly
+                                $scope.repeatEveryOptions = Helpers.range(1,11);
+                                nullifyWeeklySettings();
+                                break;
+                            case $scope.repeatTypeHandleOptions[3].value: // yearly
+                                $scope.repeatEveryOptions = Helpers.range(1,5);
+                                nullifyMonthlySettings();
+                                nullifyWeeklySettings();
+                                break;
+                        }
+                        if( $scope._timeEntity.repeatTypeHandle !== null ){
+                            onChangeRepeatMethodAdjustValuesIfNull();
+                        }
+                    });
+
+                    /**
+                     * If set to repeat indefinitely, nullify repeatEndUTC.
+                     */
+                    $scope.$watch('_timeEntity.repeatIndefinite', function( value ){
+                        if( value === true ){
+                            $scope._timeEntity.repeatEndUTC = null;
+                        }
+                    });
+
+                    /**
+                     * Update the endUTC when startUTC is adjusted.
+                     */
+                    $scope.$watch('_timeEntity.startUTC', function( dateObj ){
+                        if( dateObj ){
+                            $scope.calendarEndMinDate = _moment(dateObj).subtract(1, 'day');
+                            if( _moment($scope._timeEntity.endUTC).isBefore(_moment($scope._timeEntity.startUTC)) ){
+                                $scope._timeEntity.endUTC = _moment($scope._timeEntity.startUTC);
+                            }
+                        }
+                    });
+
+                    /**
+                     * This takes care of syncronizing repeat settings, including when
+                     * the time form is initialized.
+                     */
+                    $scope.$watch('_timeEntity.isRepeating', function( value ){
+                        if( value === true && $scope._timeEntity.repeatTypeHandle === null ){
+                            $scope._timeEntity.repeatTypeHandle = $scope.repeatTypeHandleOptions[0].value;
+                        }
+                        if( value === false ){
+                            nullifyAllRepeatSettings();
+                        }
+                    });
+
+                    /**
+                     * Nullifiers
+                     */
+                    $scope.showNullifiers = false;
+                    API.eventNullify.query({eventTimeID:$scope._timeEntity.id}, function( resp ){
+                        $scope.hasNullifiers = resp.length >= 1;
+                        angular.forEach(resp, function( resource ){
+                            resource._moment = _moment.utc(resource.hideOnDate);
+                        });
+                        $scope.configuredNullifiers = resp;
+                    });
+
+                    /**
+                     * Delete an existing nullifer record.
+                     * @param resource
+                     */
+                    $scope.cancelNullifier = function( resource ){
+                        resource.$delete(function( resp ){
+                            $rootScope.$emit('calendar.refresh');
+                        });
+                    };
+                }
+            ]
+        };
+    }]);
+angular.module('schedulizer.app').
+
+    /**
+     * Will automatically initialize modalWindow directive; and we don't have to worry about
+     * leaving this in HTML somewhere.
+     */
+    run([function(){
+        angular.element(document.querySelector('body')).append('<div modal-window class="schedulizer-app" ng-class="manager.classes"><a class="icon-close default-closer" modal-close></a><div class="modal-inner" ng-include="manager.data.source"></div></div>');
+    }]).
+
+    /**
+     * ModalManager
+     */
+    factory('ModalManager', [function(){
+        return {
+            classes : {open: false},
+            data    : {source: null}
+        };
+    }]).
+
+    /**
+     * Elements that should trigger opening a modal window
+     * @returns {{restrict: string, scope: boolean, link: Function, controller: Array}}
+     */
+    directive('modalize', [function(){
+
+            /**
+             * @param scope
+             * @param $element
+             * @param attrs
+             * @private
+             */
+            function _link( scope, $element, attrs ){
+                $element.on('click', function(){
+                    scope.$apply(function(){
+                        scope.manager.data = angular.extend({
+                            source: attrs.modalize
+                        }, scope.using);
+                    });
+                });
+            }
+
+            return {
+                restrict:   'A',
+                scope:      {using: '=using'},
+                link:       _link,
+                controller: ['$scope', 'ModalManager', function( $scope, ModalManager ){
+                    $scope.manager = ModalManager;
+                }]
+            };
+        }
+    ]).
+
+    /**
+     * Close the modal window
+     */
+    directive('modalClose', ['ModalManager', function( ModalManager ){
+
+        function _link( scope, $elem, attrs ){
+            $elem.on('click', function(){
+                scope.$apply(function(){
+                    ModalManager.classes.open = false;
+                    ModalManager.data = null;
+                });
+            });
+        }
+
+        return {
+            restrict: 'A',
+            link: _link
+        };
+    }]).
+
+    /**
+     * Actual ModalWindow directive handler
+     * @param Tween
+     * @returns {{restrict: string, scope: boolean, link: Function, controller: Array}}
+     */
+    directive('modalWindow', [function(){
+
+        /**
+         * Link function with ModalManager service bound to the scope
+         * @param scope
+         * @param $elem
+         * @param attrs
+         * @private
+         */
+        function _link( scope, $elem, attrs ){
+            scope.$watch('manager.classes.open', function(_val){
+                angular.element(document.documentElement).toggleClass('schedulizer-modal', _val);
+                if( ! _val ){
+                    scope.manager.data = null;
+                }
+            });
+        }
+
+        return {
+            restrict:   'A',
+            scope:      true,
+            link:       _link,
+            controller: ['$scope', 'ModalManager', function( $scope, ModalManager ){
+                $scope.manager = ModalManager;
+
+                $scope.$on('$includeContentLoaded', function(){
+                    $scope.manager.classes.open = true;
+                });
+            }]
+        };
+        }
+    ]);
+
+angular.module('schedulizer.app').
+
+    directive('redactorized', [function(){
+
+        /**
+         * Redactor settings, pulled from Concrete5 defaults
+         * @type {{minHeight: number, concrete5: {filemanager: boolean, sitemap: boolean, lightbox: boolean}, plugins: Array}}
+         */
+        var settings = {
+            minHeight: 200,
+            concrete5: {
+                filemanager: true,
+                sitemap: true,
+                lightbox: true
+            },
+            plugins: ['fontcolor', 'concrete5','underline']
+        };
+
+        /**
+         * @param scope
+         * @param $element
+         * @param attrs
+         * @param Controller ngModel controller
+         * @private
+         */
+        function _link( scope, $elem, attrs, Controller ){
+            // ngModel's $render function
+            Controller.$render = function(){
+                // Set the initial value, if any
+                $elem.val(Controller.$viewValue);
+
+                // Initialize redactor, binding change callback
+                $elem.redactor(angular.extend(settings, {
+                    changeCallback: function(){
+                        Controller.$setViewValue(this.get());
+                        //scope.$apply(Controller.$setViewValue(this.get()));
+                    }
+                }));
+
+                if( Controller.$viewValue ){
+                    $elem.redactor('set', Controller.$viewValue);
+                }
+            };
+        }
+
+        return {
+            priority:   0,
+            require:    '?ngModel',
+            restrict:   'A',
+            link:       _link
+        };
+    }]);
+angular.module('schedulizer.app').
+
     /**
      * @description MomentJS provider
      * @param $window
@@ -1400,3 +1075,340 @@ angular.module('schedulizer.app').
             }
         ];
     });
+;(function( window, angular, undefined ){
+    'use strict';
+
+    angular.module('calendry').
+
+
+    /**
+     * Wrap 'moment' from the global scope for angular DI, or set to false if unavailable.
+     */
+    factory('MomentJS', ['$window', '$log', function( $window, $log ){
+        return $window['moment'] ||
+            ($log.warn('Moment.JS not available in global scope, Calendry will be unavailable.'), false);
+    }]).
+
+    /**
+     * Calendry directive
+     */
+    directive('calendry', ['$cacheFactory', '$document', '$log', '$q', 'MomentJS',
+        function factory( $cacheFactory, $document, $log, $q, momentJS ){
+
+            // If momentJS is not available, don't initialize the directive!
+            if( ! momentJS ){
+                $log.warn('Calendry not instantiated due to missing momentJS library');
+                return;
+            }
+
+
+            var _document       = $document[0],
+                _monthMapCache  = $cacheFactory('monthMap'),
+                _docFragsCache  = $cacheFactory('docFrags'),
+                // Cache keys
+                _monthMapKey    = 'YYYY_MM',
+                _eventMapKey    = 'YYYY_MM_DD',
+                // Default settings
+                _defaults       = {
+                    forceListView   : false,
+                    daysOfWeek      : momentJS.weekdaysShort(),
+                    currentMonth    : momentJS(),
+                    dayCellClass    : 'day-node',
+                    parseDateField  : 'startDate',
+                    onMonthChange   : function(){},
+                    onDropEnd       : function(){}
+                };
+
+
+            /**
+             * Instantiable method for creating month maps.
+             * @param monthStartMoment
+             * @constructor
+             */
+            function MonthMap( monthStartMoment ){
+                this.monthStart         = monthStartMoment;
+                this.monthEnd           = momentJS(this.monthStart).endOf('month');
+                this.calendarStart      = momentJS(this.monthStart).subtract(this.monthStart.day(), 'day');
+                this.calendarEnd        = momentJS(this.monthEnd).add((6 - this.monthEnd.day()), 'day');
+                this.calendarDayCount   = Math.abs(this.calendarEnd.diff(this.calendarStart, 'days'));
+                this.calendarDays       = (function( daysInCalendar, calendarStart, _array ){
+                    for( var _i = 0; _i <= daysInCalendar; _i++ ){
+                        _array.push(momentJS(calendarStart).add('days', _i));
+                    }
+                    return _array;
+                })( this.calendarDayCount, this.calendarStart, []);
+            }
+
+
+            /**
+             * Generate a list of moment objects, grouped by weeks visible on the calendar.
+             * @param MomentJS _month : Pass in a moment object to derive the month, or the current month will be
+             * used automatically.
+             * @returns {Array}
+             */
+            function getMonthMap( _month ){
+                var monthStart = momentJS.isMoment(_month) ? momentJS(_month).startOf('month') : momentJS({day:1}),
+                    _cacheKey  = monthStart.format(_monthMapKey);
+
+                // In cache?
+                if( _monthMapCache.get(_cacheKey) ){
+                    return _monthMapCache.get(_cacheKey);
+                }
+
+                // Hasn't been created yet, do so now.
+                _monthMapCache.put(_cacheKey, new MonthMap(monthStart));
+
+                // Return the cache item
+                return _monthMapCache.get(_cacheKey);
+            }
+
+
+            /**
+             * Get the id attribute for a day cell.
+             * @param MomentJS | MomentObj
+             * @returns {string}
+             */
+            function getDayCellID( MomentObj ){
+                return _defaults.dayCellClass + '-' + MomentObj.format('YYYY_MM_DD');
+            }
+
+
+            /**
+             * Passing in a monthMapObj, this will return a document fragment of the
+             * composed calendar DOM elements.
+             * @note: This caches documentFragments the first time they're generated, and
+             * returns CLONED elements each time thereafter.
+             * @param MonthMap | monthMapObj
+             * @returns {DocumentFragment|Object|*}
+             */
+            function getCalendarFragment( monthMapObj ){
+                var momentNow   = momentJS(),
+                    cacheKey    = monthMapObj.monthStart.format('YYYY_MM');
+
+                // If already exists in the cache, just return a cloned instance immediately
+                if( _docFragsCache.get(cacheKey) ){
+                    return _docFragsCache.get(cacheKey).cloneNode(true);
+                }
+
+                // Hasn't been created yet, do so now.
+                var docFragment = _document.createDocumentFragment();
+
+                for( var _i = 0, _len = monthMapObj.calendarDays.length; _i < _len; _i++ ){
+                    var cell    = _document.createElement('div'),
+                        inMonth = monthMapObj.calendarDays[_i].isSame(monthMapObj.monthStart, 'month') ? 'month-incl' : 'month-excl',
+                        isToday = monthMapObj.calendarDays[_i].isSame(momentNow, 'day') ? 'is-today' : '';
+
+                    cell.setAttribute('id', getDayCellID(monthMapObj.calendarDays[_i]));
+                    cell.className = _defaults.dayCellClass + ' ' + inMonth + ' ' + isToday;
+                    cell.innerHTML = '<span class="date-num">'+monthMapObj.calendarDays[_i].format('DD')+'<small>'+monthMapObj.calendarDays[_i].format('MMM')+'</small></span>';
+
+                    docFragment.appendChild(cell);
+                }
+
+                _docFragsCache.put(cacheKey, docFragment);
+
+                // Return a CLONED instance of the document fragment
+                return _docFragsCache.get(cacheKey).cloneNode(true);
+            }
+
+
+            /**
+             * Hex to RGB conversion utility
+             * @param hex
+             * @returns {{r: number, g: number, b: number}}
+             */
+            function hexToRgb(hex) {
+                // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+                var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+                hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                    return r + r + g + g + b + b;
+                });
+
+                var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+                return result ? {
+                    r: parseInt(result[1], 16),
+                    g: parseInt(result[2], 16),
+                    b: parseInt(result[3], 16)
+                } : null;
+            }
+
+
+            function _link( $scope, $element, attrs, Controller, transcludeFn ){
+                /**
+                 * Pass in the directive element and the monthMap we use to generate the
+                 * calendar DOM elements.
+                 * @param $element
+                 * @param monthMap
+                 * @returns null
+                 */
+                function renderCalendarLayout( monthMap ){
+                    // Rebuild the calendar layout (no events attached, just days)
+                    var $renderTo = angular.element($element[0].querySelector('.calendar-render')),
+                        weekRows  = Math.ceil( monthMap.calendarDayCount / 7 );
+
+                    // Set row classes on calendar-body
+                    angular.element($element[0].querySelector('.calendry-body'))
+                        .removeClass('week-rows-4 week-rows-5 week-rows-6')
+                        .addClass('week-rows-' + weekRows);
+
+                    // Render the calendar body
+                    //$renderTo.empty().append( getCalendarFragment(monthMap) );
+                    var fragment = getCalendarFragment(monthMap);
+
+                    // DECORATE EVERY DAY ELEMENT WITH A _moment PROPERTY VIA .data()
+                    Array.prototype.slice.call(fragment.childNodes).forEach(function(node, index){
+                        fragment.childNodes[index] = angular.element(node).data('_moment', monthMap.calendarDays[index]);
+                    });
+
+                    $renderTo.empty().append(fragment);
+                }
+
+
+                /**
+                 * Receive an event list as an array, and update the UI.
+                 * @param eventList array
+                 */
+                function renderEvents( eventList ){
+                    // Clear all previously rendered events
+                    angular.element($element[0].querySelectorAll('.event-cell')).remove();
+
+                    // Variables
+                    var mapped = {};
+
+                    // Loop through every event object and create _moment property, and
+                    // append to mapped
+                    eventList.forEach(function(eventObj){
+                        eventObj._moment = momentJS(eventObj[$scope.instance.parseDateField], momentJS.ISO_8601);
+                        var mappedKey    = eventObj._moment.format(_eventMapKey);
+                        if( ! mapped[mappedKey] ){
+                            mapped[mappedKey] = [];
+                        }
+                        mapped[eventObj._moment.format(_eventMapKey)].push(eventObj);
+                    });
+
+                    /**
+                     * Transclude function callback; note the $cloned element is implicitly
+                     * set by the transcludeFn, and below we use .bind() to pass in the $dayNode
+                     * @param $dayNode
+                     * @param $cloned
+                     * @private
+                     */
+                    function _transcluder( $dayNode, $cloned ){
+                        $dayNode.append($cloned);
+                    }
+
+                    /**
+                     * Loop through every day in the calendar and look for events to
+                     * render.
+                     * @note: the transcluder function in the loop, by default, passes in
+                     * $cloned as the first argument. but since we're using .bind(), it
+                     * re-orders the arguments so that $dayNode is the first arg, THEN
+                     * $cloned
+                     */
+                    $scope.instance.monthMap.calendarDays.forEach(function( dayMoment ){
+                        var eventsForDay = mapped[dayMoment.format(_eventMapKey)];
+                        if( eventsForDay ){
+                            var $dayNode = angular.element($element[0].querySelector('#' + getDayCellID(dayMoment)));
+                            if( $dayNode ){
+                                for(var _i = 0, _len = eventsForDay.length; _i < _len; _i++){
+                                    var $newScope       = $scope.$new(/*true*/);
+                                    $newScope.eventObj  = eventsForDay[_i];
+                                    transcludeFn($newScope, _transcluder.bind(null, $dayNode));
+                                }
+                            }
+                        }
+                    });
+                }
+
+
+                // Any time the monthMap model changes, re-render.
+                $scope.$watch('instance.monthMap', function( monthMapObj ){
+                    if( monthMapObj ){
+                        renderCalendarLayout(monthMapObj);
+                    }
+                });
+
+
+                // Watch for changes to events property
+                $scope.$watch('events', function(eventList){
+                    if( angular.isArray(eventList) ){
+                        renderEvents(eventList);
+                    }
+                });
+
+                // Event click handler
+//                angular.element($element[0].querySelector('.calendry-body')).on('click', function(event){
+//                    // Ghetto delegation from the parent
+//                    var delegator = this,
+//                        target    = (function( _target ){
+//                            while( ! _target.classList.contains('event-cell') ){
+//                                if(_target === delegator){_target = null; break;}
+//                                _target = _target.parentNode;
+//                            }
+//                            return _target;
+//                        })(event.target);
+//
+//                    //console.log(target);
+//                });
+
+            }
+
+
+            return {
+                restrict: 'A',
+                scope: {
+                    instance: '=calendry'
+                },
+                replace: true,
+                templateUrl: '/calendry',
+                transclude: true,
+                link: _link,
+                controller: ['$scope', function( $scope ){
+
+                    var Controller = this;
+
+                    $scope.instance = angular.extend(Controller, _defaults, ($scope.instance || {}));
+
+                    this.goToCurrentMonth = $scope.goToCurrentMonth = function(){
+                        $scope.instance.currentMonth = momentJS();
+                    };
+
+                    this.goToPrevMonth = $scope.goToPrevMonth = function(){
+                        $scope.instance.currentMonth = momentJS($scope.instance.currentMonth).subtract({months:1});
+                    };
+
+                    this.goToNextMonth = $scope.goToNextMonth = function(){
+                        $scope.instance.currentMonth = momentJS($scope.instance.currentMonth).add({months:1});
+                    };
+
+                    this.toggleListView = $scope.toggleListView = function(){
+                        $scope.instance.forceListView = !$scope.instance.forceListView;
+                    };
+
+                    $scope.$watch('instance.currentMonth', function( monthMoment ){
+                        if( monthMoment ){
+                            $scope.instance.monthMap = getMonthMap(monthMoment);
+                            // Dispatch callback
+                            $scope.instance.onMonthChange.apply(Controller, [$scope.instance.monthMap]);
+                        }
+                    });
+
+                    $scope.$watch('instance.events', function( events ){
+                        if( events ){
+                            $scope.events = events;
+                        }
+                    });
+
+                    $scope.helpers = {
+                        eventFontColor: function( color ){
+                            var rgb = hexToRgb(color),
+                                val = Math.round(((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000);
+                            return (val > 125) ? '#000000' : '#FFFFFF';
+                        }
+                    };
+                }]
+            };
+        }
+    ]);
+
+})( window, window.angular );

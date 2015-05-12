@@ -44,5 +44,17 @@ angular.module('schedulizer.app').
                     }
                 );
             };
+
+            /**
+             * Delete the entity.
+             */
+            $scope.confirmDelete = false;
+            $scope.deleteEvent = function(){
+                $scope.entity.$delete().then(function( resp ){
+                    if( resp.ok ){
+                        $window.location.href = API._routes.generate('dashboard', ['calendars']);
+                    }
+                });
+            };
         }
     ]);

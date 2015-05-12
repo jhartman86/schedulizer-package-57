@@ -28,6 +28,10 @@
             }
         }
 
+        /**
+         * eg. ?keywords=lorem+ipsum+dolor
+         * @param EventList $eventList
+         */
         private function setFullTextSearchOn( EventList $eventList ){
             if( !empty($this->requestParams()->keywords) ){
                 $eventList->setFullTextSearch($this->requestParams()->keywords);

@@ -122,6 +122,8 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
   .container-fluid {width:90%;text-align:left;}
 
   form {
+    .tab-pane {padding:15px 15px 0;margin-bottom:($grid-gutter-width/2);border:1px solid #ddd;border-top:0;position:relative;background:#fff;}
+
     .form-group {position:relative;
       &.white {background:#fff;}
     }
@@ -129,7 +131,7 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
     &.calendar {max-width:650px;}
 
     &.event {
-      .tab-pane {padding:15px 15px 0;margin-bottom:($grid-gutter-width/2);border:1px solid #ddd;border-top:0;position:relative;background:#fff;
+      .tab-pane {
         .remove-time-entity {position:absolute;top:0;right:0;}
       }
 
@@ -162,9 +164,12 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
 
 @media screen and (min-width:$screen-sm){
   [modal-window]{
+    form {
+      .save-entity img {max-height:18px;}
+      .delete-entity {padding-right:($grid-gutter-width/2);}
+    }
+
     form.event {
-      .delete-event {padding-right:($grid-gutter-width/2);}
-      .save-event img {max-height:18px;}
       .time-widgets {font-size:0;line-height:0;
         .form-group {display:inline-block;width:50%;font-size:$font-size-base;line-height:1;
           &:nth-of-type(2) input {border-left:0;}

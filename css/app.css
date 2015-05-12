@@ -3236,23 +3236,23 @@
   [modal-window] .container-fluid {
     width: 90%;
     text-align: left; }
-  [modal-window] form .form-group {
-    position: relative; }
-    [modal-window] form .form-group.white {
-      background: #fff; }
-  [modal-window] form.calendar {
-    max-width: 650px; }
-  [modal-window] form.event .tab-pane {
+  [modal-window] form .tab-pane {
     padding: 15px 15px 0;
     margin-bottom: 15px;
     border: 1px solid #ddd;
     border-top: 0;
     position: relative;
     background: #fff; }
-    [modal-window] form.event .tab-pane .remove-time-entity {
-      position: absolute;
-      top: 0;
-      right: 0; }
+  [modal-window] form .form-group {
+    position: relative; }
+    [modal-window] form .form-group.white {
+      background: #fff; }
+  [modal-window] form.calendar {
+    max-width: 650px; }
+  [modal-window] form.event .tab-pane .remove-time-entity {
+    position: absolute;
+    top: 0;
+    right: 0; }
   [modal-window] form.event .ccm-file-selector {
     -moz-border-radius: 0;
     -webkit-border-radius: 0;
@@ -3296,10 +3296,10 @@
       margin-left: 4px; }
 
 @media screen and (min-width: 768px) {
-  [modal-window] form.event .delete-event {
-    padding-right: 15px; }
-  [modal-window] form.event .save-event img {
+  [modal-window] form .save-entity img {
     max-height: 18px; }
+  [modal-window] form .delete-entity {
+    padding-right: 15px; }
   [modal-window] form.event .time-widgets {
     font-size: 0;
     line-height: 0; }

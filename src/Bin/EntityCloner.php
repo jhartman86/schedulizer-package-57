@@ -3,7 +3,7 @@
     use \Concrete\Package\Schedulizer\Src\Event;
     use \Concrete\Package\Schedulizer\Src\Attribute\Key\SchedulizerEventKey;
 
-    class EventCloner {
+    class EntityCloner {
 
         protected $originalEventObj;
         protected $clonedEventObj;
@@ -15,7 +15,7 @@
 
         protected function __construct( Event $eventObj ){
             if( ! $eventObj->isPersisted() ){
-                throw new \Exception('From EventCloner: Event must already exist.');
+                throw new \Exception('From EntityCloner: Event must already exist.');
             }
             $this->originalEventObj = $eventObj;
             $this->cloneEvent()
@@ -116,7 +116,7 @@
          * @param $mixed
          * @param array $properties
          */
-        protected function cloneInMemoryAndSetProps( $mixed, $properties = array() ){
+        public static function cloneInMemoryAndSetProps( $mixed, $properties = array() ){
             $cloned     = clone $mixed;
             $reflection = new \ReflectionObject($mixed);
             $propNames  = array_keys($properties);
