@@ -65,11 +65,19 @@
                     }
                 }
 
-                if( $this->eventList->doIncludeFilePaths() ){
+                if( $this->eventList->doIncludeFilePath() ){
                     if( $row['fileID'] ){
                         $data->filePath = \Concrete\Core\File\File::getByID($row['fileID'])->getRelativePath();
                     }else{
                         $data->filePath = null;
+                    }
+                }
+
+                if( $this->eventList->doIncludePagePath() ){
+                    if( $row['pageID'] ){
+                        $data->pagePath = \Concrete\Core\Page\Page::getByID($row['pageID'])->getCollectionPath();
+                    }else{
+                        $data->pagePath = null;
                     }
                 }
 

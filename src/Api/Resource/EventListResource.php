@@ -23,6 +23,7 @@
                 $this->setEndDate($eventListObj);
                 $this->setFetchColumns($eventListObj);
                 $this->setIncludeFilePath($eventListObj);
+                $this->setIncludePagePath($eventListObj);
                 $this->setResponseData($eventListObj->getSerializable());
             }catch(\Exception $e){
                 throw ApiException::generic($e->getMessage());
@@ -98,6 +99,16 @@
         private function setIncludeFilePath( EventList $eventList ){
             if( !empty($this->requestParams()->filepath) ){
                 $eventList->setIncludeFilePathInResults(true);
+            }
+        }
+
+        /**
+         * Simply needs to be set and we'll fetch the page path.
+         * @param EventList $eventList
+         */
+        private function setIncludePagePath( EventList $eventList ){
+            if( !empty($this->requestParams()->pagepath) ){
+                $eventList->setIncludePagePathInResults(true);
             }
         }
 

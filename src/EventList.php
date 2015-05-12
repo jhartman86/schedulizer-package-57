@@ -26,6 +26,7 @@
 
         // used by the serializer/parser only
         protected $includeFilePathInResults = false;
+        protected $includePagePathInResults = false;
 
         protected $startDTO; // set or calculated
         protected $endDTO; // set or calculated
@@ -220,7 +221,28 @@
          * Are we including the filepath?
          * @return bool
          */
-        public function doIncludeFilePaths(){
+        public function doIncludeFilePath(){
+            return $this->includeFilePathInResults;
+        }
+
+        /**
+         * We never do a join against the files table to get the path,
+         * but this will indicate to the serializer that the filepath
+         * should be included.
+         * @param bool $to
+         */
+        public function setIncludePagePathInResults( $to = true ){
+            $this->includeFilePathInResults = $to;
+            if( $to === true ){
+                $this->includeColumns(array('fileID'));
+            }
+        }
+
+        /**
+         * Are we including the filepath?
+         * @return bool
+         */
+        public function doIncludePagePath(){
             return $this->includeFilePathInResults;
         }
 
