@@ -35,11 +35,19 @@ if( $queryData->doEventGrouping === true ){
 /**
  * Restriction on internal join.
  */
-$restrictor = sprintf(
-    "sev.calendarID IN (%s) AND (DATE(sevt.startUTC) < DATE('%s'))",
-    join(',', $queryData->calendarIDs),
-    $queryData->endDTO->format('Y-m-d')
-);
+if( !empty($queryData->calendarIDs) ){
+    $restrictor = sprintf(
+        "sev.calendarID IN (%s) AND (DATE(sevt.startUTC) < DATE('%s'))",
+        join(',', $queryData->calendarIDs),
+        $queryData->endDTO->format('Y-m-d')
+    );
+}else{
+    $restrictor = sprintf(
+        "(DATE(sevt.startUTC) < DATE('%s'))",
+        $queryData->endDTO->format('Y-m-d')
+    );
+}
+
 
 /**
  * Are we also restricting by eventIDs?

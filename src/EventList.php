@@ -28,6 +28,7 @@
         protected $includeFilePathInResults = false;
         protected $includePagePathInResults = false;
 
+        protected $attributesToFetch = array();
         protected $doEventGrouping = false; // Groups by eventID, showing only most recent
         protected $startDTO; // set or calculated
         protected $endDTO; // set or calculated
@@ -261,6 +262,14 @@
             return $this->includeFilePathInResults;
         }
 
+        public function setAttributesToFetch( $attrKeyList = array() ){
+            $this->attributesToFetch = $attrKeyList;
+        }
+
+        public function getAttributesToFetch(){
+            return $this->attributesToFetch;
+        }
+
         /**
          * Fetch the results.
          * @return mixed
@@ -324,9 +333,9 @@
             });
 
             // Throw exception if no calendarIDs specified
-            if( empty($this->calendarIDs) ){
-                throw new Exception("No calendar IDs specified.");
-            }
+//            if( empty($this->calendarIDs) ){
+//                throw new Exception("No calendar IDs specified.");
+//            }
 
             // Ensure eventIDs are numeric only
             $this->eventIDs = array_filter($this->eventIDs, function( $eventID ){
@@ -367,6 +376,7 @@
          * @throws Exception
          */
         protected function assembledQuery(){
+            //echo $this->prepare()->queryString(); exit;
             return $this->prepare()->queryString();
         }
 

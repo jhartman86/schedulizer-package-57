@@ -127,6 +127,10 @@
 .icon-attention:before {
   content: "\e623"; }
 
+#ccm-dashboard-content.container-fluid {
+  padding-top: 49px;
+  padding-right: 20px; }
+
 .ccm-ui .schedulizer-app fieldset {
   padding: 0;
   margin: 0;

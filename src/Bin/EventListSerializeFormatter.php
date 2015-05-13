@@ -2,6 +2,7 @@
 
     use \DateTime;
     use \DateTimeZone;
+    use \Concrete\Package\Schedulizer\Src\Event;
     use \Concrete\Package\Schedulizer\Src\EventList;
 
     /**
@@ -41,7 +42,8 @@
          * column settings in EventList.
          */
         protected function queryAndFormat(){
-            $columnSettings = $this->eventList->getQueryColumnSettings();
+            $columnSettings  = $this->eventList->getQueryColumnSettings();
+            $fetchAttributes = $this->eventList->getAttributesToFetch();
             foreach($this->eventList->get() AS $row){
                 $data = new \stdClass();
                 foreach($columnSettings AS $columnName => $definition){
@@ -78,6 +80,16 @@
                         $data->pagePath = \Concrete\Core\Page\Page::getByID($row['pageID'])->getCollectionPath();
                     }else{
                         $data->pagePath = null;
+                    }
+                }
+
+                // Temporary, need to make this dynamic!
+                if( !empty($fetchAttributes) ){
+                    $eventObj = Event::getByID($row['eventID']);
+                    if( $eventObj ){
+                        foreach($fetchAttributes AS $key){
+                            $data->{$key} = $eventObj->getAttribute($key);
+                        }
                     }
                 }
 
