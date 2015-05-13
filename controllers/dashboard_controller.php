@@ -14,7 +14,7 @@
             parent::on_start();
             $this->requireAsset('core/file-manager');
             $this->addHeaderItem( \Core::make('helper/html')->css('app.css', 'schedulizer') );
-            $this->addHeaderItem('<script type="text/javascript">var __schedulizer = {dashboard:"'.View::url('/dashboard/schedulizer').'",api:"'.View::url('/_schedulizer').'",ajax:"'.Router::route(array('','schedulizer')).'"};</script>');
+            $this->addHeaderItem('<script type="text/javascript">var __schedulizer = {dashboard:"'.View::url('/dashboard/schedulizer').'",api:"'.View::url('/_schedulizer').'",ajax:"'.rtrim(Router::route(array('','schedulizer')), '/').'"};</script>');
             $this->addFooterItem( \Core::make('helper/html')->javascript('core.js', 'schedulizer') );
             $this->addFooterItem( \Core::make('helper/html')->javascript('app.js', 'schedulizer') );
             //$this->requireAsset('redactor');
