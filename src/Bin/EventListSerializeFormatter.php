@@ -69,7 +69,11 @@
 
                 if( $this->eventList->doIncludeFilePath() ){
                     if( $row['fileID'] ){
-                        $data->filePath = \Concrete\Core\File\File::getByID($row['fileID'])->getRelativePath();
+                        $fileObj = \Concrete\Core\File\File::getByID($row['fileID']);
+                        if( is_object($fileObj) ){
+                            $data->filePath = $fileObj->getThumbnailURL('event_thumb');
+                        }
+                        //$data->filePath = \Concrete\Core\File\File::getByID($row['fileID'])->getRelativePath();
                     }else{
                         $data->filePath = null;
                     }

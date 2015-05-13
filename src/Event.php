@@ -3,6 +3,7 @@
     use Events,
         Package,
         \Concrete\Package\Schedulizer\Src\SystemEvents\EventOnSave AS SystemEventOnSave,
+        \Concrete\Package\Schedulizer\Src\Calendar,
         \Concrete\Package\Schedulizer\Src\EventVersion,
         \Concrete\Package\Schedulizer\Src\Persistable\Mixins\Crud,
         \Concrete\Package\Schedulizer\Src\Attribute\Mixins\AttributableEntity;
@@ -131,6 +132,17 @@
                 }
                 return $statement;
             });
+        }
+
+        /**
+         * Get the Calendar object this event is associated with.
+         * @return Calendar
+         */
+        public function getCalendarObj(){
+            if( $this->_calendarObj === null ){
+                $this->_calendarObj = Calendar::getByID($this->calendarID);
+            }
+            return $this->_calendarObj;
         }
 
         /** @return array Get all associated event times */
