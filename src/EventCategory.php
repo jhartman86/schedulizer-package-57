@@ -79,7 +79,7 @@
 
         public static function fetchCategoriesByEventID( $eventID, $versionID ){
             return (array) self::fetchMultipleBy(function(\PDO $connection, $tableName) use ($eventID, $versionID){
-                $statement = $connection->prepare("SELECT sevt.* FROM SchedulizerEventCategory sevc
+                $statement = $connection->prepare("SELECT sevc.* FROM SchedulizerEventCategory sevc
                     JOIN SchedulizerCategorizedEvents sece ON sevc.id = sece.eventCategoryID
                     WHERE sece.eventID = :eventID AND sece.versionID = :versionID");
                 $statement->bindValue(':eventID', $eventID);

@@ -4,6 +4,12 @@
     use Loader;
     use \Concrete\Package\Schedulizer\Controller\DashboardController;
 
+    /**
+     * Class Settings
+     * @note: even though in the page view you can edit tags and categories, those are
+     * handled via angular and the API.
+     * @package Concrete\Package\Schedulizer\Controller\SinglePage\Dashboard\Schedulizer
+     */
     class Settings extends DashboardController {
 
         /**

@@ -576,91 +576,6 @@ angular.module('schedulizer.app').
     ]);
 angular.module('schedulizer.app').
 
-    factory('Helpers', ['_moment', function factory(_moment){
-
-        this.range = function( start, end ){
-            var arr = [];
-            for(var i = start; i <= end; i++){
-                arr.push(i);
-            }
-            return arr;
-        };
-
-        this.repeatTypeHandleOptions = function(){
-            return [
-                {label: 'Days', value: 'daily'},
-                {label: 'Weeks', value: 'weekly'},
-                {label: 'Months', value: 'monthly'},
-                {label: 'Years', value: 'yearly'}
-            ];
-        };
-
-        this.repeatIndefiniteOptions = function(){
-            return [
-                {label: 'Forever', value: true},
-                {label: 'Until', value: false}
-            ];
-        };
-
-        this.weekdayRepeatOptions = function(){
-            return [
-                {label: 'Sun', value: 1},
-                {label: 'Mon', value: 2},
-                {label: 'Tue', value: 3},
-                {label: 'Wed', value: 4},
-                {label: 'Thu', value: 5},
-                {label: 'Fri', value: 6},
-                {label: 'Sat', value: 7}
-            ];
-        };
-
-        this.repeatMonthlyMethodOptions = function(){
-            return {
-                specific    : 'specific',
-                dynamic     : 'ordinal'
-            };
-        };
-
-        this.repeatMonthlyDynamicWeekOptions = function(){
-            return [
-                {label: 'First', value: 1},
-                {label: 'Second', value: 2},
-                {label: 'Third', value: 3},
-                {label: 'Fourth', value: 4},
-                {label: 'Last', value: 5}
-            ];
-        };
-
-        this.repeatMonthlyDynamicWeekdayOptions = function(){
-            return [
-                {label: 'Sunday', value: 1},
-                {label: 'Monday', value: 2},
-                {label: 'Tuesday', value: 3},
-                {label: 'Wednesday', value: 4},
-                {label: 'Thursday', value: 5},
-                {label: 'Friday', value: 6},
-                {label: 'Saturday', value: 7}
-            ];
-        };
-
-        this.eventColorOptions = function(){
-            return [
-                {value: '#A3D900'},
-                {value: '#3A87AD'},
-                {value: '#DE4E56'},
-                {value: '#BFBFFF'},
-                {value: '#FFFF73'},
-                {value: '#FFA64D'},
-                {value: '#CCCCCC'},
-                {value: '#00B7FF'},
-                {value: '#222222'}
-            ];
-        };
-
-        return this;
-    }]);
-angular.module('schedulizer.app').
-
     directive('eventTimeForm', [function(){
 
         function _link( scope, $elem, attrs, Controller ){
@@ -1025,6 +940,142 @@ angular.module('schedulizer.app').
             link:       _link
         };
     }]);
+angular.module('schedulizer.app').
+
+    factory('Helpers', ['_moment', function factory(_moment){
+
+        this.range = function( start, end ){
+            var arr = [];
+            for(var i = start; i <= end; i++){
+                arr.push(i);
+            }
+            return arr;
+        };
+
+        this.repeatTypeHandleOptions = function(){
+            return [
+                {label: 'Days', value: 'daily'},
+                {label: 'Weeks', value: 'weekly'},
+                {label: 'Months', value: 'monthly'},
+                {label: 'Years', value: 'yearly'}
+            ];
+        };
+
+        this.repeatIndefiniteOptions = function(){
+            return [
+                {label: 'Forever', value: true},
+                {label: 'Until', value: false}
+            ];
+        };
+
+        this.weekdayRepeatOptions = function(){
+            return [
+                {label: 'Sun', value: 1},
+                {label: 'Mon', value: 2},
+                {label: 'Tue', value: 3},
+                {label: 'Wed', value: 4},
+                {label: 'Thu', value: 5},
+                {label: 'Fri', value: 6},
+                {label: 'Sat', value: 7}
+            ];
+        };
+
+        this.repeatMonthlyMethodOptions = function(){
+            return {
+                specific    : 'specific',
+                dynamic     : 'ordinal'
+            };
+        };
+
+        this.repeatMonthlyDynamicWeekOptions = function(){
+            return [
+                {label: 'First', value: 1},
+                {label: 'Second', value: 2},
+                {label: 'Third', value: 3},
+                {label: 'Fourth', value: 4},
+                {label: 'Last', value: 5}
+            ];
+        };
+
+        this.repeatMonthlyDynamicWeekdayOptions = function(){
+            return [
+                {label: 'Sunday', value: 1},
+                {label: 'Monday', value: 2},
+                {label: 'Tuesday', value: 3},
+                {label: 'Wednesday', value: 4},
+                {label: 'Thursday', value: 5},
+                {label: 'Friday', value: 6},
+                {label: 'Saturday', value: 7}
+            ];
+        };
+
+        this.eventColorOptions = function(){
+            return [
+                {value: '#A3D900'},
+                {value: '#3A87AD'},
+                {value: '#DE4E56'},
+                {value: '#BFBFFF'},
+                {value: '#FFFF73'},
+                {value: '#FFA64D'},
+                {value: '#CCCCCC'},
+                {value: '#00B7FF'},
+                {value: '#222222'}
+            ];
+        };
+
+        return this;
+    }]);
+angular.module('schedulizer.app').
+
+    filter('numberContraction', function($filter) {
+
+        var suffixes = ["th", "st", "nd", "rd"];
+
+        return function(input) {
+            var relevant = (input < 20) ? input : input % (Math.floor(input / 10) * 10);
+            var suffix   = (relevant <= 3) ? suffixes[relevant] : suffixes[0];
+            return suffix;
+        };
+    });
+angular.module('schedulizer.app').
+
+    /**
+     * AngularJS default filter with the following expression:
+     * "person in people | filter: {name: $select.search, age: $select.search}"
+     * performs a AND between 'name: $select.search' and 'age: $select.search'.
+     * We want to perform a OR.
+     * @link: https://github.com/angular-ui/ui-select/blob/master/examples/demo.js#L134
+     */
+    filter('propsFilter', function() {
+        return function(items, props) {
+            var out = [];
+
+            if (angular.isArray(items)) {
+                items.forEach(function(item) {
+                    var itemMatches = false;
+
+                    var keys = Object.keys(props);
+                    for (var i = 0; i < keys.length; i++) {
+                        var prop = keys[i];
+                        var text = props[prop].toLowerCase();
+                        if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                            itemMatches = true;
+                            break;
+                        }
+                    }
+
+                    if (itemMatches) {
+                        out.push(item);
+                    }
+                });
+            } else {
+                // Let the output be the input untouched
+                out = items;
+            }
+
+            return out;
+        };
+    });
 angular.module('schedulizer.app').
 
     /**
@@ -1412,52 +1463,30 @@ angular.module('schedulizer.app').
 })( window, window.angular );
 angular.module('schedulizer.app').
 
-    filter('numberContraction', function($filter) {
+    controller('CtrlManageCategories', ['$scope', 'API',
+        function( $scope, API ){
 
-        var suffixes = ["th", "st", "nd", "rd"];
+            $scope.categoriesList = [];
 
-        return function(input) {
-            var relevant = (input < 20) ? input : input % (Math.floor(input / 10) * 10);
-            var suffix   = (relevant <= 3) ? suffixes[relevant] : suffixes[0];
-            return suffix;
-        };
-    });
-angular.module('schedulizer.app').
+            API.eventCategories.query().$promise.then(function( resp ){
+                $scope.categoriesList = resp;
+            });
 
-    /**
-     * AngularJS default filter with the following expression:
-     * "person in people | filter: {name: $select.search, age: $select.search}"
-     * performs a AND between 'name: $select.search' and 'age: $select.search'.
-     * We want to perform a OR.
-     * @link: https://github.com/angular-ui/ui-select/blob/master/examples/demo.js#L134
-     */
-    filter('propsFilter', function() {
-        return function(items, props) {
-            var out = [];
-
-            if (angular.isArray(items)) {
-                items.forEach(function(item) {
-                    var itemMatches = false;
-
-                    var keys = Object.keys(props);
-                    for (var i = 0; i < keys.length; i++) {
-                        var prop = keys[i];
-                        var text = props[prop].toLowerCase();
-                        if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
-                            itemMatches = true;
-                            break;
-                        }
-                    }
-
-                    if (itemMatches) {
-                        out.push(item);
-                    }
+            $scope.remove = function( $index ){
+                $scope.categoriesList[$index].$delete().then(function(){
+                    $scope.categoriesList.splice($index,1);
                 });
-            } else {
-                // Let the output be the input untouched
-                out = items;
-            }
+            };
 
-            return out;
-        };
-    });
+            $scope.persist = function( $index ){
+                ($scope.categoriesList[$index].id ? $scope.categoriesList[$index].$update() : $scope.categoriesList[$index].$save()).then(function( resp ){
+                    console.log(resp);
+                });
+            };
+
+            $scope.addCategory = function(){
+                $scope.categoriesList.push( new API.eventCategories());
+            };
+
+        }
+    ]);

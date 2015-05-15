@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '0.71';
+        protected $pkgVersion               = '0.72';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -120,7 +120,7 @@
                 $apiOnStart->addRoute('event_time_nullify', 'EventTimeNullifyResource');
                 // GET
                 $apiOnStart->addRoute('event_tags', 'EventTagsResource');
-                // GET
+                // GET,PUT,DELETE
                 $apiOnStart->addRoute('event_categories', 'EventCategoriesResource');
                 // GET
                 $apiOnStart->addRoute('event_list', 'EventListResource');
@@ -334,6 +334,9 @@
                 // Tag associations @todo: IMPLEMENT WITH VERSIONS
                 $connection->query("ALTER TABLE SchedulizerTaggedEvents ADD CONSTRAINT FK_taggedEvent FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
                 $connection->query("ALTER TABLE SchedulizerTaggedEvents ADD CONSTRAINT FK_taggedEvent2 FOREIGN KEY (eventTagID) REFERENCES SchedulizerEventTag(id) ON DELETE CASCADE");
+                // Category associations @todo: IMPLEMENT WITH VERSIONS
+                $connection->query("ALTER TABLE SchedulizerCategorizedEvents ADD CONSTRAINT FK_categorizedEvent FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
+                $connection->query("ALTER TABLE SchedulizerCategorizedEvents ADD CONSTRAINT FK_categorizedEvent2 FOREIGN KEY (eventCategoryID) REFERENCES SchedulizerEventCategory(id) ON DELETE CASCADE");
             }catch(\Exception $e){ /** @todo: log out */ }
         }
 

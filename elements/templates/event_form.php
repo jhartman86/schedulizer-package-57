@@ -120,7 +120,7 @@
                             <ui-select multiple ng-model="entity._categories" theme="bootstrap" title="Categories">
                                 <ui-select-match placeholder="Categories">{{ $item.displayText }}</ui-select-match>
                                 <ui-select-choices repeat="category in eventCategoryList | propsFilter: {displayText: $select.search}">
-                                    <div ng-bind-html="tag.displayText | highlight: $select.search"></div>
+                                    <div ng-bind-html="category.displayText | highlight: $select.search"></div>
                                 </ui-select-choices>
                             </ui-select>
                         </div>

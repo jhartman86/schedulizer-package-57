@@ -155,6 +155,11 @@
             return (array) EventTag::fetchTagsByEventID($this->id, $this->versionID);
         }
 
+        /** @return array Get all associated tags */
+        public function getEventCategories(){
+            return (array) EventCategory::fetchCategoriesByEventID($this->id, $this->versionID);
+        }
+
         /** @return array|mixed */
         public function jsonSerialize(){
             if( ! $this->isPersisted() ){
@@ -165,6 +170,7 @@
             $properties                 = (object) get_object_vars($this);
             $properties->_timeEntities  = $this->getEventTimes();
             $properties->_tags          = $this->getEventTags();
+            $properties->_categories    = $this->getEventCategories();
             return $properties;
         }
 

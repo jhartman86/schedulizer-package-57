@@ -7,6 +7,7 @@
     use \Concrete\Package\Schedulizer\Src\EventTime;
     use \Concrete\Package\Schedulizer\Src\EventTimeNullify;
     use \Concrete\Package\Schedulizer\Src\EventTag;
+    use \Concrete\Package\Schedulizer\Src\EventCategory;
     use \Concrete\Package\Schedulizer\Src\Attribute\Key\SchedulizerEventKey;
     use \Concrete\Package\Schedulizer\Src\Api\ApiException;
     use \Symfony\Component\HttpFoundation\Response;
@@ -77,6 +78,12 @@
                 $tagObj = EventTag::createOrGetExisting($tagEntityData);
                 $tagObj->tagEvent($eventObj);
             }
+            // Handle categories @todo: can the user create categories? if not then only get and process existing ones
+            foreach((array)$data->_categories AS $categoryEntityData){
+                /** @var $categoryEntityData EventCategory */
+                $categoryObj = EventCategory::createOrGetExisting($categoryEntityData);
+                $categoryObj->categorizeEvent($eventObj);
+            }
 
             $this->setResponseData($eventObj);
             $this->setResponseCode(Response::HTTP_CREATED);
@@ -124,6 +131,13 @@
                 /** @var $tagObj EventTag */
                 $tagObj = EventTag::createOrGetExisting($tagEntityData);
                 $tagObj->tagEvent($eventObj);
+            }
+
+            // Handle categories @todo: can the user create categories? if not then only get and process existing ones
+            foreach((array)$data->_categories AS $categoryEntityData){
+                /** @var $categoryEntityData EventCategory */
+                $categoryObj = EventCategory::createOrGetExisting($categoryEntityData);
+                $categoryObj->categorizeEvent($eventObj);
             }
 
             $this->setResponseData($eventObj);
