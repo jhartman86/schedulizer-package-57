@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '0.63';
+        protected $pkgVersion               = '0.64';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -205,7 +205,8 @@
                 'SchedulizerEventTimeWeekdays',
                 'SchedulizerEventTimeNullify',
                 'SchedulizerEventAttributeValues',
-                'SchedulizerEventSearchIndexAttributes'
+                'SchedulizerEventSearchIndexAttributes',
+                'SchedulizerCalendarPermissionAssignments'
             );
             try {
                 $database = Loader::db();
@@ -219,7 +220,7 @@
          * @throws mixed
          */
         public function upgrade(){
-            if( Src\Install\Tests::meetsRequirements() ){
+            if( Src\Install\Support::meetsRequirements() ){
                 parent::upgrade();
                 $this->installAndUpdate();
                 return;
@@ -235,10 +236,10 @@
          * @throws mixed
          */
         public function install() {
-            if( !class_exists("\\Concrete\\Package\\Schedulizer\\Src\\Install\\Tests") ) {
-                include DIR_PACKAGES . '/' . self::PACKAGE_HANDLE . '/src/Install/Tests.php';
+            if( !class_exists("\\Concrete\\Package\\Schedulizer\\Src\\Install\\Support") ) {
+                include DIR_PACKAGES . '/' . self::PACKAGE_HANDLE . '/src/Install/Support.php';
             }
-            if( Src\Install\Tests::meetsRequirements() ){
+            if( Src\Install\Support::meetsRequirements() ){
                 $this->_packageObj = parent::install();
                 $this->saveConfigsFromInstallScreen()
                      ->installAndUpdate();
@@ -261,7 +262,7 @@
         }
 
         /**
-         * More doctrine shit we have to ditch...
+         * More doctrine shit we have to override...
          * @throws \Exception
          */
         public function upgradeDatabase(){

@@ -21,7 +21,7 @@
 //            if( Package::getByHandle('schedulizer') ){
 //                Package::getByHandle('schedulizer')->uninstall();
 //            }
-            Package::getClass('schedulizer')->install();
+//            Package::getClass('schedulizer')->install();
         }
 
 //        public function testUpgrade(){

@@ -1,8 +1,8 @@
 <?php
-if( !class_exists("\\Concrete\\Package\\Schedulizer\\Src\\Install\\Tests") ) {
-    include DIR_PACKAGES . '/schedulizer/src/Install/Tests.php';
+if( !class_exists("\\Concrete\\Package\\Schedulizer\\Src\\Install\\Support") ) {
+    include DIR_PACKAGES . '/schedulizer/src/Install/Support.php';
 }
-$support = new Concrete\Package\Schedulizer\Src\Install\Tests();
+$support = new Concrete\Package\Schedulizer\Src\Install\Support();
 ?>
 <style type="text/css">
     .support-table tbody tr td:nth-child(1){text-align:center;}
