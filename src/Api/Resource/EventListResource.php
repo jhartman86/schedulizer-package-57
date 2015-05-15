@@ -8,6 +8,9 @@
 
     class EventListResource extends \Concrete\Package\Schedulizer\Src\Api\ApiDispatcher {
 
+        /** @var $eventListObj EventList */
+        protected $eventListObj;
+
         /**
          * List resource get method.
          * @param null $calendarID
@@ -15,18 +18,19 @@
          */
         protected function httpGet( $calendarID = null ){
             try {
-                $eventListObj = new EventList(array($calendarID));
-                $this->setFullTextSearchOn($eventListObj);
-                $this->setCalendarIDsOn($eventListObj);
-                $this->setFilterByTagsOn($eventListObj);
-                $this->setStartDate($eventListObj);
-                $this->setEndDate($eventListObj);
-                $this->setFetchColumns($eventListObj);
-                $this->setIncludeFilePath($eventListObj);
-                $this->setIncludePagePath($eventListObj);
-                $this->setGrouping($eventListObj);
-                $this->setAttributeFetchers($eventListObj);
-                $this->setResponseData($eventListObj->getSerializable());
+                $this->eventListObj = new EventList(array($calendarID));
+                $this->setFullTextSearchOn()
+                     ->setCalendarIDsOn()
+                     ->setFilterByTagsOn()
+                     ->setStartDate()
+                     ->setEndDate()
+                     ->setFetchColumns()
+                     ->setIncludeFilePath()
+                     ->setIncludePagePath()
+                     ->setGrouping()
+                     ->setResultLimit()
+                     ->setAttributeFetchers();
+                $this->setResponseData($this->eventListObj->getSerializable());
             }catch(\Exception $e){
                 throw ApiException::generic($e->getMessage());
             }
@@ -34,99 +38,126 @@
 
         /**
          * eg. ?keywords=lorem+ipsum+dolor
-         * @param EventList $eventList
+         * @return $this
          */
-        private function setFullTextSearchOn( EventList $eventList ){
+        private function setFullTextSearchOn(){
             if( !empty($this->requestParams()->keywords) ){
-                $eventList->setFullTextSearch($this->requestParams()->keywords);
+                $this->eventListObj->setFullTextSearch($this->requestParams()->keywords);
             }
+            return $this;
         }
 
         /**
          * eg. ?calendars=1,17,22
-         * @param EventList $eventList
+         * @return $this
          */
-        private function setCalendarIDsOn( EventList $eventList ){
+        private function setCalendarIDsOn(){
             if( !empty($this->requestParams()->calendars) ){
-                $eventList->setCalendarIDs(explode(',', $this->requestParams()->calendars));
+                $this->eventListObj->setCalendarIDs(explode(',', $this->requestParams()->calendars));
             }
+            return $this;
         }
 
         /**
          * eg. ?tags=12,83,15
-         * @param EventList $eventList
+         * @return $this
          */
-        private function setFilterByTagsOn( EventList $eventList ){
+        private function setFilterByTagsOn(){
             if( !empty($this->requestParams()->tags) ){
-                $eventList->filterByTagIDs(explode(',', $this->requestParams()->tags));
+                $this->eventListObj->filterByTagIDs(explode(',', $this->requestParams()->tags));
             }
+            return $this;
         }
 
         /**
          * eg. ?start=2015-04-02
-         * @param EventList $eventList
+         * @return $this
          */
-        private function setStartDate( EventList $eventList ){
+        private function setStartDate(){
             if( !empty($this->requestParams()->start) ){
-                $eventList->setStartDate(new DateTime($this->requestParams()->start, new DateTimeZone('UTC')));
+                $this->eventListObj->setStartDate(new DateTime($this->requestParams()->start, new DateTimeZone('UTC')));
             }
+            return $this;
         }
 
         /**
          * eg. ?end=2015-04-02
-         * @param EventList $eventList
+         * @return $this
          */
-        private function setEndDate( EventList $eventList ){
+        private function setEndDate(){
             if( !empty($this->requestParams()->end) ){
-                $eventList->setEndDate(new DateTime($this->requestParams()->end, new DateTimeZone('UTC')));
+                $this->eventListObj->setEndDate(new DateTime($this->requestParams()->end, new DateTimeZone('UTC')));
             }
+            return $this;
         }
 
         /**
          * Comma-delimited list of include fields.
          * eg. ?fields=eventID,calendarID
-         * @param EventList $eventList
+         * @return $this
          */
-        private function setFetchColumns( EventList $eventList ){
+        private function setFetchColumns(){
             if( !empty($this->requestParams()->fields) ){
-                $eventList->includeColumns(explode(',', $this->requestParams()->fields));
+                $this->eventListObj->includeColumns(explode(',', $this->requestParams()->fields));
             }
+            return $this;
         }
 
         /**
          * Simply needs to be set and we'll fetch the relative file path
          * and include it in the results.
-         * @param EventList $eventList
+         * @return $this
          */
-        private function setIncludeFilePath( EventList $eventList ){
+        private function setIncludeFilePath(){
             if( !empty($this->requestParams()->filepath) ){
-                $eventList->setIncludeFilePathInResults(true);
+                $this->eventListObj->setIncludeFilePathInResults(true);
             }
+            return $this;
         }
 
         /**
          * Simply needs to be set and we'll fetch the page path.
-         * @param EventList $eventList
+         * @return $this
          */
-        private function setIncludePagePath( EventList $eventList ){
+        private function setIncludePagePath(){
             if( !empty($this->requestParams()->pagepath) ){
-                $eventList->setIncludePagePathInResults(true);
+                $this->eventListObj->setIncludePagePathInResults(true);
             }
+            return $this;
         }
 
         /**
-         * @param EventList $eventList
+         * Define grouping settings
+         * @return $this
          */
-        private function setGrouping( EventList $eventList ){
+        private function setGrouping(){
             if( !empty($this->requestParams()->grouping) ){
-                $eventList->setEventGrouping(true);
+                $this->eventListObj->setEventGrouping(true);
             }
+            return $this;
         }
 
-        private function setAttributeFetchers( EventList $eventList ){
+        /**
+         * Include attributes to fetch by key.
+         * @return $this
+         */
+        private function setAttributeFetchers(){
             if( !empty($this->requestParams()->attributes) ){
-                $eventList->setAttributesToFetch(explode(',', $this->requestParams()->attributes));
+                $this->eventListObj->setAttributesToFetch(explode(',', $this->requestParams()->attributes));
             }
+            return $this;
+        }
+
+        /**
+         * Set query result limit.
+         * @return $this
+         */
+        private function setResultLimit(){
+            $limit = (int)$this->requestParams()->limit;
+            if( !empty($this->requestParams()->limit) && $limit >= 1 ){
+                $this->eventListObj->setTotalLimit($limit);
+            }
+            return $this;
         }
 
     }

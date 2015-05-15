@@ -114,6 +114,14 @@ SQL;
 }
 
 /**
+ * Are we putting a limit on the total number of results that can be returned?
+ */
+$limitResultsClause = '';
+if( $queryData->limitTotal >= 1 ){
+    $limitResultsClause = sprintf("LIMIT %s", $queryData->limitTotal);
+}
+
+/**
  * This query is freaking atrocious - so break it out into a new file where we can
  * actually format and view it w/ proper indentation. Note, this is called by a method
  * in EventList, so the context of this file receives the variables declared in that
@@ -240,7 +248,7 @@ $sql = <<<SQL
         OR (
           (_events.isRepeating = 0 AND _synthesized._syntheticDate = DATE(_events.startUTC))
         )
-    ) AS _eventList $groupByClause ORDER BY computedStartUTC;
+    ) AS _eventList $groupByClause ORDER BY computedStartUTC $limitResultsClause;
 SQL;
 
 // Return the fully composed SQL query

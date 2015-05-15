@@ -33,6 +33,7 @@
         protected $startDTO; // set or calculated
         protected $endDTO; // set or calculated
         protected $limitPerDay  = null;
+        protected $limitTotal   = null;
         protected $calendarIDs  = array();
         protected $eventIDs     = array();
         protected $tagIDs       = array();
@@ -97,14 +98,6 @@
                     $this->fetchColumns[$columnName][0] = true;
                 }
             }
-        }
-
-        /**
-         * @todo: don't allow excluding derivedTimezone
-         * @param array $columns
-         */
-        public function excludeColumns( array $columns = array() ){
-
         }
 
         /**
@@ -197,6 +190,19 @@
         }
 
         /**
+         * Unlike limitPerDay, this sets the TOTAL limit that can be returned
+         * from the result set.
+         * @param $limit int
+         * @return $this
+         */
+        public function setTotalLimit( $limit ){
+            if( (int)$limit >= 1 ){
+                $this->limitTotal = (int)$limit;
+            }
+            return $this;
+        }
+
+        /**
          * @todo: probably figure out a way to re-enable a maximum limit on the query
          * day span so we can't arbitrarily murder the database...
          * @param int $number
@@ -224,6 +230,14 @@
         }
 
         /**
+         * Are we including the filepath?
+         * @return bool
+         */
+        public function doIncludeFilePath(){
+            return $this->includeFilePathInResults;
+        }
+
+        /**
          * If you only want to list events by the most recent (say from today forward),
          * but not have them listed as an occurrence on every day, this lets you do so.
          * @param bool $to
@@ -234,23 +248,15 @@
         }
 
         /**
-         * Are we including the filepath?
-         * @return bool
-         */
-        public function doIncludeFilePath(){
-            return $this->includeFilePathInResults;
-        }
-
-        /**
          * We never do a join against the files table to get the path,
-         * but this will indicate to the serializer that the filepath
+         * but this will indicate to the serializer that the pagepath
          * should be included.
          * @param bool $to
          */
         public function setIncludePagePathInResults( $to = true ){
-            $this->includeFilePathInResults = $to;
+            $this->includePagePathInResults = $to;
             if( $to === true ){
-                $this->includeColumns(array('fileID'));
+                $this->includeColumns(array('pageID'));
             }
         }
 
@@ -259,7 +265,7 @@
          * @return bool
          */
         public function doIncludePagePath(){
-            return $this->includeFilePathInResults;
+            return $this->includePagePathInResults;
         }
 
         public function setAttributesToFetch( $attrKeyList = array() ){
@@ -395,6 +401,7 @@
                 'endDTO'            => $this->endDTO,
                 'queryDaySpan'      => (int)$this->queryDaySpan,
                 'limitPerDay'       => (int)$this->limitPerDay,
+                'limitTotal'        => (int)$this->limitTotal,
                 'fullTextSearch'    => $this->fullTextSearch,
                 'doEventGrouping'   => $this->doEventGrouping
             );
