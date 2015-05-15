@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '0.62';
+        protected $pkgVersion               = '0.63';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -219,7 +219,7 @@
          * @throws mixed
          */
         public function upgrade(){
-            if( Src\Install\Support::meetsRequirements() ){
+            if( Src\Install\Tests::meetsRequirements() ){
                 parent::upgrade();
                 $this->installAndUpdate();
                 return;
@@ -235,13 +235,57 @@
          * @throws mixed
          */
         public function install() {
-            if( Src\Install\Support::meetsRequirements() ){
+            if( !class_exists("\\Concrete\\Package\\Schedulizer\\Src\\Install\\Tests") ) {
+                include DIR_PACKAGES . '/' . self::PACKAGE_HANDLE . '/src/Install/Tests.php';
+            }
+            if( Src\Install\Tests::meetsRequirements() ){
                 $this->_packageObj = parent::install();
                 $this->saveConfigsFromInstallScreen()
                      ->installAndUpdate();
                 return;
             }
             throw new Exception("System requirements not met.");
+        }
+
+
+        /**
+         * With 5.7.4.1, the use of Doctrine's annotation parser causes major issues
+         * EVEN THOUGH DOCTRINE ISN'T EFFING BEING USED. So override the parent methods
+         * and remove calls to annoation parser.
+         */
+        public function installDatabase(){
+            if (file_exists($this->getPackagePath() . '/' . FILENAME_PACKAGE_DB)) {
+                // Legacy db.xml
+                parent::installDB($this->getPackagePath() . '/' . FILENAME_PACKAGE_DB);
+            }
+        }
+
+        /**
+         * More doctrine shit we have to ditch...
+         * @throws \Exception
+         */
+        public function upgradeDatabase(){
+            if (file_exists($this->getPackagePath() . '/' . FILENAME_PACKAGE_DB)) {
+                // Legacy db.xml
+                // currently this is just done from xml
+                $db = Database::get();
+                $db->beginTransaction();
+
+                $parser = \Concrete\Core\Database\Schema\Schema::getSchemaParser(simplexml_load_file($this->getPackagePath() . '/' . FILENAME_PACKAGE_DB));
+                $parser->setIgnoreExistingTables(false);
+                $toSchema = $parser->parse($db);
+
+                $fromSchema = $db->getSchemaManager()->createSchema();
+                $comparator = new \Doctrine\DBAL\Schema\Comparator();
+                $schemaDiff = $comparator->compare($fromSchema, $toSchema);
+                $saveQueries = $schemaDiff->toSaveSql($db->getDatabasePlatform());
+
+                foreach ($saveQueries as $query) {
+                    $db->query($query);
+                }
+
+                $db->commit();
+            }
         }
 
 

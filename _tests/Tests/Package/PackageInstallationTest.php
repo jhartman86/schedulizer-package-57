@@ -18,11 +18,17 @@
     class PackageInstallationTest extends \PHPUnit_Framework_TestCase {
 
         public function testInstall(){
-            if( Package::getByHandle('schedulizer') ){
-                Package::getByHandle('schedulizer')->uninstall();
-            }
-            //Package::getClass('schedulizer')->install();
+//            if( Package::getByHandle('schedulizer') ){
+//                Package::getByHandle('schedulizer')->uninstall();
+//            }
+            Package::getClass('schedulizer')->install();
         }
+
+//        public function testUpgrade(){
+//            if( $pkg = Package::getByHandle('schedulizer') ){
+//                $pkg->upgrade();
+//            }
+//        }
 
     }
 

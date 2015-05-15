@@ -10,7 +10,7 @@
      * @todo: mysql 5.6 for innodb full text indices
      * @todo: test for foreign key support and cascading deletes
      */
-    class Support {
+    class Tests {
 
         const PHP_MIN_VERSION   = 5.4;
 
