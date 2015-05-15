@@ -56,10 +56,10 @@
             }
 
             // Permission check @todo: test this
-            $permissions = new Permissions($calendarObj);
-            if( ! $permissions->canAddEvents() ){
-                throw ApiException::permissionInvalid();
-            }
+//            $permissions = new Permissions($calendarObj);
+//            if( ! $permissions->canAddEvents() ){
+//                throw ApiException::permissionInvalid();
+//            }
 
             // Set
             $data->ownerID = ($this->currentUser()->getUserID() >= 1) ? $this->currentUser()->getUserID() : 0;
