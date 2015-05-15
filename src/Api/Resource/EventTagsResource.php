@@ -5,7 +5,7 @@
     class EventTagsResource extends \Concrete\Package\Schedulizer\Src\Api\ApiDispatcher {
 
         protected function httpGet( $id ){
-            $this->setResponseData(Eventtag::fetchAll());
+            $this->setResponseData(EventTag::fetchAll());
         }
 
     }

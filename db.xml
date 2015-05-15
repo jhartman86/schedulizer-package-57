@@ -266,7 +266,49 @@
             <KEY/>
         </field>
 
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+    <table name="SchedulizerEventCategory">
+        <field name="id" type="I">
+            <autoincrement />
+            <key />
+            <unsigned />
+        </field>
+        <field name="displayText" type="C" size="255">
+            <NOTNULL />
+        </field>
+        <field name="handle" type="C" size="255">
+            <NOTNULL />
+        </field>
+
         <!-- indices -->
+        <index name="handle">
+            <col>handle</col>
+            <unique/>
+        </index>
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+    <table name="SchedulizerCategorizedEvents">
+        <field name="eventID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <KEY/>
+        </field>
+        <field name="versionID" type="I">
+            <NOTNULL/>
+            <key/>
+            <unsigned />
+        </field>
+        <field name="eventCategoryID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <KEY/>
+        </field>
+
         <opt platform="mysql">ENGINE=INNODB</opt>
         <opt platform="mysqlt">ENGINE=INNODB</opt>
     </table>

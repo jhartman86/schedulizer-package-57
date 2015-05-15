@@ -1,8 +1,8 @@
 <?php namespace Concrete\Package\Schedulizer\Src {
 
     use \DateTime;
-    use Concrete\Package\Schedulizer\Src\Persistable\Contracts\Persistant;
-    use Concrete\Package\Schedulizer\Src\Persistable\Mixins\Crud;
+    use \Concrete\Package\Schedulizer\Src\Persistable\Contracts\Persistant;
+    use \Concrete\Package\Schedulizer\Src\Persistable\Mixins\Crud;
 
     /**
      * @package Concrete\Package\Schedulizer\Src

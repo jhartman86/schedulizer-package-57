@@ -22,12 +22,13 @@
             $provide.factory('Routes', function(){
                 var _routes = {
                     api: {
-                        calendar:       routeBase.api + '/calendar',
-                        event:          routeBase.api + '/event',
-                        eventList:      routeBase.api + '/event_list',
-                        eventNullify:   routeBase.api + '/event_time_nullify',
-                        eventTags:      routeBase.api + '/event_tags',
-                        timezones:      routeBase.api + '/timezones'
+                        calendar:           routeBase.api + '/calendar',
+                        event:              routeBase.api + '/event',
+                        eventList:          routeBase.api + '/event_list',
+                        eventNullify:       routeBase.api + '/event_time_nullify',
+                        eventTags:          routeBase.api + '/event_tags',
+                        eventCategories:    routeBase.api + '/event_categories',
+                        timezones:          routeBase.api + '/timezones'
                     },
                     dashboard: routeBase.dashboard,
                     ajax: routeBase.ajax
@@ -65,6 +66,9 @@
                    // more custom methods
                })),
                eventTags: $resource(Routes.generate('api.eventTags', [':id']), {id:'@id'}, angular.extend(_methods(), {
+
+               })),
+               eventCategories: $resource(Routes.generate('api.eventCategories', [':id']), {id:'@id'}, angular.extend(_methods(), {
 
                })),
                timezones: $resource(Routes.generate('api.timezones'), {}, {

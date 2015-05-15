@@ -100,14 +100,26 @@
                     <div class="col-sm-12">
                         <div class="form-group ui-select-widget">
                             <?php if( $permissions->canCreateTag() ): ?>
-                            <ui-select multiple tagging="tagTransform" ng-model="entity._tags" theme="bootstrap" title="Tags">
+                                <ui-select multiple tagging="tagTransform" ng-model="entity._tags" theme="bootstrap" title="Tags">
                             <?php else: ?>
                                 <ui-select multiple ng-model="entity._tags" theme="bootstrap" title="Tags">
                             <?php endif; ?>
                                 <ui-select-match placeholder="Tags">{{ $item.displayText }}</ui-select-match>
                                 <ui-select-choices repeat="tag in eventTagList | propsFilter: {displayText: $select.search}">
-                                    <!--<div ng-if="!tag.isTag" ng-bind-html="tag.displayText | highlight: $select.search"></div>
-                                    <div ng-if="tag.isTag" ng-bind-html="tag.displayText | highlight: $select.search"></div>-->
+                                    <div ng-bind-html="tag.displayText | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- categories -->
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-group ui-select-widget">
+                            <ui-select multiple ng-model="entity._categories" theme="bootstrap" title="Categories">
+                                <ui-select-match placeholder="Categories">{{ $item.displayText }}</ui-select-match>
+                                <ui-select-choices repeat="category in eventCategoryList | propsFilter: {displayText: $select.search}">
                                     <div ng-bind-html="tag.displayText | highlight: $select.search"></div>
                                 </ui-select-choices>
                             </ui-select>

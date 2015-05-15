@@ -6,11 +6,11 @@
     use \Concrete\Package\Schedulizer\Src\Persistable\Mixins\Crud;
 
     /**
-     * Class EventTag
+     * Class EventCategory
      * @package Concrete\Package\Schedulizer\Src
-     * @definition({"table":"SchedulizerEventTag"})
+     * @definition({"table":"SchedulizerEventCategory"})
      */
-    class EventTag extends Persistant {
+    class EventCategory extends Persistant {
 
         use Crud;
 
@@ -55,23 +55,13 @@
             }
         }
 
-        // With versioning implemented, this isn't needed right?
-//        public static function purgeAllEventTags( Event $eventObj ){
-//            $eventID = $eventObj->getID();
-//            self::adhocQuery(function(\PDO $connection) use ($eventObj, $eventID){
-//                $statement = $connection->prepare("DELETE FROM SchedulizerTaggedEvents WHERE eventID=:eventID");
-//                $statement->bindValue(':eventID', $eventObj->getID());
-//                return $statement;
-//            });
-//        }
-
-        public function tagEvent( Event $eventObj ){
-            $tagID = $this->id;
-            self::adhocQuery(function(\PDO $connection) use ($eventObj, $tagID){
-                $statement = $connection->prepare("INSERT INTO SchedulizerTaggedEvents (eventID, versionID, eventTagID) VALUES(:eventID,:versionID,:eventTagID)");
+        public function categorizeEvent( Event $eventObj ){
+            $categoryID = $this->id;
+            self::adhocQuery(function(\PDO $connection) use ($eventObj, $categoryID){
+                $statement = $connection->prepare("INSERT INTO SchedulizerCategorizedEvents (eventID, versionID, eventCategoryID) VALUES(:eventID,:versionID,:eventCategoryID)");
                 $statement->bindValue(':eventID', $eventObj->getID());
                 $statement->bindValue(':versionID', $eventObj->getVersionID());
-                $statement->bindValue(':eventTagID', $tagID);
+                $statement->bindValue(':eventCategoryID', $categoryID);
                 return $statement;
             });
         }
@@ -87,11 +77,11 @@
             });
         }
 
-        public static function fetchTagsByEventID( $eventID, $versionID ){
+        public static function fetchCategoriesByEventID( $eventID, $versionID ){
             return (array) self::fetchMultipleBy(function(\PDO $connection, $tableName) use ($eventID, $versionID){
-                $statement = $connection->prepare("SELECT sevt.* FROM SchedulizerEventTag sevt
-                    JOIN SchedulizerTaggedEvents sete ON sevt.id = sete.eventTagID
-                    WHERE sete.eventID = :eventID AND sete.versionID = :versionID");
+                $statement = $connection->prepare("SELECT sevt.* FROM SchedulizerEventCategory sevc
+                    JOIN SchedulizerCategorizedEvents sece ON sevc.id = sece.eventCategoryID
+                    WHERE sece.eventID = :eventID AND sece.versionID = :versionID");
                 $statement->bindValue(':eventID', $eventID);
                 $statement->bindValue(':versionID', $versionID);
                 return $statement;

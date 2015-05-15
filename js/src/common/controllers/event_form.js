@@ -43,6 +43,7 @@ angular.module('schedulizer.app').
             $scope.eventColorOptions    = Helpers.eventColorOptions();
             $scope.timingTabs           = [];
             $scope.eventTagList         = [];
+            $scope.eventCategoryList    = [];
             // Did the user click to edit an event that's an alias?
             $scope.warnAliased          = ModalManager.data.eventObj.isSynthetic || false;
 
@@ -53,14 +54,15 @@ angular.module('schedulizer.app').
 
             /**
              * Before doing anything else, get timezone list (which is cache-able),
-             * the calendar object, and the list of available tags.
+             * the calendar object, and the lists of available tags/categories.
              * @type {*[]}
              * @private
              */
             var _requests = [
                 API.timezones.get().$promise,
                 API.calendar.get({id:ModalManager.data.eventObj.calendarID}).$promise,
-                API.eventTags.query().$promise
+                API.eventTags.query().$promise,
+                API.eventCategories.query().$promise
             ];
 
             /**
@@ -73,6 +75,8 @@ angular.module('schedulizer.app').
                 $scope.calendarObj = results[1];
                 // Set event tags on scope
                 $scope.eventTagList = results[2];
+                // Set event categories
+                $scope.eventCategoryList = results[3];
 
                 // If eventObj passed by the modal manager DOES NOT have an ID, we're
                 // creating a new entity
@@ -106,12 +110,12 @@ angular.module('schedulizer.app').
                 // and the last request is index 2
                 $q.all(_requests).then(function( results ){
                     // Map existing time entity results before setting entity on scope
-                    results[3]._timeEntities.map(function( record ){
+                    results[4]._timeEntities.map(function( record ){
                         return newEventTimeEntity(record);
                     });
 
                     // Set the entity
-                    $scope.entity = results[3];
+                    $scope.entity = results[4];
 
                     jQuery('[data-file-selector="fileID"]').concreteFileSelector({
                         'inputName': 'fileID',

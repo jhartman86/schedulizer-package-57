@@ -118,8 +118,10 @@
                 $apiOnStart->addRoute('event', 'EventResource');
                 // GET,POST,DELETE
                 $apiOnStart->addRoute('event_time_nullify', 'EventTimeNullifyResource');
-                // GET,POST,PUT,DELETE
+                // GET
                 $apiOnStart->addRoute('event_tags', 'EventTagsResource');
+                // GET
+                $apiOnStart->addRoute('event_categories', 'EventCategoriesResource');
                 // GET
                 $apiOnStart->addRoute('event_list', 'EventListResource');
                 // GET
