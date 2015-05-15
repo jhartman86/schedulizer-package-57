@@ -60,7 +60,9 @@
                 Every <span select-wrap><select class="form-control" ng-options="opt as opt for opt in repeatEveryOptions" ng-model="_timeEntity.repeatEvery"></select></span>
                 <span select-wrap><select class="form-control" ng-options="opt.value as opt.label for opt in repeatTypeHandleOptions" ng-model="_timeEntity.repeatTypeHandle"></select></span>
                 <span select-wrap><select class="form-control" ng-options="opt.value as opt.label for opt in repeatIndefiniteOptions" ng-model="_timeEntity.repeatIndefinite"></select></span>
-                <input type="text" class="form-control" placeholder="Repeating End Date" ng-show="_timeEntity.repeatIndefinite == repeatIndefiniteOptions[1].value" bs-datepicker ng-model="_timeEntity.repeatEndUTC" data-autoclose="1" data-min-date="{{_timeEntity.startUTC}}" data-template="/tpl-datepicker" data-icon-left="icon-angle-left" data-icon-right="icon-angle-right" />
+                <div class="time-widgets inline">
+                    <input type="text" class="form-control" placeholder="Repeating End Date" ng-show="_timeEntity.repeatIndefinite == repeatIndefiniteOptions[1].value" bs-datepicker ng-model="_timeEntity.repeatEndUTC" data-autoclose="1" data-min-date="{{_timeEntity.startUTC}}" data-template="/tpl-datepicker" data-icon-left="icon-angle-left" data-icon-right="icon-angle-right" />
+                </div>
                 <a class="has-nullifiers" ng-show="hasNullifiers" ng-click="showNullifiers = !showNullifiers">Hidden Dates</a>
             </div>
         </div>

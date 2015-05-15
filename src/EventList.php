@@ -372,6 +372,11 @@
                 $this->endDTO->modify("+{$this->queryDaySpan} days");
             }
 
+            // Always add + 1 day to the endDTO in order to account for UTC
+            // differences; all endDTO does is act as a restrictor on the internal
+            // join of the result set to limit the number of records that get joined
+            $this->endDTO->modify('+1 days');
+
             return $this;
         }
 

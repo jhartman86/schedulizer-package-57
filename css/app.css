@@ -2632,6 +2632,10 @@
   @media print {
     .schedulizer-app .hidden-print {
       display: none !important; } }
+  .schedulizer-app .time-widgets.inline {
+    font-size: 1rem;
+    line-height: 1;
+    display: inline-block; }
   .schedulizer-app .time-widgets .dropdown-menu {
     background: #f1f1f1;
     width: auto;
@@ -2640,7 +2644,7 @@
     margin: 0;
     border: 0;
     position: absolute;
-    z-index: 9;
+    z-index: 999;
     -webkit-box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.65);
     box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.65); }
     .schedulizer-app .time-widgets .dropdown-menu button {
@@ -2668,7 +2672,8 @@
       font-weight: inherit; }
       .schedulizer-app .time-widgets .dropdown-menu.datepicker table thead th.dow {
         padding: 5px 0;
-        font-size: 80%; }
+        font-size: 12px;
+        line-height: 1; }
   .schedulizer-app [ng\:cloak], .schedulizer-app [ng-cloak], .schedulizer-app [data-ng-cloak], .schedulizer-app [x-ng-cloak], .schedulizer-app .ng-cloak, .schedulizer-app .x-ng-cloak {
     display: none !important; }
   .schedulizer-app .calendry-instance, .schedulizer-app .calendry-instance * {
