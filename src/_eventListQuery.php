@@ -108,7 +108,7 @@ SQL;
 if( !empty($queryData->tagIDs) ){
 $tagIDs = join(',', $queryData->tagIDs);
 $latestEventRecords .= <<<SQL
-    RIGHT JOIN SchedulizerTaggedEvents stag ON stag.eventID = _events.id AND stag.versionID = _versionInfo.versionID
+    JOIN SchedulizerTaggedEvents stag ON stag.eventID = _events.id AND stag.versionID = _versionInfo.versionID
     WHERE stag.eventTagID IN ($tagIDs) GROUP BY _events.id
 SQL;
 }
