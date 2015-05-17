@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '0.72';
+        protected $pkgVersion               = '0.87';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -318,26 +318,109 @@
          * exceptions.
          */
         private function installAndUpdate(){
-            $this->setupBlocks()
+            $this->tryVersionSpecificUpdates()
+                 ->setupDatabaseExtra()
+                 ->setupBlocks()
                  ->setupSinglePages()
                  ->setupAttributeCategories()
                  ->setupPermissions();
+        }
 
+
+        /**
+         * Sometimes we require version-specific updates. This takes care of.
+         * @return $this
+         */
+        private function tryVersionSpecificUpdates(){
+            // Setup autoloading for the version_updates directory
+            $symfonyLoader = new \Concrete\Core\Foundation\ModifiedPsr4ClassLoader();
+            $symfonyLoader->addPrefix('Concrete\\Package\\Schedulizer\\VersionUpdates', DIR_PACKAGES . '/schedulizer/version_updates');
+            $symfonyLoader->register();
+
+            // Re-fetch the package to get the version we're installing up to
+            // as $this return the correct value
+            $targetVersion = self::getByHandle(self::PACKAGE_HANDLE)->getPackageVersion();
+            $klassName     = sprintf("V%s", preg_replace('/[^0-9]/', '', $targetVersion));
+            $nsKlassName   = sprintf("%s\\VersionUpdates\\%s", __NAMESPACE__, $klassName);
+            if( class_exists($nsKlassName) ){
+                $updater = new $nsKlassName;
+                $updater->run();
+            }
+
+            return $this;
+        }
+
+
+        /**
+         * Handles foreign key setup since not supported w/ db.xml.
+         */
+        private function setupDatabaseExtra(){
             /** @var $connection \PDO :: Setup foreign key associations */
             try {
-                $connection = Database::connection(Database::getDefaultConnection())->getWrappedConnection();
-                $connection->query("ALTER TABLE SchedulizerEvent ADD CONSTRAINT FK_calendar FOREIGN KEY (calendarID) REFERENCES SchedulizerCalendar(id) ON UPDATE CASCADE ON DELETE CASCADE");
-                $connection->query("ALTER TABLE SchedulizerEventVersion ADD CONSTRAINT FK_event FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
-                $connection->query("ALTER TABLE SchedulizerEventTime ADD CONSTRAINT FK_event2 FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON UPDATE CASCADE ON DELETE CASCADE");
-                $connection->query("ALTER TABLE SchedulizerEventTimeWeekdays ADD CONSTRAINT FK_eventTime FOREIGN KEY (eventTimeID) REFERENCES SchedulizerEventTime(id) ON UPDATE CASCADE ON DELETE CASCADE");
-                $connection->query("ALTER TABLE SchedulizerEventTimeNullify ADD CONSTRAINT FK_eventTime2 FOREIGN KEY (eventTimeID) REFERENCES SchedulizerEventTime(id) ON UPDATE CASCADE ON DELETE CASCADE");
-                // Tag associations @todo: IMPLEMENT WITH VERSIONS
-                $connection->query("ALTER TABLE SchedulizerTaggedEvents ADD CONSTRAINT FK_taggedEvent FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
-                $connection->query("ALTER TABLE SchedulizerTaggedEvents ADD CONSTRAINT FK_taggedEvent2 FOREIGN KEY (eventTagID) REFERENCES SchedulizerEventTag(id) ON DELETE CASCADE");
-                // Category associations @todo: IMPLEMENT WITH VERSIONS
-                $connection->query("ALTER TABLE SchedulizerCategorizedEvents ADD CONSTRAINT FK_categorizedEvent FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
-                $connection->query("ALTER TABLE SchedulizerCategorizedEvents ADD CONSTRAINT FK_categorizedEvent2 FOREIGN KEY (eventCategoryID) REFERENCES SchedulizerEventCategory(id) ON DELETE CASCADE");
+                $connection          = Database::connection(Database::getDefaultConnection())->getWrappedConnection();
+                $existing            = $connection->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY'");
+                $existing->execute();
+                // = array of existing foreign key names already configured
+                $existingConstraints = $existing->fetchAll(\PDO::FETCH_COLUMN);
+
+                $constraints = array(
+                    'FK_calendar' => array(
+                        'table' => 'SchedulizerEvent', 'fkCol' => 'calendarID', 'fkRefs' => 'SchedulizerCalendar(id)', 'cascades' => array('update', 'delete')
+                    ),
+                    'FK_event' => array(
+                        'table' => 'SchedulizerEventVersion', 'fkCol' => 'eventID', 'fkRefs' => 'SchedulizerEvent(id)', 'cascades' => array('delete')
+                    ),
+                    'FK_event2' => array(
+                        'table' => 'SchedulizerEventTime', 'fkCol' => 'eventID', 'fkRefs' => 'SchedulizerEvent(id)', 'cascades' => array('update', 'delete')
+                    ),
+                    'FK_eventTime' => array(
+                        'table' => 'SchedulizerEventTimeWeekdays', 'fkCol' => 'eventTimeID', 'fkRefs' => 'SchedulizerEventTime(id)', 'cascades' => array('update', 'delete')
+                    ),
+                    'FK_eventTime2' => array(
+                        'table' => 'SchedulizerEventTimeNullify', 'fkCol' => 'eventTimeID', 'fkRefs' => 'SchedulizerEventTime(id)', 'cascades' => array('update', 'delete')
+                    ),
+                    'FK_taggedEvent' => array(
+                        'table' => 'SchedulizerTaggedEvents', 'fkCol' => 'eventID', 'fkRefs' => 'SchedulizerEvent(id)', 'cascades' => array('delete')
+                    ),
+                    'FK_taggedEvent2' => array(
+                        'table' => 'SchedulizerTaggedEvents', 'fkCol' => 'eventTagID', 'fkRefs' => 'SchedulizerEventTag(id)', 'cascades' => array('delete')
+                    ),
+                    'FK_categorizedEvent' => array(
+                        'table' => 'SchedulizerCategorizedEvents', 'fkCol' => 'eventID', 'fkRefs' => 'SchedulizerEvent(id)', 'cascades' => array('delete')
+                    ),
+                    'FK_categorizedEvent2' => array(
+                        'table' => 'SchedulizerCategorizedEvents', 'fkCol' => 'eventCategoryID', 'fkRefs' => 'SchedulizerEventCategory(id)', 'cascades' => array('delete')
+                    )
+                );
+
+                foreach($constraints AS $constrName => $def){
+                    if( !in_array($constrName, $existingConstraints) ){
+                        $query = "ALTER TABLE {$def['table']}
+                        ADD CONSTRAINT {$constrName}
+                        FOREIGN KEY ({$def['fkCol']})
+                        REFERENCES {$def['fkRefs']}";
+                        $query .= in_array('update', $def['cascades']) ? ' ON UPDATE CASCADE' : '';
+                        $query .= in_array('delete', $def['cascades']) ? ' ON DELETE CASCADE' : '';
+                        $connection->exec($query);
+                    }
+                }
+
+//                $connection->query("ALTER TABLE SchedulizerEvent ADD CONSTRAINT FK_calendar FOREIGN KEY (calendarID) REFERENCES SchedulizerCalendar(id) ON UPDATE CASCADE ON DELETE CASCADE");
+//                $connection->query("ALTER TABLE SchedulizerEventVersion ADD CONSTRAINT FK_event FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
+//                $connection->query("ALTER TABLE SchedulizerEventTime ADD CONSTRAINT FK_event2 FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON UPDATE CASCADE ON DELETE CASCADE");
+//                $connection->query("ALTER TABLE SchedulizerEventTimeWeekdays ADD CONSTRAINT FK_eventTime FOREIGN KEY (eventTimeID) REFERENCES SchedulizerEventTime(id) ON UPDATE CASCADE ON DELETE CASCADE");
+//                $connection->query("ALTER TABLE SchedulizerEventTimeNullify ADD CONSTRAINT FK_eventTime2 FOREIGN KEY (eventTimeID) REFERENCES SchedulizerEventTime(id) ON UPDATE CASCADE ON DELETE CASCADE");
+
+//                // Tag associations @todo: IMPLEMENT WITH VERSIONS
+//                $connection->query("ALTER TABLE SchedulizerTaggedEvents ADD CONSTRAINT FK_taggedEvent FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
+//                $connection->query("ALTER TABLE SchedulizerTaggedEvents ADD CONSTRAINT FK_taggedEvent2 FOREIGN KEY (eventTagID) REFERENCES SchedulizerEventTag(id) ON DELETE CASCADE");
+
+//                // Category associations @todo: IMPLEMENT WITH VERSIONS
+//                $connection->query("ALTER TABLE SchedulizerCategorizedEvents ADD CONSTRAINT FK_categorizedEvent FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
+//                $connection->query("ALTER TABLE SchedulizerCategorizedEvents ADD CONSTRAINT FK_categorizedEvent2 FOREIGN KEY (eventCategoryID) REFERENCES SchedulizerEventCategory(id) ON DELETE CASCADE");
             }catch(\Exception $e){ /** @todo: log out */ }
+
+            return $this;
         }
 
 
