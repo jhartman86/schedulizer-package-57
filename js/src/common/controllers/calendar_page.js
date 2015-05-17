@@ -3,13 +3,15 @@ angular.module('schedulizer.app').
     controller('CtrlCalendarPage', ['$rootScope', '$scope', '$http', '$cacheFactory', 'API',
         function( $rootScope, $scope, $http, $cacheFactory, API ){
 
-            $scope.updateInProgress = false;
-            $scope.searchOpen       = false;
-            $scope.eventTagList     = [];
-            $scope.searchFiltersSet = false;
-            $scope.searchFields     = {
+            $scope.updateInProgress     = false;
+            $scope.searchOpen           = false;
+            $scope.eventTagList         = [];
+            $scope.eventCategoryList    = [];
+            $scope.searchFiltersSet     = false;
+            $scope.searchFields         = {
                 keywords: null,
-                tags: []
+                tags: [],
+                categories: []
             };
 
             $scope.toggleSearch = function(){
@@ -18,6 +20,10 @@ angular.module('schedulizer.app').
 
             API.eventTags.query().$promise.then(function( results ){
                 $scope.eventTagList = results;
+            });
+
+            API.eventCategories.query().$promise.then(function( results ){
+                $scope.eventCategoryList = results;
             });
 
             // $scope.calendarID is ng-init'd from the view!
@@ -38,6 +44,7 @@ angular.module('schedulizer.app').
                 var filtersSet = false;
                 if( val.keywords ){filtersSet = true;}
                 if( val.tags.length !== 0 ){filtersSet = true;}
+                if( val.categories.length !== 0 ){filtersSet = true;}
                 $scope.searchFiltersSet = filtersSet;
             }, true);
 
@@ -51,6 +58,9 @@ angular.module('schedulizer.app').
                     keywords: $scope.searchFields.keywords,
                     tags: $scope.searchFields.tags.map(function( tag ){
                         return tag.id;
+                    }).join(','),
+                    categories: $scope.searchFields.categories.map(function( cat ){
+                        return cat.id;
                     }).join(',')
                 };
             }
@@ -96,7 +106,8 @@ angular.module('schedulizer.app').
             $scope.clearSearchFields = function(){
                 $scope.searchFields = {
                     keywords: null,
-                    tags: []
+                    tags: [],
+                    categories: []
                 };
                 _updateCalendar();
             };

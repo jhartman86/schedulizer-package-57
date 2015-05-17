@@ -36,6 +36,7 @@
         protected $limitTotal   = null;
         protected $calendarIDs  = array();
         protected $eventIDs     = array();
+        protected $categoryIDs  = array();
         protected $tagIDs       = array();
         protected $queryDaySpan = self::DAYS_IN_FUTURE;
         protected $fullTextSearch = null;
@@ -144,6 +145,22 @@
             $this->tagIDs = array_unique($this->tagIDs);
             return $this;
         }
+
+        /**
+         * Filter by categories.
+         * @param $categoryIDs
+         * @return $this
+         */
+        public function filterByCategoryIDs( $categoryIDs ){
+            if( is_array($categoryIDs) ){
+                $this->categoryIDs = array_unique(array_merge($this->categoryIDs, $categoryIDs));
+                return $this;
+            }
+            array_push($this->categoryIDs, $categoryIDs);
+            $this->categoryIDs = array_unique($this->categoryIDs);
+            return $this;
+        }
+
 
         /**
          * Add calendar id/idS to be filtered by.
@@ -353,6 +370,11 @@
                 return (int)$tagID >= 1;
             });
 
+            // Ensure categories are numeric only
+            $this->categoryIDs = array_filter($this->categoryIDs, function( $categoryID ){
+                return (int)$categoryID >= 1;
+            });
+
             // If start hasn't been declared, set it to today but time 00:00:00
             if( !($this->startDTO instanceof DateTime) ){
                 $this->startDTO = new DateTime('now', new DateTimeZone('UTC'));
@@ -402,6 +424,7 @@
                 'calendarIDs'       => $this->calendarIDs,
                 'eventIDs'          => $this->eventIDs,
                 'tagIDs'            => $this->tagIDs,
+                'categoryIDs'       => $this->categoryIDs,
                 'startDTO'          => $this->startDTO,
                 'endDTO'            => $this->endDTO,
                 'queryDaySpan'      => (int)$this->queryDaySpan,

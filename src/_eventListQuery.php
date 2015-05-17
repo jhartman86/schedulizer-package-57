@@ -101,17 +101,39 @@ $latestEventRecords = <<<SQL
     ) AS _versionInfo ON _events.id = _versionInfo.eventID
 SQL;
 
+/****************************************************************
+ * Filtering by tags and categories; if either are set, we first append
+ * the join to the $latestEventRecords internal query (since we should
+ * join against only the latest event records on the inner subquery!),
+ * then add the where clause to the $latestEventRecordWhereClauses.
+ ***************************************************************/
+$latestEventRecordWhereClauses = array();
+
 /**
- * If we're filtering by tags, do a join on the latestEventRecords to filter at that
- * level before any other outer joins occur higher up.
+ * Filtering by tags?
  */
 if( !empty($queryData->tagIDs) ){
-$tagIDs = join(',', $queryData->tagIDs);
-$latestEventRecords .= <<<SQL
-    JOIN SchedulizerTaggedEvents stag ON stag.eventID = _events.id AND stag.versionID = _versionInfo.versionID
-    WHERE stag.eventTagID IN ($tagIDs) GROUP BY _events.id
-SQL;
+    $latestEventRecords .= " JOIN SchedulizerTaggedEvents stag ON stag.eventID = _events.id AND stag.versionID = _versionInfo.versionID ";
+    array_push($latestEventRecordWhereClauses, sprintf("stag.eventTagID IN (%s)", join(',', $queryData->tagIDs)));
 }
+
+/**
+ * Filtering by categories
+ */
+if( !empty($queryData->categoryIDs) ){
+    $latestEventRecords .= " JOIN SchedulizerCategorizedEvents scev ON scev.eventID = _events.id AND scev.versionID = _versionInfo.versionID ";
+    array_push($latestEventRecordWhereClauses, sprintf("scev.eventCategoryID IN (%s)", join(',', $queryData->categoryIDs)));
+}
+
+/**
+ * If we're filtering by tags or categories, then the above if() statements
+ * will have added the proper where clauses. Now we take those and append them to the
+ * $latestEventRecords at the end.
+ */
+if( !empty($latestEventRecordWhereClauses) ){
+    $latestEventRecords .= sprintf(" WHERE %s GROUP BY _events.id ", join($latestEventRecordWhereClauses, ' AND '));
+}
+
 
 /**
  * Are we putting a limit on the total number of results that can be returned?

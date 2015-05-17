@@ -100,482 +100,6 @@ angular.module('calendry', []);
 
 angular.module('schedulizer.app').
 
-    controller('CtrlCalendarForm', ['$scope', '$q', '$window', 'ModalManager', 'API',
-        function( $scope, $q, $window, ModalManager, API ){
-
-            // Show loading message
-            $scope._ready       = false;
-            $scope._requesting  = false;
-
-            // Create requests promise queue, always loading available timezones list
-            var _requests = [
-                API.timezones.get().$promise, // full timezones list
-                API.timezones.defaultTimezone().$promise  // default timezone (config setting)
-            ];
-
-            // If calendarID is available; try to load it, and push to the requests queue
-            if( ModalManager.data.calendarID ){
-                _requests.push(API.calendar.get({id:ModalManager.data.calendarID}).$promise);
-            }
-
-            // When all requests are finished; 'returned' is an array of
-            // promises containing the query data whereas:
-            // returned[0] = array of all timezones available
-            // returned[1] = object with default timezone from config settings
-            // returned[2] = the calendar, OR null
-            $q.all(_requests).then(function( returned ){
-                $scope.timezoneOptions = returned[0];
-                $scope.entity = returned[2] || new API.calendar({
-                    defaultTimezone: $scope.timezoneOptions[$scope.timezoneOptions.indexOf(returned[1].name)]
-                });
-                $scope._ready = true;
-            }, function( resp ){
-                console.log(resp);
-            });
-
-            // Save the resource
-            $scope.submitHandler = function(){
-                $scope._requesting = true;
-                // If entity already has ID, $update, otherwise $save (create), and bind callback
-                ($scope.entity.id ? $scope.entity.$update() : $scope.entity.$save()).then(
-                    function( resp ){
-                        $scope._requesting = false;
-                        $window.location.href = API._routes.generate('dashboard',['calendars','manage',resp.id]);
-                    }
-                );
-            };
-
-            /**
-             * Delete the entity.
-             */
-            $scope.confirmDelete = false;
-            $scope.deleteEvent = function(){
-                $scope.entity.$delete().then(function( resp ){
-                    if( resp.ok ){
-                        $window.location.href = API._routes.generate('dashboard', ['calendars']);
-                    }
-                });
-            };
-        }
-    ]);
-angular.module('schedulizer.app').
-
-    controller('CtrlCalendarPage', ['$rootScope', '$scope', '$http', '$cacheFactory', 'API',
-        function( $rootScope, $scope, $http, $cacheFactory, API ){
-
-            $scope.updateInProgress = false;
-            $scope.searchOpen       = false;
-            $scope.eventTagList     = [];
-            $scope.searchFiltersSet = false;
-            $scope.searchFields     = {
-                keywords: null,
-                tags: []
-            };
-
-            $scope.toggleSearch = function(){
-                $scope.searchOpen = !$scope.searchOpen;
-            };
-
-            API.eventTags.query().$promise.then(function( results ){
-                $scope.eventTagList = results;
-            });
-
-            // $scope.calendarID is ng-init'd from the view!
-            var _cache = $cacheFactory('calendarData');
-
-            // Tell the API what fields we want back
-            var _fields = [
-                'eventID', 'eventTimeID', 'calendarID', 'title',
-                'eventColor', 'isAllDay', 'isSynthetic', 'computedStartUTC',
-                'computedStartLocal'
-            ];
-
-            /**
-             * Turn the search button green if any search fields are filled in to indicate
-             * to the user that search filters are being applied.
-             */
-            $scope.$watch('searchFields', function(val){
-                var filtersSet = false;
-                if( val.keywords ){filtersSet = true;}
-                if( val.tags.length !== 0 ){filtersSet = true;}
-                $scope.searchFiltersSet = filtersSet;
-            }, true);
-
-            /**
-             * We need to pre-process the $scope.searchFields and format them for
-             * querying; this does so.
-             * @returns {{keywords: null, tags: *}}
-             */
-            function parameterizedSearchFields(){
-                return {
-                    keywords: $scope.searchFields.keywords,
-                    tags: $scope.searchFields.tags.map(function( tag ){
-                        return tag.id;
-                    }).join(',')
-                };
-            }
-
-            /**
-             * Receive a month map object from calendry and setup the request as
-             * you see fit.
-             * @param monthMapObj
-             * @returns {HttpPromise}
-             * @private
-             */
-            function _fetch( monthMapObj ){
-                return $http.get(API._routes.generate('api.eventList', [$scope.calendarID]), {
-                    cache: _cache,
-                    params: angular.extend({
-                        start: monthMapObj.calendarStart.format('YYYY-MM-DD'),
-                        end: monthMapObj.calendarEnd.format('YYYY-MM-DD'),
-                        fields: _fields.join(',')
-                    }, parameterizedSearchFields())
-                });
-            }
-
-            /**
-             * Trigger refreshing the calendar.
-             * @private
-             */
-            function _updateCalendar(){
-                $scope.updateInProgress = true;
-                _cache.removeAll();
-                _fetch($scope.instance.monthMap, true).success(function( resp ){
-                    $scope.instance.events = resp;
-                    $scope.updateInProgress = false;
-                }).error(function( data, status, headers, config ){
-                    $scope.updateInProgress = false;
-                    console.warn(status, 'Failed fetching calendar data.');
-                });
-                $scope.searchOpen = false;
-            }
-
-            /**
-             * Clear the search fields and update calendar.
-             */
-            $scope.clearSearchFields = function(){
-                $scope.searchFields = {
-                    keywords: null,
-                    tags: []
-                };
-                _updateCalendar();
-            };
-
-            /**
-             * Method to trigger calendar refresh callable from the scope.
-             * @type {_updateCalendar}
-             */
-            $scope.sendSearch = function(){
-                _updateCalendar();
-            };
-
-            /**
-             * Handlers for calendry stuff.
-             * @type {{onMonthChange: Function, onDropEnd: Function}}
-             */
-            $scope.instance = {
-                parseDateField: 'computedStartLocal',
-                onMonthChange: function( monthMap ){
-                    _updateCalendar();
-                },
-                onDropEnd: function( landingMoment, eventObj ){
-                    console.log(landingMoment, eventObj);
-                }
-            };
-
-            /**
-             * calendar.refresh IS NOT issued by the calendry directive; it comes
-             * from other things in the app.
-             */
-            $rootScope.$on('calendar.refresh', _updateCalendar);
-
-            // Launch C5's default modal stuff
-            $scope.permissionModal = function( _href ){
-                jQuery.fn.dialog.open({
-                    title:  'Calendar Permissions',
-                    href:   _href,
-                    modal:  false,
-                    width:  500,
-                    height: 380
-                });
-            };
-
-        }
-    ]);
-/* global jQuery */
-angular.module('schedulizer.app').
-
-    controller('CtrlEventForm', ['$rootScope', '$scope', '$q', '$filter', 'Helpers', 'ModalManager', 'API', '_moment',
-        function( $rootScope, $scope, $q, $filter, Helpers, ModalManager, API, _moment ){
-
-            $scope.activeMasterTab = {
-                1: true
-            };
-
-            $scope.setMasterTabActive = function( index ){
-                $scope.activeMasterTab = {};
-                $scope.activeMasterTab[index] = true;
-            };
-
-            /**
-             * Template for a new time entity.
-             * @param _populator
-             * @returns {*}
-             */
-            function newEventTimeEntity( _populator ){
-                return angular.extend({
-                    startUTC:                       _moment(),
-                    endUTC:                         _moment(),
-                    isOpenEnded:                    false,
-                    isAllDay:                       false,
-                    isRepeating:                    false,
-                    repeatTypeHandle:               null,
-                    repeatEvery:                    null,
-                    repeatIndefinite:               null,
-                    repeatEndUTC:                   null,
-                    repeatMonthlyMethod:            null,
-                    repeatMonthlySpecificDay:       null,
-                    repeatMonthlyOrdinalWeek:       null,
-                    repeatMonthlyOrdinalWeekday:    null,
-                    weeklyDays:                     []
-                }, _populator || {});
-            }
-
-            // Set default scope variables
-            $scope._ready               = false;
-            $scope._requesting          = false;
-            $scope.eventColorOptions    = Helpers.eventColorOptions();
-            $scope.timingTabs           = [];
-            $scope.eventTagList         = [];
-            $scope.eventCategoryList    = [];
-            // Did the user click to edit an event that's an alias?
-            $scope.warnAliased          = ModalManager.data.eventObj.isSynthetic || false;
-
-            // If aliased, show the message
-            if( $scope.warnAliased ){
-                $scope._ready = true;
-            }
-
-            /**
-             * Before doing anything else, get timezone list (which is cache-able),
-             * the calendar object, and the lists of available tags/categories.
-             * @type {*[]}
-             * @private
-             */
-            var _requests = [
-                API.timezones.get().$promise,
-                API.calendar.get({id:ModalManager.data.eventObj.calendarID}).$promise,
-                API.eventTags.query().$promise,
-                API.eventCategories.query().$promise
-            ];
-
-            /**
-             * After all dependencies are loaded via the queue, THEN proceed...
-             */
-            $q.all(_requests).then(function( results ){
-                // Set timezone options on scope
-                $scope.timezoneOptions = results[0];
-                // Set calendar on scope
-                $scope.calendarObj = results[1];
-                // Set event tags on scope
-                $scope.eventTagList = results[2];
-                // Set event categories
-                $scope.eventCategoryList = results[3];
-
-                // If eventObj passed by the modal manager DOES NOT have an ID, we're
-                // creating a new entity
-                if( ! ModalManager.data.eventObj.eventID ){
-                    // Set entity on scope
-                    $scope.entity = new API.event({
-                        calendarID:             $scope.calendarObj.id,
-                        title:                  '',
-                        description:            '',
-                        useCalendarTimezone:    true,
-                        timezoneName:           $scope.calendarObj.defaultTimezone,
-                        eventColor:             $scope.eventColorOptions[0].value,
-                        _timeEntities:          [newEventTimeEntity()]
-                    });
-                    jQuery('[data-file-selector="fileID"]').concreteFileSelector({
-                        'inputName': 'fileID',
-                        'filters': [{"field":"type","type":1}]
-                    });
-                    $scope._ready = true;
-                }
-            });
-
-            /**
-             * If modal manager passed an eventID, then add another request (to get the
-             * full event info) to the queue and wait for it to resolve, then proceed.
-             */
-            if( ModalManager.data.eventObj.eventID ){
-                // Push a new request onto the promise chain...
-                _requests.push(API.event.get({id:ModalManager.data.eventObj.eventID}).$promise);
-                // When resolved (first two should be done immediately, this just chains onto the queue),
-                // and the last request is index 2
-                $q.all(_requests).then(function( results ){
-                    // Map existing time entity results before setting entity on scope
-                    results[4]._timeEntities.map(function( record ){
-                        return newEventTimeEntity(record);
-                    });
-
-                    // Set the entity
-                    $scope.entity = results[4];
-
-                    jQuery('[data-file-selector="fileID"]').concreteFileSelector({
-                        'inputName': 'fileID',
-                        'fID': $scope.entity.fileID,
-                        'filters': [{"field":"type","type":1}]
-                    });
-
-                    $scope._ready = true;
-                });
-            }
-
-            // Load the attributes form as a seperate include, passing eventID if applicable
-            $scope.attributeForm = API._routes.generate('ajax', [
-                'event_attributes_form', ModalManager.data.eventObj.eventID, ('?bustCache=' + Math.random().toString(36).substring(7) + Math.floor(Math.random() * 10000) + 1)
-            ]);
-
-            // Tag selection function (when creating new tags on the fly, this gets called)
-            $scope.tagTransform = function( newTagText ){
-                return {
-                    displayText: newTagText
-                };
-            };
-
-            /**
-             * Set a specific time entity tab to active
-             * @param index
-             */
-            $scope.setTimingTabActive = function( index ){
-                angular.forEach($scope.timingTabs, function( obj ){
-                    obj.active = false;
-                });
-                $scope.timingTabs[index].active = true;
-            };
-
-            /**
-             * Add a new time entity by pushing onto the _timeEntities stack.
-             */
-            $scope.addTimeEntity = function(){
-                $scope.entity._timeEntities.push(newEventTimeEntity());
-            };
-
-            /**
-             * Remove a time entity.
-             * @param index
-             */
-            $scope.removeTimeEntity = function( index ){
-                $scope.entity._timeEntities.splice(index,1);
-            };
-
-            /**
-             * Watch time entities and create/remove tabs appropriately.
-             */
-            $scope.$watchCollection('entity._timeEntities', function( timeEntities ){
-                if( angular.isArray(timeEntities) ){
-                    $scope.timingTabs = Helpers.range(1, timeEntities.length).map(function(val, index){
-                        return {label:'Time ' + val, active:(index === (timeEntities.length - 1))};
-                    });
-                }
-            });
-
-            /**
-             * Timezone configuration
-             */
-            $scope.$watch('calendarObj', function( obj ){
-                if( angular.isObject(obj) ){
-                    $scope.useCalendarTimezoneOptions = [
-                        {label:'Use Calendar Timezone ('+$scope.calendarObj.defaultTimezone+')', value:true},
-                        {label:'Event Uses Custom Timezone', value:false}
-                    ];
-                }
-            });
-
-            /**
-             * If use calendar timezone is set to true, or changes to be set to true,
-             * set the timezoneName on the event accordingly.
-             */
-            $scope.$watch('entity.useCalendarTimezone', function( val ){
-                if( val === true ){
-                    $scope.entity.timezoneName = $scope.calendarObj.defaultTimezone;
-                }
-            });
-
-            /**
-             * Persist the entity. THIS HAPPENS WITH TWO CALLS: first, we persist
-             * the event object itself. Then when that returns, we make ANOTHER call
-             * posting to _schedulizer/event/attributes/1 with JUST the values encapsulated
-             * in the <div custom-attributes></div> section. We have to dumb down to using
-             * just jQuery here in order to serialize the contents and treat it all as
-             * an array :(.
-             */
-            $scope.submitHandler = function(){
-                // Show the spinner...
-                $scope._requesting = true;
-
-                // Step 1 - submit primary event
-                var step1 = $q(function( resolve, reject ){
-                    // Set the primary fileID from the C5 file selector on the entity before submitting
-                    $scope.entity.fileID = parseInt(jQuery('input[type="hidden"]', '.ccm-file-selector').val()) || null;
-
-                    //If entity already has ID, $update, otherwise $save (create), and bind callback
-                    ($scope.entity.id ? $scope.entity.$update() : $scope.entity.$save()).then(
-                        function( resp ){
-                            // Resolves the outer promise (step1) so we know to move on to step2
-                            resolve(resp);
-                        }
-                    );
-                });
-
-                // Step 2 - serialize attributes and send (always goes to post handler in API)
-                step1.then(function( eventObj ){
-                    var _route = API._routes.generate('api.event', ['attributes', eventObj.id]),
-                        // Serializes all the attributes within [custom-attributes] div
-                        _attrs = jQuery('input,select,textarea', '[custom-attributes]').serialize();
-
-                    jQuery.post(_route, _attrs).always(function( resp ){
-                        if( resp.ok ){
-                            $scope._requesting = false;
-                            $rootScope.$emit('calendar.refresh');
-                            ModalManager.classes.open = false;
-                        }
-                    });
-                });
-            };
-
-            /**
-             * Delete the entity.
-             */
-            $scope.confirmDelete = false;
-            $scope.deleteEvent = function(){
-                $scope.entity.$delete().then(function( resp ){
-                    if( resp.ok ){
-                        $rootScope.$emit('calendar.refresh');
-                        ModalManager.classes.open = false;
-                    }
-                });
-            };
-
-            /**
-             * This is a synthetic event being passed by the calendar results;
-             * therefore the user sees a warning window and can nullify this
-             * event day in the series.
-             */
-            $scope.nullifyInSeries = function(){
-                var nullifier = new API.eventNullify({
-                    eventTimeID: ModalManager.data.eventObj.eventTimeID,
-                    hideOnDate: ModalManager.data.eventObj.computedStartUTC
-                });
-                nullifier.$save().then(function( resp ){
-                    $rootScope.$emit('calendar.refresh');
-                    ModalManager.classes.open = false;
-                });
-            };
-        }
-    ]);
-angular.module('schedulizer.app').
-
     directive('eventTimeForm', [function(){
 
         function _link( scope, $elem, attrs, Controller ){
@@ -942,6 +466,559 @@ angular.module('schedulizer.app').
     }]);
 angular.module('schedulizer.app').
 
+    filter('numberContraction', function($filter) {
+
+        var suffixes = ["th", "st", "nd", "rd"];
+
+        return function(input) {
+            var relevant = (input < 20) ? input : input % (Math.floor(input / 10) * 10);
+            var suffix   = (relevant <= 3) ? suffixes[relevant] : suffixes[0];
+            return suffix;
+        };
+    });
+angular.module('schedulizer.app').
+
+    /**
+     * AngularJS default filter with the following expression:
+     * "person in people | filter: {name: $select.search, age: $select.search}"
+     * performs a AND between 'name: $select.search' and 'age: $select.search'.
+     * We want to perform a OR.
+     * @link: https://github.com/angular-ui/ui-select/blob/master/examples/demo.js#L134
+     */
+    filter('propsFilter', function() {
+        return function(items, props) {
+            var out = [];
+
+            if (angular.isArray(items)) {
+                items.forEach(function(item) {
+                    var itemMatches = false;
+
+                    var keys = Object.keys(props);
+                    for (var i = 0; i < keys.length; i++) {
+                        var prop = keys[i];
+                        var text = props[prop].toLowerCase();
+                        if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
+                            itemMatches = true;
+                            break;
+                        }
+                    }
+
+                    if (itemMatches) {
+                        out.push(item);
+                    }
+                });
+            } else {
+                // Let the output be the input untouched
+                out = items;
+            }
+
+            return out;
+        };
+    });
+angular.module('schedulizer.app').
+
+    /**
+     * @description MomentJS provider
+     * @param $window
+     * @param $log
+     * @returns Moment | false
+     */
+    provider('_moment', function(){
+        this.$get = ['$window', '$log',
+            function( $window, $log ){
+                return $window['moment'] || ($log.warn('MomentJS unavailable!'), false);
+            }
+        ];
+    });
+angular.module('schedulizer.app').
+
+    controller('CtrlCalendarForm', ['$scope', '$q', '$window', 'ModalManager', 'API',
+        function( $scope, $q, $window, ModalManager, API ){
+
+            // Show loading message
+            $scope._ready       = false;
+            $scope._requesting  = false;
+
+            // Create requests promise queue, always loading available timezones list
+            var _requests = [
+                API.timezones.get().$promise, // full timezones list
+                API.timezones.defaultTimezone().$promise  // default timezone (config setting)
+            ];
+
+            // If calendarID is available; try to load it, and push to the requests queue
+            if( ModalManager.data.calendarID ){
+                _requests.push(API.calendar.get({id:ModalManager.data.calendarID}).$promise);
+            }
+
+            // When all requests are finished; 'returned' is an array of
+            // promises containing the query data whereas:
+            // returned[0] = array of all timezones available
+            // returned[1] = object with default timezone from config settings
+            // returned[2] = the calendar, OR null
+            $q.all(_requests).then(function( returned ){
+                $scope.timezoneOptions = returned[0];
+                $scope.entity = returned[2] || new API.calendar({
+                    defaultTimezone: $scope.timezoneOptions[$scope.timezoneOptions.indexOf(returned[1].name)]
+                });
+                $scope._ready = true;
+            }, function( resp ){
+                console.log(resp);
+            });
+
+            // Save the resource
+            $scope.submitHandler = function(){
+                $scope._requesting = true;
+                // If entity already has ID, $update, otherwise $save (create), and bind callback
+                ($scope.entity.id ? $scope.entity.$update() : $scope.entity.$save()).then(
+                    function( resp ){
+                        $scope._requesting = false;
+                        $window.location.href = API._routes.generate('dashboard',['calendars','manage',resp.id]);
+                    }
+                );
+            };
+
+            /**
+             * Delete the entity.
+             */
+            $scope.confirmDelete = false;
+            $scope.deleteEvent = function(){
+                $scope.entity.$delete().then(function( resp ){
+                    if( resp.ok ){
+                        $window.location.href = API._routes.generate('dashboard', ['calendars']);
+                    }
+                });
+            };
+        }
+    ]);
+angular.module('schedulizer.app').
+
+    controller('CtrlCalendarPage', ['$rootScope', '$scope', '$http', '$cacheFactory', 'API',
+        function( $rootScope, $scope, $http, $cacheFactory, API ){
+
+            $scope.updateInProgress     = false;
+            $scope.searchOpen           = false;
+            $scope.eventTagList         = [];
+            $scope.eventCategoryList    = [];
+            $scope.searchFiltersSet     = false;
+            $scope.searchFields         = {
+                keywords: null,
+                tags: [],
+                categories: []
+            };
+
+            $scope.toggleSearch = function(){
+                $scope.searchOpen = !$scope.searchOpen;
+            };
+
+            API.eventTags.query().$promise.then(function( results ){
+                $scope.eventTagList = results;
+            });
+
+            API.eventCategories.query().$promise.then(function( results ){
+                $scope.eventCategoryList = results;
+            });
+
+            // $scope.calendarID is ng-init'd from the view!
+            var _cache = $cacheFactory('calendarData');
+
+            // Tell the API what fields we want back
+            var _fields = [
+                'eventID', 'eventTimeID', 'calendarID', 'title',
+                'eventColor', 'isAllDay', 'isSynthetic', 'computedStartUTC',
+                'computedStartLocal'
+            ];
+
+            /**
+             * Turn the search button green if any search fields are filled in to indicate
+             * to the user that search filters are being applied.
+             */
+            $scope.$watch('searchFields', function(val){
+                var filtersSet = false;
+                if( val.keywords ){filtersSet = true;}
+                if( val.tags.length !== 0 ){filtersSet = true;}
+                if( val.categories.length !== 0 ){filtersSet = true;}
+                $scope.searchFiltersSet = filtersSet;
+            }, true);
+
+            /**
+             * We need to pre-process the $scope.searchFields and format them for
+             * querying; this does so.
+             * @returns {{keywords: null, tags: *}}
+             */
+            function parameterizedSearchFields(){
+                return {
+                    keywords: $scope.searchFields.keywords,
+                    tags: $scope.searchFields.tags.map(function( tag ){
+                        return tag.id;
+                    }).join(','),
+                    categories: $scope.searchFields.categories.map(function( cat ){
+                        return cat.id;
+                    }).join(',')
+                };
+            }
+
+            /**
+             * Receive a month map object from calendry and setup the request as
+             * you see fit.
+             * @param monthMapObj
+             * @returns {HttpPromise}
+             * @private
+             */
+            function _fetch( monthMapObj ){
+                return $http.get(API._routes.generate('api.eventList', [$scope.calendarID]), {
+                    cache: _cache,
+                    params: angular.extend({
+                        start: monthMapObj.calendarStart.format('YYYY-MM-DD'),
+                        end: monthMapObj.calendarEnd.format('YYYY-MM-DD'),
+                        fields: _fields.join(',')
+                    }, parameterizedSearchFields())
+                });
+            }
+
+            /**
+             * Trigger refreshing the calendar.
+             * @private
+             */
+            function _updateCalendar(){
+                $scope.updateInProgress = true;
+                _cache.removeAll();
+                _fetch($scope.instance.monthMap, true).success(function( resp ){
+                    $scope.instance.events = resp;
+                    $scope.updateInProgress = false;
+                }).error(function( data, status, headers, config ){
+                    $scope.updateInProgress = false;
+                    console.warn(status, 'Failed fetching calendar data.');
+                });
+                $scope.searchOpen = false;
+            }
+
+            /**
+             * Clear the search fields and update calendar.
+             */
+            $scope.clearSearchFields = function(){
+                $scope.searchFields = {
+                    keywords: null,
+                    tags: [],
+                    categories: []
+                };
+                _updateCalendar();
+            };
+
+            /**
+             * Method to trigger calendar refresh callable from the scope.
+             * @type {_updateCalendar}
+             */
+            $scope.sendSearch = function(){
+                _updateCalendar();
+            };
+
+            /**
+             * Handlers for calendry stuff.
+             * @type {{onMonthChange: Function, onDropEnd: Function}}
+             */
+            $scope.instance = {
+                parseDateField: 'computedStartLocal',
+                onMonthChange: function( monthMap ){
+                    _updateCalendar();
+                },
+                onDropEnd: function( landingMoment, eventObj ){
+                    console.log(landingMoment, eventObj);
+                }
+            };
+
+            /**
+             * calendar.refresh IS NOT issued by the calendry directive; it comes
+             * from other things in the app.
+             */
+            $rootScope.$on('calendar.refresh', _updateCalendar);
+
+            // Launch C5's default modal stuff
+            $scope.permissionModal = function( _href ){
+                jQuery.fn.dialog.open({
+                    title:  'Calendar Permissions',
+                    href:   _href,
+                    modal:  false,
+                    width:  500,
+                    height: 380
+                });
+            };
+
+        }
+    ]);
+/* global jQuery */
+angular.module('schedulizer.app').
+
+    controller('CtrlEventForm', ['$rootScope', '$scope', '$q', '$filter', 'Helpers', 'ModalManager', 'API', '_moment',
+        function( $rootScope, $scope, $q, $filter, Helpers, ModalManager, API, _moment ){
+
+            $scope.activeMasterTab = {
+                1: true
+            };
+
+            $scope.setMasterTabActive = function( index ){
+                $scope.activeMasterTab = {};
+                $scope.activeMasterTab[index] = true;
+            };
+
+            /**
+             * Template for a new time entity.
+             * @param _populator
+             * @returns {*}
+             */
+            function newEventTimeEntity( _populator ){
+                return angular.extend({
+                    startUTC:                       _moment(),
+                    endUTC:                         _moment(),
+                    isOpenEnded:                    false,
+                    isAllDay:                       false,
+                    isRepeating:                    false,
+                    repeatTypeHandle:               null,
+                    repeatEvery:                    null,
+                    repeatIndefinite:               null,
+                    repeatEndUTC:                   null,
+                    repeatMonthlyMethod:            null,
+                    repeatMonthlySpecificDay:       null,
+                    repeatMonthlyOrdinalWeek:       null,
+                    repeatMonthlyOrdinalWeekday:    null,
+                    weeklyDays:                     []
+                }, _populator || {});
+            }
+
+            // Set default scope variables
+            $scope._ready               = false;
+            $scope._requesting          = false;
+            $scope.eventColorOptions    = Helpers.eventColorOptions();
+            $scope.timingTabs           = [];
+            $scope.eventTagList         = [];
+            $scope.eventCategoryList    = [];
+            // Did the user click to edit an event that's an alias?
+            $scope.warnAliased          = ModalManager.data.eventObj.isSynthetic || false;
+
+            // If aliased, show the message
+            if( $scope.warnAliased ){
+                $scope._ready = true;
+            }
+
+            /**
+             * Before doing anything else, get timezone list (which is cache-able),
+             * the calendar object, and the lists of available tags/categories.
+             * @type {*[]}
+             * @private
+             */
+            var _requests = [
+                API.timezones.get().$promise,
+                API.calendar.get({id:ModalManager.data.eventObj.calendarID}).$promise,
+                API.eventTags.query().$promise,
+                API.eventCategories.query().$promise
+            ];
+
+            /**
+             * After all dependencies are loaded via the queue, THEN proceed...
+             */
+            $q.all(_requests).then(function( results ){
+                // Set timezone options on scope
+                $scope.timezoneOptions = results[0];
+                // Set calendar on scope
+                $scope.calendarObj = results[1];
+                // Set event tags on scope
+                $scope.eventTagList = results[2];
+                // Set event categories
+                $scope.eventCategoryList = results[3];
+
+                // If eventObj passed by the modal manager DOES NOT have an ID, we're
+                // creating a new entity
+                if( ! ModalManager.data.eventObj.eventID ){
+                    // Set entity on scope
+                    $scope.entity = new API.event({
+                        calendarID:             $scope.calendarObj.id,
+                        title:                  '',
+                        description:            '',
+                        useCalendarTimezone:    true,
+                        timezoneName:           $scope.calendarObj.defaultTimezone,
+                        eventColor:             $scope.eventColorOptions[0].value,
+                        _timeEntities:          [newEventTimeEntity()]
+                    });
+                    jQuery('[data-file-selector="fileID"]').concreteFileSelector({
+                        'inputName': 'fileID',
+                        'filters': [{"field":"type","type":1}]
+                    });
+                    $scope._ready = true;
+                }
+            });
+
+            /**
+             * If modal manager passed an eventID, then add another request (to get the
+             * full event info) to the queue and wait for it to resolve, then proceed.
+             */
+            if( ModalManager.data.eventObj.eventID ){
+                // Push a new request onto the promise chain...
+                _requests.push(API.event.get({id:ModalManager.data.eventObj.eventID}).$promise);
+                // When resolved (first two should be done immediately, this just chains onto the queue),
+                // and the last request is index 2
+                $q.all(_requests).then(function( results ){
+                    // Map existing time entity results before setting entity on scope
+                    results[4]._timeEntities.map(function( record ){
+                        return newEventTimeEntity(record);
+                    });
+
+                    // Set the entity
+                    $scope.entity = results[4];
+
+                    jQuery('[data-file-selector="fileID"]').concreteFileSelector({
+                        'inputName': 'fileID',
+                        'fID': $scope.entity.fileID,
+                        'filters': [{"field":"type","type":1}]
+                    });
+
+                    $scope._ready = true;
+                });
+            }
+
+            // Load the attributes form as a seperate include, passing eventID if applicable
+            $scope.attributeForm = API._routes.generate('ajax', [
+                'event_attributes_form', ModalManager.data.eventObj.eventID, ('?bustCache=' + Math.random().toString(36).substring(7) + Math.floor(Math.random() * 10000) + 1)
+            ]);
+
+            // Tag selection function (when creating new tags on the fly, this gets called)
+            $scope.tagTransform = function( newTagText ){
+                return {
+                    displayText: newTagText
+                };
+            };
+
+            /**
+             * Set a specific time entity tab to active
+             * @param index
+             */
+            $scope.setTimingTabActive = function( index ){
+                angular.forEach($scope.timingTabs, function( obj ){
+                    obj.active = false;
+                });
+                $scope.timingTabs[index].active = true;
+            };
+
+            /**
+             * Add a new time entity by pushing onto the _timeEntities stack.
+             */
+            $scope.addTimeEntity = function(){
+                $scope.entity._timeEntities.push(newEventTimeEntity());
+            };
+
+            /**
+             * Remove a time entity.
+             * @param index
+             */
+            $scope.removeTimeEntity = function( index ){
+                $scope.entity._timeEntities.splice(index,1);
+            };
+
+            /**
+             * Watch time entities and create/remove tabs appropriately.
+             */
+            $scope.$watchCollection('entity._timeEntities', function( timeEntities ){
+                if( angular.isArray(timeEntities) ){
+                    $scope.timingTabs = Helpers.range(1, timeEntities.length).map(function(val, index){
+                        return {label:'Time ' + val, active:(index === (timeEntities.length - 1))};
+                    });
+                }
+            });
+
+            /**
+             * Timezone configuration
+             */
+            $scope.$watch('calendarObj', function( obj ){
+                if( angular.isObject(obj) ){
+                    $scope.useCalendarTimezoneOptions = [
+                        {label:'Use Calendar Timezone ('+$scope.calendarObj.defaultTimezone+')', value:true},
+                        {label:'Event Uses Custom Timezone', value:false}
+                    ];
+                }
+            });
+
+            /**
+             * If use calendar timezone is set to true, or changes to be set to true,
+             * set the timezoneName on the event accordingly.
+             */
+            $scope.$watch('entity.useCalendarTimezone', function( val ){
+                if( val === true ){
+                    $scope.entity.timezoneName = $scope.calendarObj.defaultTimezone;
+                }
+            });
+
+            /**
+             * Persist the entity. THIS HAPPENS WITH TWO CALLS: first, we persist
+             * the event object itself. Then when that returns, we make ANOTHER call
+             * posting to _schedulizer/event/attributes/1 with JUST the values encapsulated
+             * in the <div custom-attributes></div> section. We have to dumb down to using
+             * just jQuery here in order to serialize the contents and treat it all as
+             * an array :(.
+             */
+            $scope.submitHandler = function(){
+                // Show the spinner...
+                $scope._requesting = true;
+
+                // Step 1 - submit primary event
+                var step1 = $q(function( resolve, reject ){
+                    // Set the primary fileID from the C5 file selector on the entity before submitting
+                    $scope.entity.fileID = parseInt(jQuery('input[type="hidden"]', '.ccm-file-selector').val()) || null;
+
+                    //If entity already has ID, $update, otherwise $save (create), and bind callback
+                    ($scope.entity.id ? $scope.entity.$update() : $scope.entity.$save()).then(
+                        function( resp ){
+                            // Resolves the outer promise (step1) so we know to move on to step2
+                            resolve(resp);
+                        }
+                    );
+                });
+
+                // Step 2 - serialize attributes and send (always goes to post handler in API)
+                step1.then(function( eventObj ){
+                    var _route = API._routes.generate('api.event', ['attributes', eventObj.id]),
+                        // Serializes all the attributes within [custom-attributes] div
+                        _attrs = jQuery('input,select,textarea', '[custom-attributes]').serialize();
+
+                    jQuery.post(_route, _attrs).always(function( resp ){
+                        if( resp.ok ){
+                            $scope._requesting = false;
+                            $rootScope.$emit('calendar.refresh');
+                            ModalManager.classes.open = false;
+                        }
+                    });
+                });
+            };
+
+            /**
+             * Delete the entity.
+             */
+            $scope.confirmDelete = false;
+            $scope.deleteEvent = function(){
+                $scope.entity.$delete().then(function( resp ){
+                    if( resp.ok ){
+                        $rootScope.$emit('calendar.refresh');
+                        ModalManager.classes.open = false;
+                    }
+                });
+            };
+
+            /**
+             * This is a synthetic event being passed by the calendar results;
+             * therefore the user sees a warning window and can nullify this
+             * event day in the series.
+             */
+            $scope.nullifyInSeries = function(){
+                var nullifier = new API.eventNullify({
+                    eventTimeID: ModalManager.data.eventObj.eventTimeID,
+                    hideOnDate: ModalManager.data.eventObj.computedStartUTC
+                });
+                nullifier.$save().then(function( resp ){
+                    $rootScope.$emit('calendar.refresh');
+                    ModalManager.classes.open = false;
+                });
+            };
+        }
+    ]);
+angular.module('schedulizer.app').
+
     factory('Helpers', ['_moment', function factory(_moment){
 
         this.range = function( start, end ){
@@ -1025,72 +1102,6 @@ angular.module('schedulizer.app').
 
         return this;
     }]);
-angular.module('schedulizer.app').
-
-    filter('numberContraction', function($filter) {
-
-        var suffixes = ["th", "st", "nd", "rd"];
-
-        return function(input) {
-            var relevant = (input < 20) ? input : input % (Math.floor(input / 10) * 10);
-            var suffix   = (relevant <= 3) ? suffixes[relevant] : suffixes[0];
-            return suffix;
-        };
-    });
-angular.module('schedulizer.app').
-
-    /**
-     * AngularJS default filter with the following expression:
-     * "person in people | filter: {name: $select.search, age: $select.search}"
-     * performs a AND between 'name: $select.search' and 'age: $select.search'.
-     * We want to perform a OR.
-     * @link: https://github.com/angular-ui/ui-select/blob/master/examples/demo.js#L134
-     */
-    filter('propsFilter', function() {
-        return function(items, props) {
-            var out = [];
-
-            if (angular.isArray(items)) {
-                items.forEach(function(item) {
-                    var itemMatches = false;
-
-                    var keys = Object.keys(props);
-                    for (var i = 0; i < keys.length; i++) {
-                        var prop = keys[i];
-                        var text = props[prop].toLowerCase();
-                        if (item[prop].toString().toLowerCase().indexOf(text) !== -1) {
-                            itemMatches = true;
-                            break;
-                        }
-                    }
-
-                    if (itemMatches) {
-                        out.push(item);
-                    }
-                });
-            } else {
-                // Let the output be the input untouched
-                out = items;
-            }
-
-            return out;
-        };
-    });
-angular.module('schedulizer.app').
-
-    /**
-     * @description MomentJS provider
-     * @param $window
-     * @param $log
-     * @returns Moment | false
-     */
-    provider('_moment', function(){
-        this.$get = ['$window', '$log',
-            function( $window, $log ){
-                return $window['moment'] || ($log.warn('MomentJS unavailable!'), false);
-            }
-        ];
-    });
 ;(function( window, angular, undefined ){
     'use strict';
 

@@ -22,6 +22,7 @@
                 $this->setFullTextSearchOn()
                      ->setCalendarIDsOn()
                      ->setFilterByTagsOn()
+                    ->setFilterByCategoriesOn()
                      ->setStartDate()
                      ->setEndDate()
                      ->setFetchColumns()
@@ -65,6 +66,17 @@
         private function setFilterByTagsOn(){
             if( !empty($this->requestParams()->tags) ){
                 $this->eventListObj->filterByTagIDs(explode(',', $this->requestParams()->tags));
+            }
+            return $this;
+        }
+
+        /**
+         * eg. ?categories=12,17,92
+         * @return $this
+         */
+        private function setFilterByCategoriesOn(){
+            if( !empty($this->requestParams()->categories) ){
+                $this->eventListObj->filterByCategoryIDs(explode(',', $this->requestParams()->categories));
             }
             return $this;
         }

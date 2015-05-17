@@ -50,19 +50,30 @@
                 <a class="btn btn-sm clear-fields" ng-click="clearSearchFields()">Clear</a>
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-sm-6">
+                        <div class="col-sm-4">
                             <div class="form-group">
                                 <label>Keyword Search</label>
                                 <input type="text" class="form-control" ng-model="searchFields.keywords" placeholder="eg. Aunt Gretta's Cookies" />
                             </div>
                         </div>
-                        <div class="col-sm-6">
-                            <label>Filter By Tags</label>
+                        <div class="col-sm-4">
+                            <label>Tags</label>
                             <div class="form-group ui-select-widget">
                                 <ui-select multiple ng-model="searchFields.tags" theme="bootstrap" title="Tags">
                                     <ui-select-match placeholder="Tags">{{ $item.displayText }}</ui-select-match>
                                     <ui-select-choices repeat="tag in eventTagList | propsFilter: {displayText: $select.search}">
                                         <div ng-bind-html="tag.displayText | highlight: $select.search"></div>
+                                    </ui-select-choices>
+                                </ui-select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <label>Categories</label>
+                            <div class="form-group ui-select-widget">
+                                <ui-select multiple ng-model="searchFields.categories" theme="bootstrap" title="Categories">
+                                    <ui-select-match placeholder="Categories">{{ $item.displayText }}</ui-select-match>
+                                    <ui-select-choices repeat="cat in eventCategoryList | propsFilter: {displayText: $select.search}">
+                                        <div ng-bind-html="cat.displayText | highlight: $select.search"></div>
                                     </ui-select-choices>
                                 </ui-select>
                             </div>
