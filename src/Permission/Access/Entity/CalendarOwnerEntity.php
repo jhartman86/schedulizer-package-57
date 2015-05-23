@@ -25,7 +25,7 @@
             if( $obj instanceof Calendar ){
                 $u = new User();
                 // I think this is right? Need to see what $permissionAccess returns as $obj
-                return $u->getUserID() == $obj->getCalenderOwnerID();
+                return $u->getUserID() == $obj->getOwnerID();
             }
             return false;
         }
