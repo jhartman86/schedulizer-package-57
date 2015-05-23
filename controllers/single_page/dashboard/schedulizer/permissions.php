@@ -29,7 +29,6 @@
                     if( $paID > 0 ){
                         $paObj = PermissionAccess::getByID($paID, $permissionKey);
                         if( is_object($paObj) ){
-                            print_r($paObj);
                             $pt->assignPermissionAccess($paObj);
                         }
                     }
