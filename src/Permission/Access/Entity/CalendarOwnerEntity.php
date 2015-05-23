@@ -4,6 +4,7 @@
     use PermissionAccess; /** @see \Concrete\Core\Permissions\Access\Access */
     use UserInfo;
     use Loader;
+    use User;
     use \Concrete\Package\Schedulizer\Src\Calendar;
 
     class CalendarOwnerEntity extends Entity {
@@ -15,8 +16,18 @@
             }
         }
 
+        /**
+         * @todo make this work...
+         * @param PermissionAccess $permissionAccessObj
+         */
         public function validate( PermissionAccess $permissionAccessObj ){
-            print_r($permissionAccessObj);exit;
+            $obj = $permissionAccessObj->getPermissionObject();
+            if( $obj instanceof Calendar ){
+                $u = new User();
+                // I think this is right? Need to see what $permissionAccess returns as $obj
+                return $u->getUserID() == $obj->getCalenderOwnerID();
+            }
+            return false;
         }
 
         public function getAccessEntityTypeLinkHTML(){

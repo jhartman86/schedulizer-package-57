@@ -94,8 +94,10 @@
             \Core::bind('\\Concrete\\Core\\Permission\\Access\\SchedulizerAccess', '\\Concrete\\Package\\Schedulizer\\Src\\Permission\\Access\\SchedulizerAccess');
             \Core::bind('\\Concrete\\Core\\Permission\\Access\\SchedulizerCalendarAccess', '\\Concrete\\Package\\Schedulizer\\Src\\Permission\\Access\\SchedulizerCalendarAccess');
 
-            // Same thing but for Calendar Owner Access Entity Type
-            \Core::bind('\\Concrete\\Core\\Permission\\Access\\Entity\\CalendarOwnerEntity', '\\Concrete\\Package\\Schedulizer\\Src\\Permission\\Access\\Entity\\CalendarOwnerEntity');
+            // @note: when C5 support permission loading order correctly (as in, packages have the
+            // on_start method called PRIOR to sessions trying to initialize serialized objects),
+            // we should move the include and bind calls found in application/config/app.php to
+            // here
 
             return $this;
         }
