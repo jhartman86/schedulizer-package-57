@@ -36,6 +36,7 @@
          * whenever you save an event, the first request that comes through is to create
          * the entity, and a second request will always be issued sending the attributes
          * AFTER the event is created. C5's attribute system is just... yikes.
+         * @todo: permissions
          */
         protected function httpPost(){
             if( is_array($this->routeParams) && $this->routeParams[0] === 'attributes' ){
@@ -191,13 +192,6 @@
                 $akObj->saveAttributeForm($eventObj);
             }
         }
-
-//        protected function permissionForCalendar( $id ){
-//            if( $this->{"_calendarPermission{$id}"} === null ){
-//                $this->{"_calendarPermission{$id}"} = new Permissions(Calendar::getByID($id));
-//            }
-//            return $this->{"_calendarPermission{$id}"};
-//        }
     }
 
 }

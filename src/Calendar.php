@@ -6,14 +6,20 @@
     use Permissions;
     use Router;
     use Loader;
+    use \Concrete\Core\Permission\Access\Access AS PermissionAccess;
+    //use \Concrete\Core\Permission\Key\Key AS PermissionKey;
+
+    use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerKey AS SchedulizerPermKey;
+    use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerCalendarKey AS SchedulizerCalendarPermKey;
     use \Concrete\Core\Permission\Category AS PermissionKeyCategory;
+    use User;
 
     /**
      * Class Calendar
      * @package Concrete\Package\Schedulizer\Src
      * @definition({"table":"SchedulizerCalendar"})
      */
-    class Calendar extends Persistant {
+    class Calendar extends Persistant implements \Concrete\Core\Permission\ObjectInterface {
 
         // req'd by PermissionableEntityMixin
         const PERMISSION_KEY_CATEGORY = 'schedulizer_calendar';
@@ -84,6 +90,28 @@
             $properties->createdUTC     = $properties->createdUTC->format('c');
             $properties->modifiedUTC    = $properties->modifiedUTC->format('c');
             return $properties;
+        }
+
+        public function onAfterPersist(){
+//            $addEventsKey = SchedulizerCalendarPermKey::getByHandle('add_events');
+//            $addEventsKey->setPermissionObject($this);
+//            $pa = $addEventsKey->getPermissionAccessObject();
+//            if( !is_object($pa) ){
+//                $pa = PermissionAccess::create($addEventsKey);
+//            }
+//            $pe =
+//            $pa->addListItem()
+
+//            $permKeyCalendar = PermissionKey::getByHandle('manage_calendar_permissions');
+//            $permKeyCalendar->setPermissionA
+//            $permKeyAccessObj = $permKeyCalendar->getPermissionAccessObject();
+//            if( !is_object($permKeyAccessObj) ){
+//                $permKeyAccessObj = PermissionAccess::create($permKeyCalendar);
+//            }
+//            $userObj = new User();
+//            $permKeyAccessObj->addListItem($userObj);
+//            $pt = $permKeyCalendar->getPermissionAssignemntObject();
+//            $pt->assignPermissionAccess($permKeyAccessObj);
         }
 
         /****************************************************************

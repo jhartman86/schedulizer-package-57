@@ -1,5 +1,6 @@
 <?php namespace Concrete\Package\Schedulizer\Src\Permission\Key {
 
+    use User;
     use \Concrete\Package\Schedulizer\Src\Permission\Assignment\SchedulizerCalendarAssignment;
     //use PermissionKey; /** @see \Concrete\Core\Permission\Key\Key */
 
@@ -28,6 +29,21 @@
             }
             $targ->setPermissionKeyObject($this);
             return $targ;
+        }
+
+        public function validate($obj = false){
+            $u = new User;
+            if( $u->isSuperUser() ){
+                return true;
+            }
+            $pae = $this->getPermissionAccessObject();
+            if( !is_object($pae) ){
+                return false;
+            }
+            // @todo: more robust permission checking
+//            $entities = $u->getUserAccessEntityObjects();
+//            print_r($entities);
+//            exit;
         }
 
     }

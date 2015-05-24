@@ -3,5 +3,7 @@
     //use PermissionAccess;
     use \Concrete\Core\Permission\Access\Access;
 
-    class SchedulizerCalendarAccess extends Access {} //PermissionAccess {}
+    class SchedulizerCalendarAccess extends Access { //PermissionAccess {}
+
+    }
 }
