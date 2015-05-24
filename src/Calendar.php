@@ -8,7 +8,9 @@
     use Loader;
     use \Concrete\Core\Permission\Access\Access AS PermissionAccess;
     //use \Concrete\Core\Permission\Key\Key AS PermissionKey;
-
+    use \Concrete\Core\User\Group\Group;
+    use \Concrete\Core\Permission\Access\Entity\GroupEntity as GroupPermissionAccessEntity;
+    use \Concrete\Package\Schedulizer\Src\Permission\Access\Entity\CalendarOwnerEntity AS CalendarOwnerAccessEntity;
     use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerKey AS SchedulizerPermKey;
     use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerCalendarKey AS SchedulizerCalendarPermKey;
     use \Concrete\Core\Permission\Category AS PermissionKeyCategory;
@@ -93,25 +95,31 @@
         }
 
         public function onAfterPersist(){
-//            $addEventsKey = SchedulizerCalendarPermKey::getByHandle('add_events');
-//            $addEventsKey->setPermissionObject($this);
-//            $pa = $addEventsKey->getPermissionAccessObject();
-//            if( !is_object($pa) ){
-//                $pa = PermissionAccess::create($addEventsKey);
-//            }
-//            $pe =
-//            $pa->addListItem()
+            // Add events
+            $pkAddEvents = SchedulizerCalendarPermKey::getByHandle('add_events');
+            $pkAddEvents->setPermissionObject($this);
+            $pa = $pkAddEvents->getPermissionAccessObject();
+            if( !is_object($pa) ){
+                $pa = PermissionAccess::create($pkAddEvents);
+            }
+            $peCalendarOwner = CalendarOwnerAccessEntity::getOrCreate();
+            $pa->addListItem($peCalendarOwner);
+            $peAdministrators = GroupPermissionAccessEntity::getOrCreate(Group::getByID(ADMIN_GROUP_ID));
+            $pa->addListItem($peAdministrators);
+            $pkAddEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
 
-//            $permKeyCalendar = PermissionKey::getByHandle('manage_calendar_permissions');
-//            $permKeyCalendar->setPermissionA
-//            $permKeyAccessObj = $permKeyCalendar->getPermissionAccessObject();
-//            if( !is_object($permKeyAccessObj) ){
-//                $permKeyAccessObj = PermissionAccess::create($permKeyCalendar);
-//            }
-//            $userObj = new User();
-//            $permKeyAccessObj->addListItem($userObj);
-//            $pt = $permKeyCalendar->getPermissionAssignemntObject();
-//            $pt->assignPermissionAccess($permKeyAccessObj);
+            // Delete events
+            $pkDeleteEvents = SchedulizerCalendarPermKey::getByHandle('delete_events');
+            $pkDeleteEvents->setPermissionObject($this);
+            $pa = $pkDeleteEvents->getPermissionAccessObject();
+            if( !is_object($pa) ){
+                $pa = PermissionAccess::create($pkDeleteEvents);
+            }
+            $peCalendarOwner = CalendarOwnerAccessEntity::getOrCreate();
+            $pa->addListItem($peCalendarOwner);
+            $peAdministrators = GroupPermissionAccessEntity::getOrCreate(Group::getByID(ADMIN_GROUP_ID));
+            $pa->addListItem($peAdministrators);
+            $pkDeleteEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
         }
 
         /****************************************************************
