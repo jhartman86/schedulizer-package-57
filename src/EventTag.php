@@ -80,6 +80,14 @@
          * Fetch Methods
          ***************************************************************/
 
+        public static function getByHandle( $handle ){
+            return self::fetchOneBy(function( \PDO $connection, $tableName ) use ($handle){
+                $statement = $connection->prepare("SELECT * FROM {$tableName} WHERE handle = :handle");
+                $statement->bindValue(':handle', $handle);
+                return $statement;
+            });
+        }
+
         public static function fetchAll(){
             return (array) self::fetchMultipleBy(function( \PDO $connection, $tableName ){
                 $statement = $connection->prepare("SELECT * FROM {$tableName}");

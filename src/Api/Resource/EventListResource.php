@@ -22,7 +22,7 @@
                 $this->setFullTextSearchOn()
                      ->setCalendarIDsOn()
                      ->setFilterByTagsOn()
-                    ->setFilterByCategoriesOn()
+                     ->setFilterByCategoriesOn()
                      ->setStartDate()
                      ->setEndDate()
                      ->setFetchColumns()
