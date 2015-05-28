@@ -128,8 +128,7 @@
   content: "\e623"; }
 
 #ccm-dashboard-content.container-fluid {
-  padding-top: 49px;
-  padding-right: 20px; }
+  padding: 0; }
 
 .ccm-ui .schedulizer-app fieldset {
   padding: 0;
@@ -695,7 +694,7 @@
   width: 100%; }
 
 .schedulizer-app {
-  margin: 0 -20px;
+  margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -moz-font-smoothing: antialiased;
@@ -2810,7 +2809,7 @@
     .schedulizer-app .calendry-instance:not(.list-view) {
       height: 100%;
       position: relative;
-      min-height: 700px;
+      min-height: 690px;
       overflow: hidden; }
       .schedulizer-app .calendry-instance:not(.list-view) .calendry-header {
         position: absolute;
@@ -3054,6 +3053,7 @@
   .schedulizer-app .ccm-dashboard-content-full {
     margin: 0 !important; }
     .schedulizer-app .ccm-dashboard-content-full .app-wrap {
+      height: calc(100% - 68px);
       position: relative;
       -webkit-transition: all 0.25s ease;
       -o-transition: all 0.25s ease;
@@ -3156,10 +3156,6 @@
     background: rgba(50, 50, 50, 0.35) url("/packages/schedulizer/images//spinner.svg") no-repeat 50% 50%;
     z-index: 5; }
 
-@media screen and (min-width: 992px) {
-  .schedulizer-app .ccm-dashboard-content-full {
-    padding-left: 20px;
-    margin: 0 0 0 -97px !important; } }
 @media screen and (min-width: 1000px) and (min-height: 820px) {
   html {
     overflow: hidden; } }

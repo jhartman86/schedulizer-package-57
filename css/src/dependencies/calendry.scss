@@ -127,7 +127,7 @@ $eventCellBgHover:      #e1e1e1;
       }
     }
 
-    &:not(.list-view){height:100%;position:relative;min-height:700px;overflow:hidden;//@todo: more flexible solution
+    &:not(.list-view){height:100%;position:relative;min-height:690px;overflow:hidden;//@todo: more flexible solution
       .calendry-header {position:absolute;top:0;left:0;right:0;
         .weekdays {display:block;}
       }

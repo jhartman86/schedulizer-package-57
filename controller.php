@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '0.87';
+        protected $pkgVersion               = '0.93';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -210,7 +210,9 @@
                 'SchedulizerEventTimeNullify',
                 'SchedulizerEventAttributeValues',
                 'SchedulizerEventSearchIndexAttributes',
-                'SchedulizerCalendarPermissionAssignments'
+                'SchedulizerCalendarPermissionAssignments',
+                'SchedulizerCategorizedEvents',
+                'SchedulizerEventCategory'
             );
             try {
                 $database = Loader::db();
@@ -365,32 +367,39 @@
                 // = array of existing foreign key names already configured
                 $existingConstraints = $existing->fetchAll(\PDO::FETCH_COLUMN);
 
+                array(
+                    'eventCalendarID',
+                    'eventVersionEventID',
+                    'eventTimeEventID'
+                );
+
+                // @todo: implement tying to versions
                 $constraints = array(
-                    'FK_calendar' => array(
+                    'eventCalendarID' => array(
                         'table' => 'SchedulizerEvent', 'fkCol' => 'calendarID', 'fkRefs' => 'SchedulizerCalendar(id)', 'cascades' => array('update', 'delete')
                     ),
-                    'FK_event' => array(
+                    'eventVersionEventID' => array(
                         'table' => 'SchedulizerEventVersion', 'fkCol' => 'eventID', 'fkRefs' => 'SchedulizerEvent(id)', 'cascades' => array('delete')
                     ),
-                    'FK_event2' => array(
+                    'eventTimeEventID' => array(
                         'table' => 'SchedulizerEventTime', 'fkCol' => 'eventID', 'fkRefs' => 'SchedulizerEvent(id)', 'cascades' => array('update', 'delete')
                     ),
-                    'FK_eventTime' => array(
+                    'eventTimeWeekdaysEventTimeID' => array(
                         'table' => 'SchedulizerEventTimeWeekdays', 'fkCol' => 'eventTimeID', 'fkRefs' => 'SchedulizerEventTime(id)', 'cascades' => array('update', 'delete')
                     ),
-                    'FK_eventTime2' => array(
+                    'eventTimeNullifyEventTimeID' => array(
                         'table' => 'SchedulizerEventTimeNullify', 'fkCol' => 'eventTimeID', 'fkRefs' => 'SchedulizerEventTime(id)', 'cascades' => array('update', 'delete')
                     ),
-                    'FK_taggedEvent' => array(
+                    'eventTaggedEventID' => array(
                         'table' => 'SchedulizerTaggedEvents', 'fkCol' => 'eventID', 'fkRefs' => 'SchedulizerEvent(id)', 'cascades' => array('delete')
                     ),
-                    'FK_taggedEvent2' => array(
+                    'eventTaggedTagID' => array(
                         'table' => 'SchedulizerTaggedEvents', 'fkCol' => 'eventTagID', 'fkRefs' => 'SchedulizerEventTag(id)', 'cascades' => array('delete')
                     ),
-                    'FK_categorizedEvent' => array(
+                    'eventCategorizedEventID' => array(
                         'table' => 'SchedulizerCategorizedEvents', 'fkCol' => 'eventID', 'fkRefs' => 'SchedulizerEvent(id)', 'cascades' => array('delete')
                     ),
-                    'FK_categorizedEvent2' => array(
+                    'eventCategorizedCategoryID' => array(
                         'table' => 'SchedulizerCategorizedEvents', 'fkCol' => 'eventCategoryID', 'fkRefs' => 'SchedulizerEventCategory(id)', 'cascades' => array('delete')
                     )
                 );
@@ -406,20 +415,6 @@
                         $connection->exec($query);
                     }
                 }
-
-//                $connection->query("ALTER TABLE SchedulizerEvent ADD CONSTRAINT FK_calendar FOREIGN KEY (calendarID) REFERENCES SchedulizerCalendar(id) ON UPDATE CASCADE ON DELETE CASCADE");
-//                $connection->query("ALTER TABLE SchedulizerEventVersion ADD CONSTRAINT FK_event FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
-//                $connection->query("ALTER TABLE SchedulizerEventTime ADD CONSTRAINT FK_event2 FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON UPDATE CASCADE ON DELETE CASCADE");
-//                $connection->query("ALTER TABLE SchedulizerEventTimeWeekdays ADD CONSTRAINT FK_eventTime FOREIGN KEY (eventTimeID) REFERENCES SchedulizerEventTime(id) ON UPDATE CASCADE ON DELETE CASCADE");
-//                $connection->query("ALTER TABLE SchedulizerEventTimeNullify ADD CONSTRAINT FK_eventTime2 FOREIGN KEY (eventTimeID) REFERENCES SchedulizerEventTime(id) ON UPDATE CASCADE ON DELETE CASCADE");
-
-//                // Tag associations @todo: IMPLEMENT WITH VERSIONS
-//                $connection->query("ALTER TABLE SchedulizerTaggedEvents ADD CONSTRAINT FK_taggedEvent FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
-//                $connection->query("ALTER TABLE SchedulizerTaggedEvents ADD CONSTRAINT FK_taggedEvent2 FOREIGN KEY (eventTagID) REFERENCES SchedulizerEventTag(id) ON DELETE CASCADE");
-
-//                // Category associations @todo: IMPLEMENT WITH VERSIONS
-//                $connection->query("ALTER TABLE SchedulizerCategorizedEvents ADD CONSTRAINT FK_categorizedEvent FOREIGN KEY (eventID) REFERENCES SchedulizerEvent(id) ON DELETE CASCADE");
-//                $connection->query("ALTER TABLE SchedulizerCategorizedEvents ADD CONSTRAINT FK_categorizedEvent2 FOREIGN KEY (eventCategoryID) REFERENCES SchedulizerEventCategory(id) ON DELETE CASCADE");
             }catch(\Exception $e){ /** @todo: log out */ }
 
             return $this;
@@ -448,6 +443,7 @@
             // Dashboard pages
             SinglePage::add('/dashboard/schedulizer/', $this->packageObject());
             SinglePage::add('/dashboard/schedulizer/calendars', $this->packageObject());
+            SinglePage::add('/dashboard/schedulizer/calendars/search', $this->packageObject());
             SinglePage::add('/dashboard/schedulizer/attributes', $this->packageObject());
             SinglePage::add('/dashboard/schedulizer/permissions', $this->packageObject());
             SinglePage::add('/dashboard/schedulizer/settings', $this->packageObject());

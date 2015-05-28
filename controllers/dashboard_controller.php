@@ -48,7 +48,7 @@
          * Force the height to 100% in the dasboard.
          */
         public function forceFullHeight(){
-            $this->addHeaderItem('<style type="text/css">html,#ccm-dashboard-page.ccm-ui,#ccm-dashboard-page.ccm-ui #ccm-dashboard-content.container-fluid,.schedulizer-app,#ccm-dashboard-page.ccm-ui #ccm-dashboard-content.container-fluid .ccm-dashboard-content-full,.schedulizer-app .calendar-wrap,.calendry-instance {height:100%;padding-bottom:0;}.schedulizer-app .app-wrap {height:calc(100% - 66px);}body {height:calc(100% - 49px);}</style>');
+            $this->addHeaderItem('<style type="text/css">html,#ccm-dashboard-page.ccm-ui,#ccm-dashboard-page.ccm-ui #ccm-dashboard-content.container-fluid,.schedulizer-app,#ccm-dashboard-page.ccm-ui #ccm-dashboard-content.container-fluid .ccm-dashboard-content-full,.schedulizer-app .calendar-wrap,.calendry-instance {height:100%;padding-bottom:0;}.schedulizer-app .app-wrap {height:calc(100% - 0px);}body {height:calc(100% - 49px);padding-top:49px;}</style>');
         }
 
     }

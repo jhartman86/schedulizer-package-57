@@ -58,7 +58,7 @@
                     throw ApiException::httpMethodNotSupported(sprintf('No match for HTTP method %s at this route.', $this->requestObj->getMethod()));
                 }
             }catch( \Exception $e ){
-                $this->responseObj->setStatusCode($e->getCode());
+                $this->responseObj->setStatusCode(JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
                 $this->responseObj->setdata((object)array(
                     'error' => $e->getMessage()
                 ));

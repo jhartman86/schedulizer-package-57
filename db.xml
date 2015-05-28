@@ -19,7 +19,7 @@
             <DEFAULT value="UTC"/>
         </field>
         <field name="ownerID" type="I">
-            <KEY/>
+            <!--<KEY/>-->
             <UNSIGNED />
             <NOTNULL />
             <DEFAULT value="0"/>
@@ -54,10 +54,10 @@
         <field name="calendarID" type="I" size="11">
             <NOTNULL/>
             <unsigned />
-            <KEY/>
+            <!--<KEY/>-->
         </field>
         <field name="ownerID" type="I">
-            <KEY/>
+            <!--<KEY/>-->
             <UNSIGNED />
             <NOTNULL />
             <DEFAULT value="0"/>
@@ -65,6 +65,13 @@
         <field name="pageID" type="I" size="11">
             <unsigned />
         </field>
+
+        <index name="eventCalendarID">
+            <col>calendarID</col>
+        </index>
+        <index name="ownerID">
+            <col>ownerID</col>
+        </index>
     </table>
 
     <table name="SchedulizerEventVersion">
@@ -74,11 +81,11 @@
             <unsigned />
         </field>
         <field name="eventID" type="I">
-            <key />
+            <!--<key />-->
             <unsigned />
         </field>
         <field name="versionID" type="I">
-            <key/>
+            <!--<key/>-->
             <default value="1" />
             <unsigned />
         </field>
@@ -99,6 +106,14 @@
             <UNSIGNED />
         </field>
 
+        <index name="eventAndVersionIDs">
+            <col>eventID</col>
+            <col>versionID</col>
+            <unique />
+        </index>
+        <index name="eventVersionEventID">
+            <col>eventID</col>
+        </index>
         <index name="title">
             <col>title</col>
             <FULLTEXT />
@@ -123,10 +138,10 @@
         <field name="eventID" type="I" size="11">
             <NOTNULL/>
             <unsigned />
-            <KEY/>
+            <!--<KEY/>-->
         </field>
         <field name="versionID" type="I">
-            <key/>
+            <!--<key/>-->
             <unsigned />
         </field>
         <field name="startUTC" type="T">
@@ -164,6 +179,12 @@
             <unsigned />
         </field>
 
+        <index name="eventTimeEventID">
+            <col>eventID</col>
+        </index>
+        <index name="versionID">
+            <col>versionID</col>
+        </index>
         <index name="startUTC">
             <col>startUTC</col>
         </index>
@@ -190,12 +211,15 @@
         <field name="eventTimeID" type="I" size="11">
             <NOTNULL/>
             <unsigned />
-            <KEY/>
+            <!--<KEY/>-->
         </field>
         <field name="repeatWeeklyDay" type="I" size="2">
             <unsigned />
         </field>
 
+        <index name="eventTimeWeekdaysEventTimeID">
+            <col>eventTimeID</col>
+        </index>
         <index name="repeatWeeklyday">
             <col>repeatWeeklyday</col>
         </index>
@@ -213,13 +237,15 @@
         <field name="eventTimeID" type="I" size="11">
             <NOTNULL/>
             <unsigned />
-            <KEY/>
+            <!--<KEY/>-->
         </field>
         <field name="hideOnDate" type="T">
             <NOTNULL/>
         </field>
 
-        <!-- indices -->
+        <index name="eventTimeNullifyEventTimeID">
+            <col>eventTimeID</col>
+        </index>
         <index name="hideOnDate">
             <col>hideOnDate</col>
         </index>
@@ -266,6 +292,12 @@
             <KEY/>
         </field>
 
+        <index name="eventTaggedEventID">
+            <col>eventID</col>
+        </index>
+        <index name="eventTaggedTagID">
+            <col>eventTagID</col>
+        </index>
         <opt platform="mysql">ENGINE=INNODB</opt>
         <opt platform="mysqlt">ENGINE=INNODB</opt>
     </table>
@@ -309,6 +341,12 @@
             <KEY/>
         </field>
 
+        <index name="eventCategorizedEventID">
+            <col>eventID</col>
+        </index>
+        <index name="eventCategorizedCategoryID">
+            <col>eventCategoryID</col>
+        </index>
         <opt platform="mysql">ENGINE=INNODB</opt>
         <opt platform="mysqlt">ENGINE=INNODB</opt>
     </table>
