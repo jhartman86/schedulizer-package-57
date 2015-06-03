@@ -90,7 +90,7 @@
 
         public static function fetchAll(){
             return (array) self::fetchMultipleBy(function( \PDO $connection, $tableName ){
-                $statement = $connection->prepare("SELECT * FROM {$tableName}");
+                $statement = $connection->prepare("SELECT * FROM {$tableName} ORDER BY displayText ASC");
                 return $statement;
             });
         }
