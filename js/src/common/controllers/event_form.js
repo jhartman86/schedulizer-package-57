@@ -1,8 +1,9 @@
 /* global jQuery */
+/* gloabl ConcreteFileManager */
 angular.module('schedulizer.app').
 
-    controller('CtrlEventForm', ['$rootScope', '$scope', '$q', '$filter', 'Helpers', 'ModalManager', 'API', '_moment',
-        function( $rootScope, $scope, $q, $filter, Helpers, ModalManager, API, _moment ){
+    controller('CtrlEventForm', ['$rootScope', '$scope', '$q', '$filter', '$http', 'Helpers', 'ModalManager', 'API', '_moment',
+        function( $rootScope, $scope, $q, $filter, $http, Helpers, ModalManager, API, _moment ){
 
             $scope.activeMasterTab = {
                 1: true
@@ -117,10 +118,37 @@ angular.module('schedulizer.app').
                     // Set the entity
                     $scope.entity = results[4];
 
-                    jQuery('[data-file-selector="fileID"]').concreteFileSelector({
-                        'inputName': 'fileID',
-                        'fID': $scope.entity.fileID,
-                        'filters': [{"field":"type","type":1}]
+                    // Fuck C5's horrendously pathetic error handling. The concreteFileSelector
+                    // call w/in this $http call hits the SAME path, but if (and there frequently will be)
+                    // an error gets thrown because the file no longer exists and C5 doesn't catch
+                    // that error, the interface explodes. So we call the route first and see if it actually
+                    // works, then we basically lets concreteFileSelector call the same things again right
+                    // away, but knowing that its valid. Oh, and we have to do this bullshit so
+                    // it gets transformed into a form request.
+                    $http({
+                        method: 'POST',
+                        url: '/ccm/system/file/get_json',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        transformRequest: function(obj){
+                            var str = [];
+                            for(var p in obj){
+                                str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
+                                return str.join('&');
+                            }
+                        },
+                        data: {fID: $scope.entity.fileID}
+                    }).then(function(){
+                        jQuery('[data-file-selector="fileID"]').concreteFileSelector({
+                            'inputName': 'fileID',
+                            'fID': $scope.entity.fileID,
+                            'filters': [{"field":"type","type":1}]
+                        });
+                    }, function(){
+                        jQuery('[data-file-selector="fileID"]').concreteFileSelector({
+                            'inputName': 'fileID',
+                            'filters': [{"field":"type","type":1}]
+                        });
+                        console.log('No file object assigned to event or it no longer exists');
                     });
 
                     $scope._ready = true;
