@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '0.93';
+        protected $pkgVersion               = '0.95';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -359,6 +359,10 @@
          * Handles foreign key setup since not supported w/ db.xml.
          */
         private function setupDatabaseExtra(){
+            // Logger
+            $groupLogger = new \Concrete\Core\Logging\GroupLogger(false, \Monolog\Logger::INFO);
+            $groupLogger->write("Monitoring DB upgrade for Schedulizer");
+
             /** @var $connection \PDO :: Setup foreign key associations */
             try {
                 $connection          = Database::connection(Database::getDefaultConnection())->getWrappedConnection();
@@ -366,12 +370,7 @@
                 $existing->execute();
                 // = array of existing foreign key names already configured
                 $existingConstraints = $existing->fetchAll(\PDO::FETCH_COLUMN);
-
-                array(
-                    'eventCalendarID',
-                    'eventVersionEventID',
-                    'eventTimeEventID'
-                );
+                $groupLogger->write(sprintf("Existing constraints (will be skipped): \n%s", join(",\n", $existingConstraints)));
 
                 // @todo: implement tying to versions
                 $constraints = array(
@@ -405,17 +404,26 @@
                 );
 
                 foreach($constraints AS $constrName => $def){
-                    if( !in_array($constrName, $existingConstraints) ){
-                        $query = "ALTER TABLE {$def['table']}
-                        ADD CONSTRAINT {$constrName}
-                        FOREIGN KEY ({$def['fkCol']})
-                        REFERENCES {$def['fkRefs']}";
-                        $query .= in_array('update', $def['cascades']) ? ' ON UPDATE CASCADE' : '';
-                        $query .= in_array('delete', $def['cascades']) ? ' ON DELETE CASCADE' : '';
-                        $connection->exec($query);
+                    try {
+                        if( !in_array($constrName, $existingConstraints) ){
+                            $query = "ALTER TABLE {$def['table']}
+                            ADD CONSTRAINT {$constrName}
+                            FOREIGN KEY ({$def['fkCol']})
+                            REFERENCES {$def['fkRefs']}";
+                            $query .= in_array('update', $def['cascades']) ? ' ON UPDATE CASCADE' : '';
+                            $query .= in_array('delete', $def['cascades']) ? ' ON DELETE CASCADE' : '';
+                            $connection->exec($query);
+                            $groupLogger->write(sprintf("Successfully added contraint: %s", $constrName));
+                        }
+                    }catch(\Exception $e){
+                        $groupLogger->write(sprintf("Failed with constraint: %s \n Exception: %s", $constrName, $e->getMessage()));
                     }
                 }
-            }catch(\Exception $e){ /** @todo: log out */ }
+            }catch(\Exception $e){
+                $groupLogger->write(sprintf("Updating constraints failed, caught outer exception: \n %s", $e->getMessage()));
+            }
+
+            $groupLogger->close();
 
             return $this;
         }
