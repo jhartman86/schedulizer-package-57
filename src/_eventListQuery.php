@@ -66,7 +66,7 @@ if( !empty($queryData->eventIDs) ){
 $fullTextSearch = '';
 if( !empty($queryData->fullTextSearch) ){
     $fullTextSearch = sprintf(
-        " AND (MATCH (_eventVersions.title, _eventVersions.description) AGAINST ('%s'))",
+        " AND (MATCH (_eventVersions.title, _eventVersions.description) AGAINST ('%s*' IN BOOLEAN MODE))",
         $queryData->fullTextSearch
     );
 }
