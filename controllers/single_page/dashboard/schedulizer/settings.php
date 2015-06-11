@@ -12,6 +12,11 @@
      */
     class Settings extends DashboardController {
 
+        public function on_start(){
+            parent::on_start();
+            $this->forceFullHeight();
+        }
+
         /**
          * @todo: token validation - can the user adjust/save settings?
          */

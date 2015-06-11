@@ -12,6 +12,7 @@
         public function on_start(){
             parent::on_start();
             $this->tokenHelper = Loader::helper('validation/token');
+            $this->forceFullHeight();
         }
 
         public function view(){

@@ -21,6 +21,7 @@
                 $types[$at->getAttributeTypeID()] = $at->getAttributeTypeDisplayName();
             }
             $this->set('types', $types);
+            $this->forceFullHeight();
         }
 
         public function view(){

@@ -181,6 +181,15 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
   }
 }
 
+#ccm-dashboard-content .schedulizer-system-page-wrap {padding-left:30px;padding-right:30px;padding-bottom:100px;max-width:768px;margin:0 auto;
+  .ccm-dashboard-header-buttons {top:28px;}
+}
+div#ccm-dashboard-content {overflow-y:scroll;
+  > header.ccm-dashboard-page-header {margin:0 0 30px;padding:30px;
+    h1 {margin:0;}
+  }
+}
+
 @media screen and (min-width:$screen-md){
   [modal-window]{
     form.event {
