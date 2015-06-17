@@ -20,6 +20,7 @@
             try {
                 $this->eventListObj = new EventList(array($calendarID));
                 $this->setFullTextSearchOn()
+                     ->setIncludeInactiveEvents()
                      ->setCalendarIDsOn()
                      ->setFilterByTagsOn()
                      ->setFilterByCategoriesOn()
@@ -44,6 +45,17 @@
         private function setFullTextSearchOn(){
             if( !empty($this->requestParams()->keywords) ){
                 $this->eventListObj->setFullTextSearch($this->requestParams()->keywords);
+            }
+            return $this;
+        }
+
+        /**
+         * Simply needs to be set in the query parameter
+         * eg. ?includeinactives=
+         */
+        private function setIncludeInactiveEvents(){
+            if( !empty($this->requestParams()->includeinactives) ){
+                $this->eventListObj->setIncludeInactiveEvents(true);
             }
             return $this;
         }

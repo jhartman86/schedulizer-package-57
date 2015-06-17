@@ -8,7 +8,7 @@
         <div class="row">
             <div class="col-sm-12 time-widgets">
                 <div class="form-group">
-                    <input type="text" class="form-control" placeholder="Start" bs-datepicker ng-model="_timeEntity.startUTC" data-autoclose="1" data-min-date="today" data-template="/tpl-datepicker" data-icon-left="icon-angle-left" data-icon-right="icon-angle-right" />
+                    <input type="text" class="form-control" placeholder="Start" bs-datepicker ng-model="_timeEntity.startUTC" data-autoclose="1" data-template="/tpl-datepicker" data-icon-left="icon-angle-left" data-icon-right="icon-angle-right" />
                 </div>
                 <div class="form-group">
                     <input type="text" class="form-control" placeholder="Time" bs-timepicker ng-model="_timeEntity.startUTC" data-autoclose="1" data-template="/tpl-timepicker" data-icon-up="icon-angle-up" data-icon-down="icon-angle-down" data-time-format="hh:mm a" />

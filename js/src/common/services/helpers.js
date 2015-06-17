@@ -10,6 +10,13 @@ angular.module('schedulizer.app').
             return arr;
         };
 
+        this.isActiveOptions = function(){
+            return [
+                {label:'Active', value: true},
+                {label:'Inactive', value: false}
+            ];
+        };
+
         this.repeatTypeHandleOptions = function(){
             return [
                 {label: 'Days', value: 'daily'},

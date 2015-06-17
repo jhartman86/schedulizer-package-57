@@ -77,6 +77,14 @@ if( !empty($queryData->eventIDs) ){
 }
 
 /**
+ * In the event list class, true is the DEFAULT. But (for ex.) in the dashboard, we
+ * need to view all events, so we can turn this off.
+ */
+if( $queryData->filterByIsActive === true ){ // this is the default set in eventList
+    $restrictor .= " AND sev.isActive = 1 ";
+}
+
+/**
  * Full text search? This is NOT part of the restrictor, but instead gets run on
  * the $latestEventRecords join below.
  */
@@ -100,6 +108,7 @@ $latestEventRecords = <<<SQL
         _events.calendarID,
         _events.ownerID,
         _events.pageID,
+        _events.isActive,
         _versionInfo.versionID,
         _versionInfo.title,
         _versionInfo.description,
@@ -206,6 +215,7 @@ $sql = <<<SQL
               sev.versionID AS versionID,
               sec.id AS calendarID,
               sevt.id AS eventTimeID,
+              sev.isActive,
               sev.title,
               sev.description,
               sev.useCalendarTimezone,

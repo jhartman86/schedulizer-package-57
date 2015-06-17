@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '0.95';
+        protected $pkgVersion               = '0.96';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }

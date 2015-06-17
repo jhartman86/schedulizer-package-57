@@ -65,12 +65,19 @@
         <field name="pageID" type="I" size="11">
             <unsigned />
         </field>
+        <field name="isActive" type="I" size="1">
+            <notnull/>
+            <default value="1"/>
+        </field>
 
         <index name="eventCalendarID">
             <col>calendarID</col>
         </index>
         <index name="ownerID">
             <col>ownerID</col>
+        </index>
+        <index name="pageID">
+            <col>pageID</col>
         </index>
     </table>
 

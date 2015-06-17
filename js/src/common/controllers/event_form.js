@@ -45,6 +45,7 @@ angular.module('schedulizer.app').
             $scope.timingTabs           = [];
             $scope.eventTagList         = [];
             $scope.eventCategoryList    = [];
+            $scope.isActiveOptions      = Helpers.isActiveOptions();
             // Did the user click to edit an event that's an alias?
             $scope.warnAliased          = ModalManager.data.eventObj.isSynthetic || false;
 
@@ -90,6 +91,7 @@ angular.module('schedulizer.app').
                         useCalendarTimezone:    true,
                         timezoneName:           $scope.calendarObj.defaultTimezone,
                         eventColor:             $scope.eventColorOptions[0].value,
+                        isActive:               $scope.isActiveOptions[0].value,
                         _timeEntities:          [newEventTimeEntity()]
                     });
                     jQuery('[data-file-selector="fileID"]').concreteFileSelector({
@@ -118,12 +120,12 @@ angular.module('schedulizer.app').
                     // Set the entity
                     $scope.entity = results[4];
 
-                    // Fuck C5's horrendously pathetic error handling. The concreteFileSelector
+                    // Workaround C5's horrendous error handling. The concreteFileSelector
                     // call w/in this $http call hits the SAME path, but if (and there frequently will be)
                     // an error gets thrown because the file no longer exists and C5 doesn't catch
                     // that error, the interface explodes. So we call the route first and see if it actually
-                    // works, then we basically lets concreteFileSelector call the same things again right
-                    // away, but knowing that its valid. Oh, and we have to do this bullshit so
+                    // works, then we basically let concreteFileSelector call the same thing, again, right
+                    // away, but knowing that its valid. Oh, and we have to do this fun stuff below so
                     // it gets transformed into a form request.
                     $http({
                         method: 'POST',

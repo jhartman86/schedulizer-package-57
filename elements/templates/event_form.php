@@ -40,9 +40,10 @@
                 <!-- title -->
                 <div class="row">
                     <div class="col-sm-12">
-                        <div class="form-group">
+                        <div class="form-group title-group">
                             <label for="" class="sr-only">Title</label>
                             <input type="text" class="form-control input-title" placeholder="Title" ng-model="entity.title" />
+                            <span select-wrap ng-class="{'active-true':entity.isActive,'active-false':!entity.isActive}"><select class="form-control" ng-options="opt.value as opt.label for opt in isActiveOptions" ng-model="entity.isActive"></select></span>
                         </div>
                     </div>
                 </div>

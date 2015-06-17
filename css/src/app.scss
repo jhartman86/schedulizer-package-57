@@ -172,7 +172,16 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
     }
 
     form.event {
+      .title-group {
+        input[type="text"] {padding-right:6rem;}
+        [select-wrap]{position:absolute;top:4px;right:0;
+          select {text-transform:uppercase;font-weight:bold;}
+          &.active-true select {color:$alert-success-text;border-color:$alert-success-border;}
+          &.active-false select {color:$alert-danger-text;border-color:$alert-danger-border;}
+        }
+      }
       .time-widgets {font-size:0;line-height:0;
+        input[type="text"]{display:block;}
         .form-group {display:inline-block;width:50%;font-size:$font-size-base;line-height:1;
           &:nth-of-type(2) input {border-left:0;}
         }

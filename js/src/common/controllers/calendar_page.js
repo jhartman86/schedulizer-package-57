@@ -31,7 +31,7 @@ angular.module('schedulizer.app').
 
             // Tell the API what fields we want back
             var _fields = [
-                'eventID', 'eventTimeID', 'calendarID', 'title',
+                'eventID', 'eventTimeID', 'calendarID', 'title', 'isActive',
                 'eventColor', 'isAllDay', 'isSynthetic', 'computedStartUTC',
                 'computedStartLocal'
             ];
@@ -55,6 +55,7 @@ angular.module('schedulizer.app').
              */
             function parameterizedSearchFields(){
                 return {
+                    includeinactives: true,
                     keywords: $scope.searchFields.keywords,
                     tags: $scope.searchFields.tags.map(function( tag ){
                         return tag.id;

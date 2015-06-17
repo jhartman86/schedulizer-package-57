@@ -20,7 +20,9 @@
         // Required for AttributableEntity trait
         const ATTR_KEY_CLASS    = '\Concrete\Package\Schedulizer\Src\Attribute\Key\SchedulizerEventKey',
               ATTR_VALUE_CLASS  = '\Concrete\Package\Schedulizer\Src\Attribute\Value\SchedulizerEventValue',
-              EVENT_ON_SAVE     = 'schedulizer.event_save';
+              EVENT_ON_SAVE     = 'schedulizer.event_save',
+              IS_ACTIVE         = true,
+              IS_INACTIVE       = false;
 
         /** @definition({"cast":"datetime", "declarable":false, "autoSet":["onCreate"]}) */
         protected $createdUTC;
@@ -37,6 +39,9 @@
         /** @definition({"cast":"int","nullable":true}) */
         protected $pageID;
 
+        /** @definition({"cast":"bool","nullable":false}) */
+        protected $isActive = self::IS_ACTIVE;
+
         /** @return DateTime|null */
         public function getModifiedUTC(){ return $this->modifiedUTC; }
 
@@ -51,6 +56,9 @@
 
         /** @return int */
         public function getPageID(){ return $this->pageID; }
+
+        /** @return bool|null */
+        public function getIsActive(){ return $this->isActive; }
 
         /**
          * On after persist is only called after the canonical Event record
@@ -192,6 +200,13 @@
                 $statement->bindValue(':eventID', $id);
                 return $statement;
             });
+            // Delete associated page, if it was created
+            if( (int) $this->pageID >= 1 ){
+                $pageObj = \Concrete\Core\Page\Page::getByID($this->pageID);
+                if( is_object($pageObj) ){
+                    $pageObj->delete();
+                }
+            }
         }
 
         /****************************************************************

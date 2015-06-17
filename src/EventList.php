@@ -30,6 +30,7 @@
 
         protected $attributesToFetch = array();
         protected $doEventGrouping = false; // Groups by eventID, showing only most recent
+        protected $filterByIsActive = true;
         protected $startDTO; // set or calculated
         protected $endDTO; // set or calculated
         protected $limitPerDay  = null;
@@ -50,6 +51,7 @@
             'versionID'                     => array(false, self::COLUMN_CAST_INT),
             'calendarID'                    => array(false, self::COLUMN_CAST_INT),
             'eventTimeID'                   => array(false, self::COLUMN_CAST_INT),
+            'isActive'                      => array(false, self::COLUMN_CAST_BOOL),
             'title'                         => array(true, self::COLUMN_CAST_STRING),
             'description'                   => array(false, self::COLUMN_CAST_STRING),
             'useCalendarTimezone'           => array(false, self::COLUMN_CAST_BOOL),
@@ -278,6 +280,14 @@
         }
 
         /**
+         * By default, the event list only looks for ACTIVE events. This
+         * turns off that filtering (ie. for the dashboard...)
+         */
+        public function setIncludeInactiveEvents(){
+            $this->filterByIsActive = false;
+        }
+
+        /**
          * Are we including the filepath?
          * @return bool
          */
@@ -394,11 +404,6 @@
                 $this->endDTO->modify("+{$this->queryDaySpan} days");
             }
 
-//            // Always add + 1 day to the endDTO in order to account for UTC
-//            // differences; all endDTO does is act as a restrictor on the internal
-//            // join of the result set to limit the number of records that get joined
-//            $this->endDTO->modify('+1 days');
-
             return $this;
         }
 
@@ -431,7 +436,8 @@
                 'limitPerDay'       => (int)$this->limitPerDay,
                 'limitTotal'        => (int)$this->limitTotal,
                 'fullTextSearch'    => $this->fullTextSearch,
-                'doEventGrouping'   => $this->doEventGrouping
+                'doEventGrouping'   => $this->doEventGrouping,
+                'filterByIsActive'  => $this->filterByIsActive
             );
             return (require sprintf("%s/_eventListQuery.php", __DIR__));
         }
