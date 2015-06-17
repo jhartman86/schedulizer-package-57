@@ -16,7 +16,17 @@ if( !( $this instanceof \Concrete\Package\Schedulizer\Src\EventList ) ){
 
 // Variables passed into the query
 $startDateString    = $queryData->startDTO->format('Y-m-d');
-$queryDaySpan       = $queryData->queryDaySpan;
+// End date is only used at the outermost level of the query to provide
+// restrictions on the LOCALIZED time range
+$endDateString      = $queryData->endDTO->format('Y-m-d');
+// In the query section where we have to do all that synthetic date generation
+// bs, we want to step the date to start generating FROM back by 1...
+$startDateBackOne   = $queryData->startDTO->modify("-1 days")->format('Y-m-d');
+// Then similarly, we want to ADD +2 to the day span, so it looks for events possibly one day
+// past (this accounts for UTC differences, then we ultimately filter on the localized start/end time
+// at the end of the query!)
+$queryDaySpan       = $queryData->queryDaySpan + 2;
+// Limit per day has the effect of "show only the first x events per day"
 $limitPerDay        = ($queryData->limitPerDay >= 1) ? " LIMIT {$queryData->limitPerDay}" : '';
 $selectColumns      = join(',', array_keys($queryData->selectableColumns));
 
@@ -34,17 +44,24 @@ if( $queryData->doEventGrouping === true ){
 
 /**
  * Restriction on internal join.
+ * @note: in the same vein as above where we are stepping back the startDateBackOne, and adding
+ * one to the queryDaySpan, we have to add +1 day to the end date on the restrictor to account
+ * for UTC stuff. Also - we have to CLONE it here because effing php makes datetime object's
+ * mutable, and we want to re-use the endDTO at the end of the query to, ultimately, filter
+ * start/end times based on LOCAL values.
  */
+$endUTCPlusOne = clone $queryData->endDTO;
+$endUTCPlusOne->modify('+1 days');
 if( !empty($queryData->calendarIDs) ){
     $restrictor = sprintf(
-        "sev.calendarID IN (%s) AND (DATE(sevt.startUTC) < DATE('%s'))",
+        "sev.calendarID IN (%s) AND (DATE(sevt.startUTC) <= DATE('%s'))",
         join(',', $queryData->calendarIDs),
-        $queryData->endDTO->format('Y-m-d')
+        $endUTCPlusOne->format('Y-m-d')
     );
 }else{
     $restrictor = sprintf(
-        "(DATE(sevt.startUTC) < DATE('%s'))",
-        $queryData->endDTO->format('Y-m-d')
+        "(DATE(sevt.startUTC) <= DATE('%s'))",
+        $endUTCPlusOne->format('Y-m-d')
     );
 }
 
@@ -177,7 +194,7 @@ $sql = <<<SQL
         FROM (
             /* Where the magic happens for dynamically generating a series of dates into the future
              against which we can join event records. */
-            SELECT DATE('$startDateString' + INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY) AS _syntheticDate
+            SELECT DATE('$startDateBackOne' + INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY) AS _syntheticDate
             FROM (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as a
             CROSS JOIN (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as b
             CROSS JOIN (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as c
@@ -270,7 +287,12 @@ $sql = <<<SQL
         OR (
           (_events.isRepeating = 0 AND _synthesized._syntheticDate = DATE(_events.startUTC))
         )
-    ) AS _eventList $groupByClause ORDER BY computedStartUTC $limitResultsClause;
+    ) AS _eventList
+
+    /* This is where we ultimately filter events by the proper, LOCALIZED date range */
+    WHERE DATE(computedStartLocal) >= DATE('$startDateString') AND DATE(computedEndLocal) <= DATE('$endDateString')
+
+    $groupByClause ORDER BY computedStartUTC $limitResultsClause;
 SQL;
 
 // Return the fully composed SQL query
