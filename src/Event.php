@@ -209,6 +209,24 @@
             }
         }
 
+        /**
+         * By default, an event object does not contain any time information... Which
+         * seems counter-intuitive. This method looks through all the associated
+         * time entities and finds the earliest start time in UTC.
+         */
+        public function getEarliestStartTime(){
+            if( $this->_calcdEarliestStartTime === null ){
+                $allStartUTCTimes = array_map(function( $eventTimeObj ){
+                    /** @var $eventTimeObj \Concrete\Package\Schedulizer\Src\EventTime */
+                    return $eventTimeObj->getStartUTC();
+                }, (array) $this->getEventTimes());
+                $this->_calcdEarliestStartTime = array_reduce($allStartUTCTimes, function( $carry, $item ){
+                    return ($carry < $item) ? $carry : $item;
+                }, $allStartUTCTimes[0]);
+            }
+            return $this->_calcdEarliestStartTime;
+        }
+
         /****************************************************************
          * Fetch Methods
          ***************************************************************/
