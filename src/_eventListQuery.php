@@ -301,7 +301,7 @@ $sql = <<<SQL
     ) AS _eventList
 
     /* This is where we ultimately filter events by the proper, LOCALIZED date range */
-    WHERE DATE(computedStartLocal) >= DATE('$startDateString') AND DATE(computedEndLocal) <= DATE('$endDateString')
+    WHERE DATE(computedStartLocal) >= DATE('$startDateString') AND DATE(computedStartLocal) <= DATE('$endDateString')
 
     $groupByClause ORDER BY computedStartUTC $limitResultsClause;
 SQL;
