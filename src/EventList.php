@@ -53,6 +53,7 @@
             'eventTimeID'                   => array(false, self::COLUMN_CAST_INT),
             'isActive'                      => array(false, self::COLUMN_CAST_BOOL),
             'title'                         => array(true, self::COLUMN_CAST_STRING),
+            'calendarTitle'                 => array(false, self::COLUMN_CAST_STRING),
             'description'                   => array(false, self::COLUMN_CAST_STRING),
             'useCalendarTimezone'           => array(false, self::COLUMN_CAST_BOOL),
             'derivedTimezone'               => array(true, self::COLUMN_CAST_STRING),

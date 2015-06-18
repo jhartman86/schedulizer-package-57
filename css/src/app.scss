@@ -59,11 +59,20 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
   .ccm-dashboard-content-full {margin: 0 !important;
     .app-wrap {height:calc(100% - 68px);position:relative;@include transition(all 0.25s ease);@include transform(translateY(0));
       .calendar-event-search {padding:1rem 0;height:150px;background:#414d59;color:#97aabc;position:absolute;bottom:100%;left:0;right:0;width:100%;
-        .clear-fields {position:absolute;top:0;right:0;}
+        .clear-fields {position:absolute;top:0;right:0;z-index:2;}
       }
     }
     &.search-open {overflow:hidden;
       .app-wrap {@include transform(translateY(150px));}
+    }
+    &.search-page {
+      input.date-selector{display:inline-block;max-width:90px;}
+      table.event-search-table {
+        tbody td {padding-left:10px;padding-right:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+          a {padding:0;}
+          .text-wrap {max-width:90%;display:block;white-space:pre-line;overflow:hidden;text-overflow:ellipsis;}
+        }
+      }
     }
   }
 
@@ -76,10 +85,10 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
     }
   }
 
-  [select-wrap]{display:inline-block;position:relative;z-index:2;
+  [select-wrap]{display:inline-block;position:relative;z-index:2;background-color:#fff;
     &::after {content: "\e608";font-family:'icomoon';position:absolute;top:50%;right:5px;font-size:24px;z-index:-1;@include transform(translateY(-50%));}
     &.block {display:block;}
-    select {padding-right:25px;text-transform:capitalize;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:transparent;@include border-radius(0);}
+    select, select.form-control {padding-right:25px;text-transform:capitalize;-webkit-appearance:none;-moz-appearance:none;appearance:none;background:transparent;@include border-radius(0);}
   }
 
   .calendar-wrap {

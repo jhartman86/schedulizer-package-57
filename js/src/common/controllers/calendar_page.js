@@ -91,7 +91,7 @@ angular.module('schedulizer.app').
             function _updateCalendar(){
                 $scope.updateInProgress = true;
                 _cache.removeAll();
-                _fetch($scope.instance.monthMap, true).success(function( resp ){
+                _fetch($scope.instance.monthMap).success(function( resp ){
                     $scope.instance.events = resp;
                     $scope.updateInProgress = false;
                 }).error(function( data, status, headers, config ){

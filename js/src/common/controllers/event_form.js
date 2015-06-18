@@ -262,9 +262,13 @@ angular.module('schedulizer.app').
 
                     jQuery.post(_route, _attrs).always(function( resp ){
                         if( resp.ok ){
-                            $scope._requesting = false;
-                            $rootScope.$emit('calendar.refresh');
-                            ModalManager.classes.open = false;
+                            // Need to $apply because we have to use effing jQuery for the post
+                            // and this happens in the callback!
+                            $scope.$apply(function(){
+                                $scope._requesting = false;
+                                $rootScope.$emit('calendar.refresh');
+                                ModalManager.classes.open = false;
+                            });
                         }
                     });
                 });

@@ -1,19 +1,31 @@
 angular.module('schedulizer.app').
 
-    controller('CtrlSearchPage', ['$rootScope', '$scope', '$http', '$cacheFactory', 'API',
-        function( $rootScope, $scope, $http, $cacheFactory, API ){
+    controller('CtrlSearchPage', ['$rootScope', '$scope', '$http', '$cacheFactory', 'API', '_moment',
+        function( $rootScope, $scope, $http, $cacheFactory, API, _moment ){
 
+            var _cache  = $cacheFactory('searchCalendarData'),
+                _fields = [ // Tell the API what fields we want back
+                    'eventID', 'eventTimeID', 'calendarID', 'calendarTitle', 'title',
+                    'eventColor', 'isAllDay', 'isSynthetic', 'computedStartUTC',
+                    'computedStartLocal', 'isActive'
+                ];
+
+            // Pass MomentJS to the view via scope
+            $scope.momentJS = _moment;
+
+            $scope.resultData           = [];
             $scope.updateInProgress     = false;
             $scope.searchOpen           = false;
             $scope.eventTagList         = [];
             $scope.eventCategoryList    = [];
             $scope.searchFiltersSet     = false;
-            $scope.searchFields         = {
-                keywords: null,
-                tags: [],
-                categories: []
-            };
-
+            $scope.isActiveOptions      = [{label:'Include Inactive', value: true}, {label:'Active Only', value: false}];
+            $scope.showAllEvents        = true;
+            $scope.groupingOptions      = [{label:'Group Events', value: true}, {label:'Show Repeating', value: false}];
+            $scope.doGrouping           = true;
+            $scope.searchStart          = _moment();
+            $scope.searchEnd            = _moment().add(1, 'month');
+            $scope.searchFields         = {keywords:null, tags:[], categories:[]};
 
             $scope.toggleSearch = function(){
                 $scope.searchOpen = !$scope.searchOpen;
@@ -26,16 +38,6 @@ angular.module('schedulizer.app').
             API.eventCategories.query().$promise.then(function( results ){
                 $scope.eventCategoryList = results;
             });
-
-            // $scope.calendarID is ng-init'd from the view!
-            var _cache = $cacheFactory('calendarData');
-
-            // Tell the API what fields we want back
-            var _fields = [
-                'eventID', 'eventTimeID', 'calendarID', 'title',
-                'eventColor', 'isAllDay', 'isSynthetic', 'computedStartUTC',
-                'computedStartLocal'
-            ];
 
             /**
              * Turn the search button green if any search fields are filled in to indicate
@@ -50,37 +52,47 @@ angular.module('schedulizer.app').
             }, true);
 
             /**
-             * We need to pre-process the $scope.searchFields and format them for
-             * querying; this does so.
-             * @returns {{keywords: null, tags: *}}
+             * In the paramaterizedSearchFields below, we have to use a .map function
+             * with a callback that just returns the ID. Instead of writing it multiple
+             * times, just use this since it always returns the same .id property.
+             * @param obj
+             * @returns {obj.id|*}
+             * @private
              */
-            function parameterizedSearchFields(){
-                return {
-                    keywords: $scope.searchFields.keywords,
-                    tags: $scope.searchFields.tags.map(function( tag ){
-                        return tag.id;
-                    }).join(','),
-                    categories: $scope.searchFields.categories.map(function( cat ){
-                        return cat.id;
-                    }).join(',')
-                };
+            function _mapCallbackReturnID( obj ){
+                return obj.id;
             }
 
             /**
-             * Receive a month map object from calendry and setup the request as
-             * you see fit.
-             * @param monthMapObj
+             * We need to pre-process the $scope.searchFields and format them for
+             * querying; this does so. Also, this determines whether to add 'includeinactives'
+             * to the query string or not.
+             * @returns {{keywords: null, tags: *}}
+             */
+            function parameterizedSearchFields(){
+                return angular.extend({
+                    start:      _moment($scope.searchStart).format('YYYY-MM-DD'),
+                    end:        _moment($scope.searchEnd).format('YYYY-MM-DD'),
+                    fields:     _fields.join(','),
+                    keywords:   $scope.searchFields.keywords,
+                    tags:       $scope.searchFields.tags.map(_mapCallbackReturnID).join(','),
+                    categories: $scope.searchFields.categories.map(_mapCallbackReturnID).join(',')
+                },
+                    // Set these this way because it only matters if they're PRESENT, not their actual value
+                    ($scope.showAllEvents ? {includeinactives:true} : {}),
+                    ($scope.doGrouping ? {grouping:true} : {})
+                );
+            }
+
+            /**
+             * Fetch updates
              * @returns {HttpPromise}
              * @private
              */
-            function _fetch( monthMapObj ){
-                return $http.get(API._routes.generate('api.eventList', [$scope.calendarID]), {
-                    cache: _cache,
-                    params: angular.extend({
-                        start: monthMapObj.calendarStart.format('YYYY-MM-DD'),
-                        end: monthMapObj.calendarEnd.format('YYYY-MM-DD'),
-                        fields: _fields.join(',')
-                    }, parameterizedSearchFields())
+            function _fetch(){
+                return $http.get(API._routes.generate('api.eventList'), {
+                    cache:  _cache,
+                    params: parameterizedSearchFields()
                 });
             }
 
@@ -88,15 +100,15 @@ angular.module('schedulizer.app').
              * Trigger refreshing the calendar.
              * @private
              */
-            function _updateCalendar(){
+            function _updateResults(){
                 $scope.updateInProgress = true;
                 _cache.removeAll();
-                _fetch($scope.instance.monthMap, true).success(function( resp ){
-                    $scope.instance.events = resp;
+                _fetch().success(function( resp ){
+                    $scope.resultData = resp;
                     $scope.updateInProgress = false;
                 }).error(function( data, status, headers, config ){
                     $scope.updateInProgress = false;
-                    console.warn(status, 'Failed fetching calendar data.');
+                    console.warn(status, 'Failed fetching data');
                 });
                 $scope.searchOpen = false;
             }
@@ -110,47 +122,22 @@ angular.module('schedulizer.app').
                     tags: [],
                     categories: []
                 };
-                _updateCalendar();
+                _updateResults();
             };
 
             /**
              * Method to trigger calendar refresh callable from the scope.
-             * @type {_updateCalendar}
+             * @type {_updateResults}
              */
-            $scope.sendSearch = function(){
-                _updateCalendar();
-            };
+            $scope.sendSearch = _updateResults;
 
             /**
-             * Handlers for calendry stuff.
-             * @type {{onMonthChange: Function, onDropEnd: Function}}
+             * When an event is saved, it emits this event. So watch it
+             * and update if necessary.
              */
-            $scope.instance = {
-                parseDateField: 'computedStartLocal',
-                onMonthChange: function( monthMap ){
-                    _updateCalendar();
-                },
-                onDropEnd: function( landingMoment, eventObj ){
-                    console.log(landingMoment, eventObj);
-                }
-            };
+            $rootScope.$on('calendar.refresh', _updateResults);
 
-            /**
-             * calendar.refresh IS NOT issued by the calendry directive; it comes
-             * from other things in the app.
-             */
-            $rootScope.$on('calendar.refresh', _updateCalendar);
-
-            // Launch C5's default modal stuff
-            $scope.permissionModal = function( _href ){
-                jQuery.fn.dialog.open({
-                    title:  'Calendar Permissions',
-                    href:   _href,
-                    modal:  false,
-                    width:  500,
-                    height: 380
-                });
-            };
-
+            // Once everything is wired up, now do first-run load...
+            _updateResults();
         }
     ]);

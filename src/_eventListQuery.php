@@ -217,6 +217,7 @@ $sql = <<<SQL
               sevt.id AS eventTimeID,
               sev.isActive,
               sev.title,
+              sec.title AS calendarTitle,
               sev.description,
               sev.useCalendarTimezone,
               (CASE WHEN (sev.useCalendarTimezone = 1) IS TRUE THEN sec.defaultTimezone ELSE sev.timezoneName END) as derivedTimezone,
