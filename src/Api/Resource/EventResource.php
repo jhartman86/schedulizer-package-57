@@ -39,29 +39,34 @@
          * @todo: permissions
          */
         protected function httpPost(){
+            // Handle saving attributes
             if( is_array($this->routeParams) && $this->routeParams[0] === 'attributes' ){
                 // $this->getEventByID handles errors if event doesn't exist or is invalid
                 $eventObj = $this->getEventByID($this->routeParams[1]);
-                $this->saveAttributesAgainst($eventObj);
-                $this->setResponseData((object)array('ok' => true));
-                return;
+                // Before we update, do a permissions check (not on a per-event basis, but
+                // whether the user can ADD events to the calendar...)
+                if( $eventObj->getCalendarObj()->getPermissions()->canEditEvents() ){
+                    $this->saveAttributesAgainst($eventObj);
+                    $this->setResponseData((object)array('ok' => true));
+                    return;
+                }
+                throw ApiException::permissionInvalid('You do not have permission to edit events on this Calendar.');
             }
 
             $data = $this->scrubbedPostData();
-            // Check its a member of an existing calendar
             $calendarObj = Calendar::getByID($data->calendarID);
-            if( empty($calendarObj) ){
+            // Ensure calendar exists
+            if( empty($calendarObj) || !is_object($calendarObj) ){
                 throw ApiException::dependentResourceInvalid('Calendar does not exist to create an event for.');
             }
+            // Check user has permissions to add events
+            if( ! $calendarObj->getPermissions()->canEditEvents() ){
+                throw ApiException::permissionInvalid('You do not have permission to edit events on this Calendar.');
+            }
+            // Make sure at least 1 time setting exists
             if( empty($data->_timeEntities) ){
                 throw ApiException::generic('At least 1 time setting must be passed in _timeEntities property.');
             }
-
-            // Permission check @todo: test this
-//            $permissions = new Permissions($calendarObj);
-//            if( ! $permissions->canAddEvents() ){
-//                throw ApiException::permissionInvalid();
-//            }
 
             // Set
             $data->ownerID = ($this->currentUser()->getUserID() >= 1) ? $this->currentUser()->getUserID() : 0;
@@ -102,8 +107,16 @@
             if( empty($data->_timeEntities) ){
                 throw ApiException::generic('At least 1 time setting must be passed in _timeEntities property.');
             }
-            // Get existing event
-            $eventObj = Event::getByID($id)->update($data);
+            // Get existing event (getEventByID method throws exception on no existence...)
+            $eventObj = $this->getEventByID($id);
+            // Ensure permissions
+            if( ! $eventObj->getCalendarObj()->getPermissions()->canEditEvents() ){
+                throw ApiException::permissionInvalid('You do not have permission to edit events on this Calendar.');
+            }
+
+            // Now, update the event...
+            $eventObj->update($data);
+            // Process time entities
             foreach((array)$data->_timeEntities AS $timeEntityData){
                 $timeEntityData->eventID   = $eventObj->getID();
                 $timeEntityData->versionID = $eventObj->getVersionID();
@@ -151,13 +164,17 @@
          * @throws ApiException
          */
         public function httpDelete( $id ){
-            $this->getEventByID($id)->delete();
+            $eventObj = $this->getEventByID($id);
+            if( ! $eventObj->getCalendarObj()->getPermissions()->canDeleteEvents() ){
+                throw ApiException::permissionInvalid('You do not have permission to delete events on this Calendar.');
+            }
+            $eventObj->delete();
             $this->setResponseData((object)array('ok' => true));
             $this->setResponseCode(Response::HTTP_ACCEPTED);
         }
 
         /**
-         * All methods that need to access a calendar entity can use this
+         * All methods that need to access an event entity can use this
          * as it has all exception checking built in.
          * @param $id
          * @return Event

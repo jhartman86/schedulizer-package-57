@@ -14,7 +14,7 @@
     use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerKey AS SchedulizerPermKey;
     use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerCalendarKey AS SchedulizerCalendarPermKey;
     use \Concrete\Core\Permission\Category AS PermissionKeyCategory;
-    use User;
+    use UserInfo;
 
     /**
      * Class Calendar
@@ -77,6 +77,13 @@
         }
 
         /**
+         * @return \Concrete\Core\User\UserInfo | null
+         */
+        public function getCalendarOwnerUserInfoObj(){
+            return UserInfo::getByID( $this->ownerID );
+        }
+
+        /**
          * Return properties for JSON serialization
          * @return array|mixed
          */
@@ -96,17 +103,17 @@
 
         public function onAfterPersist(){
             // Add events
-            $pkAddEvents = SchedulizerCalendarPermKey::getByHandle('add_events');
+            $pkAddEvents = SchedulizerCalendarPermKey::getByHandle('edit_events');
             $pkAddEvents->setPermissionObject($this);
             $pa = $pkAddEvents->getPermissionAccessObject();
             if( !is_object($pa) ){
                 $pa = PermissionAccess::create($pkAddEvents);
+                $peCalendarOwner = CalendarOwnerAccessEntity::getOrCreate();
+                $pa->addListItem($peCalendarOwner);
+                $peAdministrators = GroupPermissionAccessEntity::getOrCreate(Group::getByID(ADMIN_GROUP_ID));
+                $pa->addListItem($peAdministrators);
+                $pkAddEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
             }
-            $peCalendarOwner = CalendarOwnerAccessEntity::getOrCreate();
-            $pa->addListItem($peCalendarOwner);
-            $peAdministrators = GroupPermissionAccessEntity::getOrCreate(Group::getByID(ADMIN_GROUP_ID));
-            $pa->addListItem($peAdministrators);
-            $pkAddEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
 
             // Delete events
             $pkDeleteEvents = SchedulizerCalendarPermKey::getByHandle('delete_events');
@@ -114,12 +121,12 @@
             $pa = $pkDeleteEvents->getPermissionAccessObject();
             if( !is_object($pa) ){
                 $pa = PermissionAccess::create($pkDeleteEvents);
+                $peCalendarOwner = CalendarOwnerAccessEntity::getOrCreate();
+                $pa->addListItem($peCalendarOwner);
+                $peAdministrators = GroupPermissionAccessEntity::getOrCreate(Group::getByID(ADMIN_GROUP_ID));
+                $pa->addListItem($peAdministrators);
+                $pkDeleteEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
             }
-            $peCalendarOwner = CalendarOwnerAccessEntity::getOrCreate();
-            $pa->addListItem($peCalendarOwner);
-            $peAdministrators = GroupPermissionAccessEntity::getOrCreate(Group::getByID(ADMIN_GROUP_ID));
-            $pa->addListItem($peAdministrators);
-            $pkDeleteEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
         }
 
         /****************************************************************

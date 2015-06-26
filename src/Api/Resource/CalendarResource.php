@@ -36,7 +36,9 @@
          */
         protected function httpPost(){
             $data = $this->scrubbedPostData();
-            $data->ownerID = ($this->currentUser()->getUserID() >= 1) ? $this->currentUser()->getUserID() : 0;
+            if( empty($data->ownerID) ){
+                $data->ownerID = 1;
+            }
             $calendarObj = Calendar::create($data);
             $this->setResponseData($calendarObj);
             $this->setResponseCode(Response::HTTP_CREATED);

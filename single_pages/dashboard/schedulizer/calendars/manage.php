@@ -32,7 +32,7 @@
                             </h3>
                         </div>
                         <div class="pull-right">
-                            <?php if($calendarObj->getPermissions()->canAddEvents()): ?>
+                            <?php if($calendarObj->getPermissions()->canEditEvents()): ?>
                             <button class="btn btn-primary" modalize="/event_form" data-using="{eventObj:{calendarID:<?php echo $calendarObj->getID(); ?>}}"><?php echo t("Add Event"); ?></button>
                             <?php endif; ?>
                             <?php if($calendarObj->getPermissions()->canManageCalendarPermissions()): ?>

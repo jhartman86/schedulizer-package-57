@@ -241,7 +241,7 @@ angular.module('schedulizer.app').
                 $scope._requesting = true;
 
                 // Step 1 - submit primary event
-                var step1 = $q(function( resolve, reject ){
+                var step1 = $q(function( resolve ){
                     // Set the primary fileID from the C5 file selector on the entity before submitting
                     $scope.entity.fileID = parseInt(jQuery('input[type="hidden"]', '.ccm-file-selector').val()) || null;
 
@@ -250,6 +250,9 @@ angular.module('schedulizer.app').
                         function( resp ){
                             // Resolves the outer promise (step1) so we know to move on to step2
                             resolve(resp);
+                        },
+                        function(){ // Failure, bail out of the modal
+                            ModalManager.classes.open = false;
                         }
                     );
                 });
@@ -279,12 +282,16 @@ angular.module('schedulizer.app').
              */
             $scope.confirmDelete = false;
             $scope.deleteEvent = function(){
-                $scope.entity.$delete().then(function( resp ){
-                    if( resp.ok ){
-                        $rootScope.$emit('calendar.refresh');
+                $scope.entity.$delete().then(
+                    function( resp ){
+                        if( resp.ok ){
+                            $rootScope.$emit('calendar.refresh');
+                            ModalManager.classes.open = false;
+                        }
+                    }, function(){ // Failure, bail out of the modal
                         ModalManager.classes.open = false;
                     }
-                });
+                );
             };
 
             /**

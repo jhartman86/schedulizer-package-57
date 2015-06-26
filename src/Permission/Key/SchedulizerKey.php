@@ -14,13 +14,17 @@
      *  $p->canManageCalendarPermissions();
      *
      * Class SchedulizerKey
-     * @package Concrete\Package\Schedulizer\Src\Permission\Key
+     * @package \Concrete\Package\Schedulizer\Src\Permission\Key
      * @extends \Concrete\Core\Permission\Key\Key
      */
     class SchedulizerKey extends PermissionKey {
 
         public static function getList(){
             return parent::getList('schedulizer');
+        }
+
+        public function setPermissionObject( $obj ){
+            $this->permissionObjectToCheck = $obj;
         }
 
         public function getPermissionAssignmentObject(){
@@ -34,6 +38,10 @@
             $targ->setPermissionKeyObject($this);
             return $targ;
         }
+
+//        public function validate(){
+//            return true;
+//        }
 
     }
 

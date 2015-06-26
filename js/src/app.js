@@ -11,8 +11,8 @@
      * @param $provide
      * @param $locationProvider
      */
-    config(['$provide', '$locationProvider',
-        function( $provide, $locationProvider ){
+    config(['$provide', '$locationProvider', '$httpProvider',
+        function( $provide, $locationProvider, $httpProvider ){
             // Disable Angular's HTML5 mode stuff
             $locationProvider.html5Mode(false);
 
@@ -44,6 +44,20 @@
                     }
                 };
             });
+
+            // "Global" ajax error handlers
+            $httpProvider.interceptors.push(['$q', 'Alerter', function( $q, Alerter ){
+                return {
+                    responseError: function( rejection ){
+                        var message = 'An error occurred; your request was not completed.';
+                        if( rejection.data && rejection.data.error ){
+                            message = rejection.data.error;
+                        }
+                        Alerter.add({msg:message, danger:true});
+                        return $q.reject(rejection);
+                    }
+                };
+            }]);
         }
     ]).
 

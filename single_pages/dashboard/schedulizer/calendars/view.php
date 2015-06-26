@@ -24,7 +24,6 @@
         <table border="0" cellspacing="0" cellpadding="0" class="ccm-search-results-table">
             <thead>
             <tr>
-                <th><span class="ccm-search-results-checkbox"><input type="checkbox" data-search-checkbox="select-all" class="ccm-flat-checkbox" /></span></th>
                 <th><a>Calendar</a></th>
                 <th><a>Timezone</a></th>
                 <th><a>Created</a></th>
@@ -35,12 +34,20 @@
             <tbody>
             <?php foreach($calendars AS $calendarObj): ?>
                 <tr>
-                    <td><span class="ccm-search-results-checkbox"><input type="checkbox" class="ccm-flat-checkbox" /></span></td>
                     <td><a href="<?php echo View::url('/dashboard/schedulizer/calendars/manage/', $calendarObj->getID()); ?>"><?php echo $calendarObj; ?></a></td>
                     <td><?php echo $calendarObj->getDefaultTimezone(); ?></td>
                     <td><?php echo $conversionHelper->localizeWithFormat($calendarObj->getCreatedUTC(), $calendarObj->getCalendarTimezoneObj(), 'M d, Y H:i:s'); ?></td>
                     <td><?php echo $conversionHelper->localizeWithFormat($calendarObj->getCreatedUTC(), $calendarObj->getCalendarTimezoneObj(), 'M d, Y H:i:s'); ?></td>
-                    <td><?php echo 'todo'; ?></td>
+                    <td>
+                        <?php
+                            $ownerUIObj = $calendarObj->getCalendarOwnerUserInfoObj();
+                            if( is_object($ownerUIObj) ){
+                                echo $ownerUIObj->getUserName();
+                            }else{
+                                echo 'Unassigned';
+                            }
+                        ?>
+                    </td>
                 </tr>
             <?php endforeach; ?>
             </tbody>

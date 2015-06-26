@@ -133,6 +133,8 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
   .container-fluid {width:90%;text-align:left;}
 
   form {
+    [data-calendar-owner-picker]{font-weight:bold;display:block;padding:1rem;background:#f5f5f5;border:1px solid #e5e5e5;}
+
     .tab-pane {padding:15px 15px 0;margin-bottom:($grid-gutter-width/2);border:1px solid #ddd;border-top:0;position:relative;background:#fff;}
 
     .form-group {position:relative;
@@ -227,4 +229,14 @@ div#ccm-dashboard-content {overflow-y:scroll;
 // Overflow stuff for the modal
 html.schedulizer-modal {overflow-y:hidden;
   //.event-form-wrapper {padding:15px 0;max-height:100%;width:100%;overflow-y:scroll;}
+}
+
+// "Alerter" notifications
+[alerter]{font-family:$font-family-base;font-size:13px;display:block;position:fixed;top:-100%;left:50%;width:100%;max-width:550px;background:#fff;z-index:99999;@include box-shadow(0 0 20px rgba(0,0,0,0.25));@include transform(translateX(-50%));@include transition(all 0.35s ease);
+  &.open {top:0;}
+  .alert-item {display:block;padding:1rem;position:relative;
+    [alert-closer] {display:inline-block;padding:0.5rem;line-height:1;position:absolute;top:0;right:0;cursor:pointer;}
+    &.type-danger {background:$alert-danger-bg;color:$alert-danger-text;}
+    &.type-success {background:$alert-success-bg;color:$alert-success-text;}
+  }
 }

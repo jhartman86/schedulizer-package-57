@@ -2,5 +2,11 @@
 
     use \Concrete\Core\Permission\Response\Response;
 
-    class SchedulizerResponse extends Response {}
+    class SchedulizerResponse extends Response {
+
+//        public function canManageCalendarPermissions(){
+//            echo 'PROXIED TO HERE';EXIT;
+//        }
+
+    }
 }

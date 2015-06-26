@@ -6,11 +6,16 @@
     use Loader;
     use User;
     use \Concrete\Package\Schedulizer\Src\Calendar;
+    use \Concrete\Package\Schedulizer\Src\Permission\Access\SchedulizerAccess;
+    use \Concrete\Package\Schedulizer\Src\Permission\Access\SchedulizerCalendarAccess;
 
     class CalendarOwnerEntity extends Entity {
 
         public function getAccessEntityUsers( PermissionAccess $permissionAccessObj ){
-            $calObj = $permissionAccessObj->getPermissionObject();
+            $calObj = $permissionAccessObj->getPermissionObjectToCheck();
+            if( is_null($calObj) ){
+                $calObj = $permissionAccessObj->getPermissionObject();
+            }
             if( is_object($calObj) && ($calObj instanceof Calendar) ){
                 return UserInfo::getByID($calObj->getOwnerID());
             }
@@ -19,14 +24,32 @@
         /**
          * @todo make this work...
          * @param PermissionAccess $permissionAccessObj
+         * @return bool
          */
         public function validate( PermissionAccess $permissionAccessObj ){
-            $obj = $permissionAccessObj->getPermissionObject();
-            if( $obj instanceof Calendar ){
-                $u = new User();
-                // I think this is right? Need to see what $permissionAccess returns as $obj
-                return $u->getUserID() == $obj->getOwnerID();
+            // If we get a SchedulizerAccess class, we're checking if the user
+            // has been granted access via the Schedulizer task permissions. As in,
+            // the Schedulizer permissions are generic and not usually assigned on a
+            // per-object (calendar) basis, but we can grant a permission to a calendar
+            // owner that will be relevant for all calendars they own...
+            if( $permissionAccessObj instanceof SchedulizerAccess ){
+                $user = $this->getAccessEntityUsers($permissionAccessObj);
+                if( is_object($user) ){
+                    $currentUser = new User();
+                    return (int)$user->getUserID() === (int)$currentUser->getUserID();
+                }
             }
+
+            // With this, we know the permissionAccessObj has a permissionObj to check
+            // against directly...
+            if( $permissionAccessObj instanceof SchedulizerCalendarAccess ){
+                $calObj = $permissionAccessObj->getPermissionObjectToCheck();
+                if( $calObj instanceof Calendar ){
+                    $currentUser = new User();
+                    return (int)$currentUser->getUserID() === (int)$calObj->getOwnerID();
+                }
+            }
+
             return false;
         }
 

@@ -24,12 +24,34 @@ angular.module('schedulizer.app').
             // returned[1] = object with default timezone from config settings
             // returned[2] = the calendar, OR null
             $q.all(_requests).then(function( returned ){
+                var ownerPickerNode = document.querySelector('[data-calendar-owner-picker]');
+
                 $scope.timezoneOptions = returned[0];
                 $scope.entity = returned[2] || new API.calendar({
-                    defaultTimezone: $scope.timezoneOptions[$scope.timezoneOptions.indexOf(returned[1].name)]
+                    defaultTimezone: $scope.timezoneOptions[$scope.timezoneOptions.indexOf(returned[1].name)],
+                    ownerID: +(ownerPickerNode.getAttribute('data-default-owner-id') || 1)
                 });
                 $scope._ready = true;
-            }, function( resp ){
+
+                /**
+                 * Concrete5-specific stuff...
+                 */
+                jQuery(ownerPickerNode).dialog().on('click', function(){
+                    var $picker = jQuery(this);
+                    $window['ConcreteEvent'].unsubscribe('UserSearchDialogSelectUser.core');
+                    $window['ConcreteEvent'].unsubscribe('UserSearchDialogAfterSelectUser.core');
+                    $window['ConcreteEvent'].subscribe('UserSearchDialogSelectUser.core', function(e, data){
+                        $picker.text(data.uName);
+                        $scope.$apply(function(){
+                            $scope.entity.ownerID = data.uID;
+                        });
+                    });
+                    $window['ConcreteEvent'].subscribe('UserSearchDialogAfterSelectUser.core', function(e) {
+                        jQuery.fn.dialog.closeTop();
+                    });
+                });
+
+            }, function( resp ){ // Failure; @todo: proper handling!
                 console.log(resp);
             });
 
