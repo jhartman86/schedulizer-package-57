@@ -2,8 +2,8 @@
 /* gloabl ConcreteFileManager */
 angular.module('schedulizer.app').
 
-    controller('CtrlEventForm', ['$rootScope', '$scope', '$q', '$filter', '$http', 'Helpers', 'ModalManager', 'API', '_moment',
-        function( $rootScope, $scope, $q, $filter, $http, Helpers, ModalManager, API, _moment ){
+    controller('CtrlEventForm', ['$window', '$rootScope', '$scope', '$q', '$filter', '$http', 'Helpers', 'ModalManager', 'API', '_moment',
+        function( $window, $rootScope, $scope, $q, $filter, $http, Helpers, ModalManager, API, _moment ){
 
             $scope.activeMasterTab = {
                 1: true
@@ -125,32 +125,26 @@ angular.module('schedulizer.app').
                     // an error gets thrown because the file no longer exists and C5 doesn't catch
                     // that error, the interface explodes. So we call the route first and see if it actually
                     // works, then we basically let concreteFileSelector call the same thing, again, right
-                    // away, but knowing that its valid. Oh, and we have to do this fun stuff below so
-                    // it gets transformed into a form request.
-                    $http({
-                        method: 'POST',
-                        url: '/ccm/system/file/get_json',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        transformRequest: function(obj){
-                            var str = [];
-                            for(var p in obj){
-                                str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
-                                return str.join('&');
-                            }
+                    // away, but knowing that its valid. Also, we're using jQuery here to duplicate (exactly)
+                    // the request as its made by the core file manager.
+                    jQuery.ajax({
+                        type: 'post',
+                        dataType: 'json',
+                        url: $window['CCM_DISPATCHER_FILENAME'] + '/ccm/system/file/get_json',
+                        data: {'fID':$scope.entity.fileID},
+                        error: function(r){
+                            jQuery('[data-file-selector="fileID"]').concreteFileSelector({
+                                'inputName': 'fileID',
+                                'filters': [{"field":"type","type":1}]
+                            });
                         },
-                        data: {fID: $scope.entity.fileID}
-                    }).then(function(){
-                        jQuery('[data-file-selector="fileID"]').concreteFileSelector({
-                            'inputName': 'fileID',
-                            'fID': $scope.entity.fileID,
-                            'filters': [{"field":"type","type":1}]
-                        });
-                    }, function(){
-                        jQuery('[data-file-selector="fileID"]').concreteFileSelector({
-                            'inputName': 'fileID',
-                            'filters': [{"field":"type","type":1}]
-                        });
-                        console.log('No file object assigned to event or it no longer exists');
+                        success: function(r){
+                            jQuery('[data-file-selector="fileID"]').concreteFileSelector({
+                                'inputName': 'fileID',
+                                'fID': $scope.entity.fileID,
+                                'filters': [{"field":"type","type":1}]
+                            });
+                        }
                     });
 
                     $scope._ready = true;
