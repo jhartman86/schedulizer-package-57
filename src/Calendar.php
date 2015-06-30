@@ -103,16 +103,16 @@
 
         public function onAfterPersist(){
             // Add events
-            $pkAddEvents = SchedulizerCalendarPermKey::getByHandle('edit_events');
-            $pkAddEvents->setPermissionObject($this);
-            $pa = $pkAddEvents->getPermissionAccessObject();
+            $pkEditEvents = SchedulizerCalendarPermKey::getByHandle('edit_events');
+            $pkEditEvents->setPermissionObject($this);
+            $pa = $pkEditEvents->getPermissionAccessObject();
             if( !is_object($pa) ){
-                $pa = PermissionAccess::create($pkAddEvents);
+                $pa = PermissionAccess::create($pkEditEvents);
                 $peCalendarOwner = CalendarOwnerAccessEntity::getOrCreate();
                 $pa->addListItem($peCalendarOwner);
                 $peAdministrators = GroupPermissionAccessEntity::getOrCreate(Group::getByID(ADMIN_GROUP_ID));
                 $pa->addListItem($peAdministrators);
-                $pkAddEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
+                $pkEditEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
             }
 
             // Delete events

@@ -246,7 +246,8 @@ angular.module('schedulizer.app').
                             resolve(resp);
                         },
                         function(){ // Failure, bail out of the modal
-                            ModalManager.classes.open = false;
+                            // If its an error, the global $http error handler auto-closes the modal
+                            //ModalManager.classes.open = false;
                         }
                     );
                 });

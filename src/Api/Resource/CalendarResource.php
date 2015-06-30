@@ -1,5 +1,6 @@
 <?php namespace Concrete\Package\Schedulizer\Src\Api\Resource {
 
+    use Permissions;
     use \Concrete\Package\Schedulizer\Src\Calendar;
     use \Concrete\Package\Schedulizer\Src\Event;
     use \Concrete\Package\Schedulizer\Src\Api\ApiException;
@@ -32,9 +33,15 @@
 
         /**
          * Create a new calendar
-         * @todo: permissions, pass user (api key determines?), and timezone options
+         * @todo: pass user (api key determines for permissions?), and timezone options
          */
         protected function httpPost(){
+            // Allowed to create calendars?
+            $permissions = new Permissions();
+            if( ! $permissions->canCreateCalendar() ){
+                throw ApiException::permissionInvalid('You do not have permission to create calendars.');
+            }
+            // User has permission, proceed...
             $data = $this->scrubbedPostData();
             if( empty($data->ownerID) ){
                 $data->ownerID = 1;
@@ -49,6 +56,7 @@
          * @param $id
          * @throws ApiException
          * @throws \Exception
+         * @todo: permission to update?
          */
         public function httpPut( $id ){
             $calendarObj = $this->getCalendarBy($id);
@@ -63,7 +71,11 @@
          * @throws ApiException
          */
         public function httpDelete( $id ){
-            $this->getCalendarBy($id)->delete();
+            $calendarObj = $this->getCalendarBy($id);
+            if( ! $calendarObj->getPermissions()->canDeleteCalendar() ){
+                throw ApiException::permissionInvalid('You do not have permission to delete this Calendar.');
+            }
+            $calendarObj->delete();
             $this->setResponseData((object)array('ok' => true));
             $this->setResponseCode(Response::HTTP_ACCEPTED);
         }

@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '0.97';
+        protected $pkgVersion               = '0.99';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -519,6 +519,10 @@
                         'name'      => t('Add Calendars'),
                         'descr'     => t('Is Allowed To Create New Calendars')
                     ),
+                    'delete_calendar' => array(
+                        'name'      => t('Delete Calendars'),
+                        'descr'     => t('Is Allowed To Delete Calendars')
+                    ),
                     'manage_calendar_permissions' => array(
                         'name'      => t('Manage Calendar Permissions'),
                         'descr'     => t('Can Manage Calendar Permissions')
@@ -541,9 +545,9 @@
             }
 
             foreach(array(
-                'add_events'    => array(
-                    'name'      => t('Add Events'),
-                    'descr'     => t('Can Add Events To The Calendar')
+                'edit_events'   => array(
+                    'name'      => t('Edit Events'),
+                    'descr'     => t('Can Add and Update Calendar Events')
                 ),
                 'delete_events' => array(
                     'name'      => t('Delete Events'),

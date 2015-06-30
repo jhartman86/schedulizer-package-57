@@ -63,6 +63,8 @@ $currentUser = new User();
                                         $ownerUserInfoObj = $calendarObj->getCalendarOwnerUserInfoObj();
                                         if( is_object($ownerUserInfoObj) ){
                                             echo $ownerUserInfoObj->getUserName();
+                                        }else{
+                                            echo 'Unassigned';
                                         }
                                     }else{
                                         echo $currentUser->getUserName();

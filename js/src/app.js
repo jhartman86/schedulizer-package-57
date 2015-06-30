@@ -46,7 +46,7 @@
             });
 
             // "Global" ajax error handlers
-            $httpProvider.interceptors.push(['$q', 'Alerter', function( $q, Alerter ){
+            $httpProvider.interceptors.push(['$q', 'Alerter', 'ModalManager', function( $q, Alerter, ModalManager ){
                 return {
                     responseError: function( rejection ){
                         var message = 'An error occurred; your request was not completed.';
@@ -54,6 +54,7 @@
                             message = rejection.data.error;
                         }
                         Alerter.add({msg:message, danger:true});
+                        ModalManager.classes.open = false;
                         return $q.reject(rejection);
                     }
                 };
