@@ -32,7 +32,7 @@
             </tr>
             </thead>
             <tbody>
-            <?php foreach($calendars AS $calendarObj): ?>
+            <?php if(!empty($calendars)): foreach($calendars AS $calendarObj): ?>
                 <tr>
                     <td><a href="<?php echo View::url('/dashboard/schedulizer/calendars/manage/', $calendarObj->getID()); ?>"><?php echo $calendarObj; ?></a></td>
                     <td><?php echo $calendarObj->getDefaultTimezone(); ?></td>
@@ -49,7 +49,17 @@
                         ?>
                     </td>
                 </tr>
-            <?php endforeach; ?>
+            <?php endforeach; else: ?>
+                <tr>
+                    <td colspan="5" class="text-center">
+                        <?php if($permissionsObj->canCreateCalendar()){ ?>
+                            <a class="lead" modalize="/calendar_form"><h3><?php echo t('Create Your First Calendar'); ?></h3></a>
+                        <?php }else{ ?>
+                            <h3><?php echo t('No calendars created yet'); ?></h3>
+                        <?php } ?>
+                    </td>
+                </tr>
+            <?php endif; ?>
             </tbody>
         </table>
     </div>

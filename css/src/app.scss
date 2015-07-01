@@ -11,17 +11,7 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
 @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins';
 
 // Enable calendar @ 100% fluid
-//html,
-//#ccm-dashboard-page.ccm-ui,
-//#ccm-dashboard-page.ccm-ui #ccm-dashboard-content.container-fluid,
-//.schedulizer-app,
-//#ccm-dashboard-page.ccm-ui #ccm-dashboard-content.container-fluid .ccm-dashboard-content-full,
-//.schedulizer-app .calendar-wrap,
-//.calendry-instance {height:100%;padding-bottom:0;}
-//.schedulizer-app .app-wrap {height:calc(100% - 66px);}
-//body {height:calc(100% - 49px);}
 #ccm-dashboard-content.container-fluid {padding:0;}//{padding-top:49px;padding-right:20px;}
-
 
 .ccm-ui .schedulizer-app {
   // Override concrete5 defaults
@@ -58,12 +48,12 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
 
   .ccm-dashboard-content-full {margin: 0 !important;
     .app-wrap {height:calc(100% - 68px);position:relative;@include transition(all 0.25s ease);@include transform(translateY(0));
-      .calendar-event-search {padding:1rem 0;height:150px;background:#414d59;color:#97aabc;position:absolute;bottom:100%;left:0;right:0;width:100%;
+      .calendar-event-search {padding:1rem 0;height:100%;background:#414d59;color:#97aabc;position:absolute;bottom:100%;left:0;right:0;width:100%;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;
         .clear-fields {position:absolute;top:0;right:0;z-index:2;}
       }
     }
     &.search-open {overflow:hidden;
-      .app-wrap {@include transform(translateY(150px));}
+      .app-wrap {@include transform(translateY(100%));}
     }
     &.search-page {
       input.date-selector{display:inline-block;max-width:90px;}
@@ -93,12 +83,6 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
 
   .calendar-wrap {
     &.updating::after {position:absolute;display:block;content:'';top:0;right:0;bottom:0;left:0;width:100%;height:100%;background:rgba(50,50,50,0.35) url('#{$image-path}/spinner.svg') no-repeat 50% 50%;z-index:5;}
-  }
-}
-
-@media screen and (min-width:992px){
-  .schedulizer-app {
-    //.ccm-dashboard-content-full {padding-left:20px;margin:0 0 0 -97px !important;}
   }
 }
 
@@ -149,7 +133,7 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
       }
 
       .ccm-file-selector {@include border-radius(0);}
-      .redactor_editor {padding:10px;max-height:350px;}
+      .redactor-editor {padding:10px;max-height:350px;}
       .input-title {font-weight:200;border:0;outline:0;padding:5px;margin-bottom:($grid-gutter-width/2);border-bottom:1px solid $input-border;height:auto;font-size:180%;background:transparent;@include box-shadow(none);}
 
       // start/end time display
@@ -201,35 +185,18 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
   }
 }
 
-#ccm-dashboard-content .schedulizer-system-page-wrap {padding-left:30px;padding-right:30px;padding-bottom:100px;max-width:768px;margin:0 auto;
-  .ccm-dashboard-header-buttons {top:28px;}
-}
+// Scrolling on internal dashboard content
 div#ccm-dashboard-content {overflow-y:scroll;
   > header.ccm-dashboard-page-header {margin:0 0 30px;padding:30px;
     h1 {margin:0;}
   }
-}
-
-@media screen and (min-width:$screen-md){
-  [modal-window]{
-    form.event {
-//      .nav-tabs {border-bottom:0;
-//        li {display:none;
-//          &.add-time-entity {display:block;float:none;margin-bottom:($grid-gutter-width/2);background:#fff;border:1px solid $input-border;text-align:center;
-//            a {margin:0;}
-//            span {padding-left:5px;}
-//          }
-//        }
-//      }
-//      .tab-content .tab-pane {display:block;visibility:visible;border-top:1px solid $input-border;}
-    }
+  .schedulizer-system-page-wrap {padding-left:30px;padding-right:30px;padding-bottom:100px;max-width:768px;margin:0 auto;
+    .ccm-dashboard-header-buttons {top:28px;}
   }
 }
 
 // Overflow stuff for the modal
-html.schedulizer-modal {overflow-y:hidden;
-  //.event-form-wrapper {padding:15px 0;max-height:100%;width:100%;overflow-y:scroll;}
-}
+html.schedulizer-modal {overflow-y:hidden;}
 
 // "Alerter" notifications
 [alerter]{font-family:$font-family-base;font-size:13px;display:block;position:fixed;top:-100%;left:50%;width:100%;max-width:550px;background:#fff;z-index:99999;@include box-shadow(0 0 20px rgba(0,0,0,0.25));@include transform(translateX(-50%));@include transition(all 0.35s ease);

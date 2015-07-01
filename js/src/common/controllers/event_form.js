@@ -68,6 +68,47 @@ angular.module('schedulizer.app').
             ];
 
             /**
+             * Workaround C5's horrendous error handling. The concreteFileSelector
+             * call w/in this $http call hits the SAME path, but if (and there frequently will be)
+             * an error gets thrown because the file no longer exists and C5 doesn't catch
+             * that error, the interface explodes. So we call the route first and see if it actually
+             * works, then we basically let concreteFileSelector call the same thing, again, right
+             * away, but knowing that its valid. Also, we're using jQuery here to duplicate (exactly)
+             * the request as its made by the core file manager.
+             * @param  {int} fileID [description]
+             * @return void
+             */
+            function setupFilePicker( fileID ){
+                var _always = {
+                    'inputName': 'fileID',
+                    'filters': [{"field":"type","type":1}]
+                };
+
+                // If fileID is non-existent
+                if( (+(fileID) >= 1) === false || angular.isDefined(fileID) === false ){
+                    jQuery('[data-file-selector="fileID"]').concreteFileSelector(_always);
+                    return;
+                }
+
+                // If fileID DOES exist, this is where we have to do the insanely stupid
+                // pre-test to make sure it actually exists in the system.
+                jQuery.ajax({
+                    type: 'post',
+                    dataType: 'json',
+                    url: $window['CCM_DISPATCHER_FILENAME'] + '/ccm/system/file/get_json',
+                    data: {'fID':$scope.entity.fileID},
+                    error: function(r){
+                        jQuery('[data-file-selector="fileID"]').concreteFileSelector(_always);
+                    },
+                    success: function(r){
+                        jQuery('[data-file-selector="fileID"]').concreteFileSelector(
+                            angular.extend(_always,{fID:fileID})
+                        );
+                    }
+                });
+            }
+
+            /**
              * After all dependencies are loaded via the queue, THEN proceed...
              */
             $q.all(_requests).then(function( results ){
@@ -94,10 +135,7 @@ angular.module('schedulizer.app').
                         isActive:               $scope.isActiveOptions[0].value,
                         _timeEntities:          [newEventTimeEntity()]
                     });
-                    jQuery('[data-file-selector="fileID"]').concreteFileSelector({
-                        'inputName': 'fileID',
-                        'filters': [{"field":"type","type":1}]
-                    });
+                    setupFilePicker();
                     $scope._ready = true;
                 }
             });
@@ -120,33 +158,10 @@ angular.module('schedulizer.app').
                     // Set the entity
                     $scope.entity = results[4];
 
-                    // Workaround C5's horrendous error handling. The concreteFileSelector
-                    // call w/in this $http call hits the SAME path, but if (and there frequently will be)
-                    // an error gets thrown because the file no longer exists and C5 doesn't catch
-                    // that error, the interface explodes. So we call the route first and see if it actually
-                    // works, then we basically let concreteFileSelector call the same thing, again, right
-                    // away, but knowing that its valid. Also, we're using jQuery here to duplicate (exactly)
-                    // the request as its made by the core file manager.
-                    jQuery.ajax({
-                        type: 'post',
-                        dataType: 'json',
-                        url: $window['CCM_DISPATCHER_FILENAME'] + '/ccm/system/file/get_json',
-                        data: {'fID':$scope.entity.fileID},
-                        error: function(r){
-                            jQuery('[data-file-selector="fileID"]').concreteFileSelector({
-                                'inputName': 'fileID',
-                                'filters': [{"field":"type","type":1}]
-                            });
-                        },
-                        success: function(r){
-                            jQuery('[data-file-selector="fileID"]').concreteFileSelector({
-                                'inputName': 'fileID',
-                                'fID': $scope.entity.fileID,
-                                'filters': [{"field":"type","type":1}]
-                            });
-                        }
-                    });
+                    // Setup the file picker
+                    setupFilePicker($scope.entity.fileID);
 
+                    // Notify scope ready
                     $scope._ready = true;
                 });
             }

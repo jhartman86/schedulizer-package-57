@@ -14,7 +14,7 @@ foreach($pageTypesList AS $pageTypeObj){ /** @var $pageTypeObj \Concrete\Core\Pa
 
 <style type="text/css">
     .config-table td.config-label {white-space:nowrap;border-right:1px dotted #ccc;}
-    .config-table span.checkbox {margin-top:0;padding-left:20px;}
+    .config-table span.checkbox {margin-top:0 !important;padding-left:20px;}
     .config-table table.inner-table {width:100%;background:transparent;}
     .config-table table.inner-table td {width:50%;padding:8px;background:transparent;}
     .config-table table.inner-table tr.inner-table-label td {padding-top:0;border-bottom:1px dotted #ccc;}

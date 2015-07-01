@@ -2,7 +2,7 @@
 if( !class_exists("\\Concrete\\Package\\Schedulizer\\Src\\Install\\Support") ) {
     include DIR_PACKAGES . '/schedulizer/src/Install/Support.php';
 }
-$support = new Concrete\Package\Schedulizer\Src\Install\Support();
+$support = new \Concrete\Package\Schedulizer\Src\Install\Support();
 ?>
 <style type="text/css">
     .support-table tbody tr td:nth-child(1){text-align:center;}
@@ -48,6 +48,18 @@ $support = new Concrete\Package\Schedulizer\Src\Install\Support();
                             <p>Your PHP version is up to snuff.</p>
                         <?php else: ?>
                             <p>Unfortunately your PHP version is not up to snuff. PHP Version 5.4 was released in 2013, you are running a significantly outdated version.</p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <!-- innodb version test -->
+                <tr class="<?php echo ($support->mysqlInnoDBVersion()) ? 'success' : 'danger'; ?>">
+                    <td><i class="fa <?php echo ($support->mysqlInnoDBVersion()) ? 'fa-check' : 'fa-close'; ?>"></i></td>
+                    <td>MySQL:InnoDB Version 5.6&plus;</td>
+                    <td>
+                        <?php if( $support->mysqlInnoDBVersion() ): ?>
+                            <p>Your MySQL InnoDB version is up to snuff.</p>
+                        <?php else: ?>
+                            <p>Unfortunately your MySQL installation is below the required version. Schedulizer requires MySQL 5.6&plus;.</p>
                         <?php endif; ?>
                     </td>
                 </tr>

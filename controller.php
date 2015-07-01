@@ -246,6 +246,9 @@
                 include DIR_PACKAGES . '/' . self::PACKAGE_HANDLE . '/src/Install/Support.php';
             }
             if( Src\Install\Support::meetsRequirements() ){
+                // the on_start method doesn't run during installation, so we need to
+                // call setupClassBindings here or it'll fail or only partially install
+                $this->setupClassBindings();
                 $this->_packageObj = parent::install();
                 $this->saveConfigsFromInstallScreen()
                      ->installAndUpdate();
@@ -484,6 +487,8 @@
 
         /**
          * @return $this
+         * @todo: setup task permissions (create tags, add/delete cals, manage cal permissions) with
+         * defaults to Admin and Calendar owner (where relevant), but only on INSTALL
          */
         private function setupPermissions(){
             // Calendar permissions: first, we need to create a new permission entity type for "calendar owner"!

@@ -12,7 +12,8 @@
      */
     class Support {
 
-        const PHP_MIN_VERSION   = 5.4;
+        const PHP_MIN_VERSION       = 5.4;
+        const MYSQL_INNODB_VERSION  = 5.6;
 
         private $db;
 
@@ -42,6 +43,7 @@
             if( ! $this->mysqlHasTimezoneTables() ){ return false; }
             if( ! $this->phpDateTimeZoneConversionsCorrect() ){ return false; }
             if( ! $this->phpDateTimeSupportsOrdinals() ){ return false; }
+            if( ! $this->mysqlInnoDBVersion() ){ return false; }
             return true;
         }
 
@@ -55,6 +57,19 @@
                 return false;
             }
             return true;
+        }
+
+        /**
+         * Is MySQL's innoDB version >= 5.6?
+         * @return bool
+         */
+        public function mysqlInnoDBVersion(){
+            if( $this->_mysqlInnoDBV === null ){
+                $statement  = $this->db->Execute("SHOW VARIABLES LIKE '%innodb_version%'");
+                $result     = $statement->fetch();
+                $this->_mysqlInnoDBV = (float)$result['Value'];
+            }
+            return $this->_mysqlInnoDBV >= self::MYSQL_INNODB_VERSION;
         }
 
         /**
