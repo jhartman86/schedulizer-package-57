@@ -88,9 +88,11 @@ angular.module('schedulizer.app').
              * Trigger refreshing the calendar.
              * @private
              */
-            function _updateCalendar(){
+            function _updateCalendar( uncache ){
                 $scope.updateInProgress = true;
-                _cache.removeAll();
+                if( uncache === true ){
+                    _cache.removeAll();
+                }
                 _fetch($scope.instance.monthMap).success(function( resp ){
                     $scope.instance.events = resp;
                     $scope.updateInProgress = false;
@@ -139,7 +141,9 @@ angular.module('schedulizer.app').
              * calendar.refresh IS NOT issued by the calendry directive; it comes
              * from other things in the app.
              */
-            $rootScope.$on('calendar.refresh', _updateCalendar);
+            $rootScope.$on('calendar.refresh', function(){
+                _updateCalendar(true);
+            });
 
             // Launch C5's default modal stuff
             $scope.permissionModal = function( _href ){
