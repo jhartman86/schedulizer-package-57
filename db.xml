@@ -399,4 +399,91 @@
         </field>
     </table>
 
+    <!-- calendar aggregation -->
+    <table name="SchedulizerCollection">
+        <field name="id" type="I">
+            <autoincrement />
+            <key />
+            <unsigned />
+        </field>
+        <field name="createdUTC" type="T">
+            <NOTNULL/>
+        </field>
+        <field name="modifiedUTC" type="T">
+            <NOTNULL/>
+        </field>
+        <field name="title" type="C" size="255" />
+        <field name="ownerID" type="I">
+            <!--<KEY/>-->
+            <UNSIGNED />
+            <NOTNULL />
+            <DEFAULT value="0"/>
+        </field>
+
+        <index name="title">
+            <col>title</col>
+            <FULLTEXT />
+        </index>
+        <index name="ownerID">
+            <col>ownerID</col>
+        </index>
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+    <table name="SchedulizerCollectionCalendars">
+        <field name="collectionID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <KEY/>
+        </field>
+        <field name="calendarID" type="I" size="11">
+            <NOTNULL/>
+            <key/>
+            <unsigned />
+        </field>
+
+        <index name="collectionCalendarCollectionID">
+            <col>collectionID</col>
+        </index>
+        <index name="collectionCalendarCalendarID">
+            <col>calendarID</col>
+        </index>
+
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
+    <table name="SchedulizerCollectionEvents">
+        <field name="collectionID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <!--<KEY/>-->
+        </field>
+        <field name="eventID" type="I" size="11">
+            <NOTNULL/>
+            <unsigned />
+            <!--<KEY/>-->
+        </field>
+        <field name="approvedVersionID" type="I">
+            <NOTNULL/>
+            <!--<key/>-->
+            <unsigned />
+        </field>
+
+        <index name="collectionEventEventVersionIDs">
+            <col>collectionID</col>
+            <col>eventID</col>
+            <unique />
+        </index>
+        <index name="collectionEventCollectionID">
+            <col>collectionID</col>
+        </index>
+        <index name="collectionEventEventID">
+            <col>eventID</col>
+        </index>
+        <opt platform="mysql">ENGINE=INNODB</opt>
+        <opt platform="mysqlt">ENGINE=INNODB</opt>
+    </table>
+
 </schema>

@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '0.99';
+        protected $pkgVersion               = '1.03';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -116,6 +116,12 @@
                 /** @var $apiOnStart \Concrete\Package\Schedulizer\Src\Api\OnStart */
                 // GET,POST,PUT,DELETE
                 $apiOnStart->addRoute('calendar', 'CalendarResource');
+                // GET,POST,PUT,DELETE
+                $apiOnStart->addRoute('collection', 'CollectionResource');
+                // GET,POST,PUT,DELETE
+                $apiOnStart->addRoute('collection_event', 'CollectionEventResource');
+                // GET
+                $apiOnStart->addRoute('calendar_list', 'CalendarListResource');
                 // GET,POST,PUT,DELETE
                 $apiOnStart->addRoute('event', 'EventResource');
                 // GET,POST,DELETE
@@ -455,6 +461,7 @@
             SinglePage::add('/dashboard/schedulizer/', $this->packageObject());
             SinglePage::add('/dashboard/schedulizer/calendars', $this->packageObject());
             SinglePage::add('/dashboard/schedulizer/calendars/search', $this->packageObject());
+            SinglePage::add('/dashboard/schedulizer/calendars/collections', $this->packageObject());
             SinglePage::add('/dashboard/schedulizer/attributes', $this->packageObject());
             SinglePage::add('/dashboard/schedulizer/permissions', $this->packageObject());
             SinglePage::add('/dashboard/schedulizer/settings', $this->packageObject());
@@ -462,6 +469,10 @@
             $spManage = SinglePage::add('/dashboard/schedulizer/calendars/manage', $this->packageObject());
             if( is_object($spManage) ){
                 $spManage->setAttribute('exclude_nav', 1);
+            }
+            $spManageCollections = SinglePage::add('/dashboard/schedulizer/calendars/collections/manage', $this->packageObject());
+            if( is_object($spManageCollections) ){
+                $spManageCollections->setAttribute('exclude_nav', 1);
             }
 
             return $this;

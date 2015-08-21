@@ -28,6 +28,7 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
   @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/button-groups';
   @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/forms';
   @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/navs';
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/tables';
   @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/utilities';
   @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/responsive-utilities';
   @import 'dependencies/angular-strap';
@@ -83,6 +84,18 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
 
   .calendar-wrap {
     &.updating::after {position:absolute;display:block;content:'';top:0;right:0;bottom:0;left:0;width:100%;height:100%;background:rgba(50,50,50,0.35) url('#{$image-path}/spinner.svg') no-repeat 50% 50%;z-index:5;}
+  }
+
+  .tbl-collection-list {
+    a {cursor:pointer;}
+    .split-row {text-align:center;font-size:12px;
+      &.divided {border-bottom:1px dotted #394F63;}
+      span {padding:5px 8px;}
+    }
+    .active-status {padding:0;line-height:0;display:inline-block;width:8px;height:8px;border-radius:50%;
+      &.active {background:#42c648;}
+      &.inactive {background:#fd3d39;}
+    }
   }
 }
 
@@ -154,6 +167,21 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
         .btn {width:25%;position:relative;
           i {font-size:18px;line-height:0;position:relative;top:4px;margin-left:4px;}
         }
+      }
+    }
+
+    &.collection-event-form {
+      .col-left-bar {position:absolute;top:0;left:0;bottom:0;width:220px;height:100%;background:#333c46;color:#97aabc;
+        a {color:inherit;}
+        ul {padding:1rem;margin:0;
+          li {
+            a {display:block;padding:0.25rem 0;}
+            &.active a {color:#56E1A2;font-weight:bold;}
+          }
+        }
+      }
+      .col-right-main {position:absolute;top:0;right:0;width:calc(100% - 220px);height:100%;padding:1rem;
+        .version-stat {padding-bottom:1rem;margin-bottom:1rem;border-bottom:1px solid #ccc;}
       }
     }
   }

@@ -23,6 +23,9 @@
                 var _routes = {
                     api: {
                         calendar:           routeBase.api + '/calendar',
+                        calendarList:       routeBase.api + '/calendar_list',
+                        collection:         routeBase.api + '/collection',
+                        collectionEvent:    routeBase.api + '/collection_event',
                         event:              routeBase.api + '/event',
                         eventList:          routeBase.api + '/event_list',
                         eventNullify:       routeBase.api + '/event_time_nullify',
@@ -73,6 +76,16 @@
            return {
                calendar: $resource(Routes.generate('api.calendar', [':id']), {id:'@id'}, angular.extend(_methods(), {
                    // more custom methods here
+               })),
+               calendarList: $resource(Routes.generate('api.calendarList'), {}, {
+                   get: {isArray:true, cache:true}
+               }),
+               collection: $resource(Routes.generate('api.collection', [':id', ':subAction']), {id:'@id'}, angular.extend(_methods(), {
+                   allEventsList: {method:'get', isArray:true, cache:false, params:{subAction:'all_events_list'}}
+               })),
+               collectionEvent: $resource(Routes.generate('api.collectionEvent', [':subAction']), {}, angular.extend(_methods(), {
+                   versionList: {method:'get', isArray:true, cache:false, params:{subAction:'version_list'}},
+                   approvedVersion: {method:'get', cache:false, params:{subAction:'approved_version'}}
                })),
                event: $resource(Routes.generate('api.event', [':id']), {id:'@id'}, angular.extend(_methods(), {
                    // more custom methods here
