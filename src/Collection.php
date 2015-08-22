@@ -142,12 +142,56 @@
         public function approveEventVersion( $eventID, $approvedVersionID ){
             $collectionID = $this->id;
             self::adhocQuery(function( \PDO $connection ) use ($collectionID, $eventID, $approvedVersionID){
-                $statement = $connection->prepare("INSERT INTO SchedulizerCollectionEvents (collectionID,eventID,approvedVersionID)
-                VALUES (:collectionID,:eventID,:approvedVersionID)
-                ON DUPLICATE KEY UPDATE approvedVersionID = :approvedVersionID");
+                $statement = $connection->prepare("
+                REPLACE INTO SchedulizerCollectionEvents (collectionID,eventID,approvedVersionID)
+                VALUES (:collectionID,:eventID,:approvedVersionID)");
                 $statement->bindValue(":collectionID", $collectionID);
                 $statement->bindValue(":eventID", $eventID);
                 $statement->bindValue(":approvedVersionID", $approvedVersionID);
+                return $statement;
+            });
+        }
+
+        /**
+         * @todo: major sql-injection vulnerability where we're just doing join()
+         * directly on user input; validate that shit first.
+         * @param array $eventIDs
+         */
+        public function approveEventsAtLatestVersion( array $eventIDs = array() ){
+            $collectionID = $this->id;
+            $eventIDs     = join(',', $eventIDs);
+            self::adhocQuery(function( \PDO $connection ) use ($collectionID, $eventIDs){
+                $statement = $connection->prepare("
+                  REPLACE INTO SchedulizerCollectionEvents (collectionID, eventID, approvedVersionID)
+                  SELECT :collectionID, _events.id, _versionInfo.versionID
+                  FROM SchedulizerEvent _events
+                  LEFT JOIN (
+                      SELECT _eventVersions.*
+                      FROM SchedulizerEventVersion _eventVersions
+                      INNER JOIN ( SELECT eventID, MAX(versionID) AS maxVersionID FROM SchedulizerEventVersion GROUP BY eventID ) _eventVersions2
+                      ON _eventVersions.eventID = _eventVersions2.eventID
+                      AND _eventVersions.versionID = _eventVersions2.maxVersionID
+                  ) AS _versionInfo ON _events.id = _versionInfo.eventID
+                  WHERE _events.id IN ($eventIDs)
+                ");
+                $statement->bindValue(":collectionID", $collectionID);
+                return $statement;
+            });
+        }
+
+        /**
+         * "Unapprove" means "delete"...
+         */
+        public function unapproveCollectionEvents( array $eventIDs = array() ){
+            $collectionID = $this->id;
+            $eventIDs = join(',', $eventIDs);
+            self::adhocQuery(function( \PDO $connection ) use ($collectionID, $eventIDs){
+                $statement = $connection->prepare("
+                  DELETE FROM SchedulizerCollectionEvents
+                  WHERE collectionID = :collectionID
+                  AND eventID IN ($eventIDs)
+                ");
+                $statement->bindValue(":collectionID", $collectionID);
                 return $statement;
             });
         }

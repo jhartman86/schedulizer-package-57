@@ -15,14 +15,21 @@
                             </h3>
                         </div>
                         <div class="pull-right">
-                            <button type="button" class="btn btn-default" ng-click="toggleSearch()" ng-class="{'btn-success':searchFiltersSet}"><i class="icon-search"></i></button>
+                            <div ng-show="boxesAreChecked">
+                                With Checked:
+                                <button type="button" class="btn btn-default" ng-click="approveLatest()">Approve Latest</button>
+                                <button type="button" class="btn btn-default" ng-click="unapprove()">Unapprove</button>
+                            </div>
+                            <div ng-hide="boxesAreChecked">
+                                <button type="button" class="btn btn-default" ng-click="toggleSearch()" ng-class="{'btn-success':searchFiltersSet}"><i class="icon-search"></i></button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <table border="0" cellspacing="0" cellpadding="0" class="ccm-search-results-table tbl-collection-list">
+        <table ng-cloak border="0" cellspacing="0" cellpadding="0" class="ccm-search-results-table tbl-collection-list">
             <thead>
                 <tr>
                     <th rowspan="2"><span><input type="checkbox" ng-model="checkToggleAll" ng-change="toggleAllCheckboxes()" /></span></th>

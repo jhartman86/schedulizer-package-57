@@ -8,18 +8,19 @@ angular.module('schedulizer.app').
             $scope.checkboxes       = {};
             $scope.eventList        = [];
 
-            function checkedEventIDs(values){
+            function checkedEventIDs(){
                 var _checked = [];
-                for(var key in values){
-                    if(values[key] === true){
+                for(var key in $scope.checkboxes){
+                    if($scope.checkboxes[key] === true){
                         _checked.push(key);
                     }
                 }
                 return _checked;
             }
 
-            $scope.$watchCollection('checkboxes', function(values){
-                var checked = checkedEventIDs(values);
+            $scope.$watchCollection('checkboxes', function(){
+                var ids = checkedEventIDs();
+                $scope.boxesAreChecked = ids.length >= 1;
             });
 
             $scope.toggleAllCheckboxes = function(){
@@ -40,6 +41,24 @@ angular.module('schedulizer.app').
                     unregisterWatch();
                 }
             });
+
+            $scope.approveLatest = function(){
+                API.collectionEvent.approveLatestVersions({
+                    collectionID: $scope.collectionID,
+                    events: checkedEventIDs()
+                }, function(){
+                    $scope.refreshEventList();
+                });
+            };
+
+            $scope.unapprove = function(){
+                API.collectionEvent.unapprove({
+                    collectionID: $scope.collectionID,
+                    events: checkedEventIDs().join(',')
+                }, function(){
+                    $scope.refreshEventList();
+                });
+            };
 
             $rootScope.$on('collection:refreshEventList', $scope.refreshEventList);
 

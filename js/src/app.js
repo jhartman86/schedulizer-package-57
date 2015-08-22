@@ -85,7 +85,9 @@
                })),
                collectionEvent: $resource(Routes.generate('api.collectionEvent', [':subAction']), {}, angular.extend(_methods(), {
                    versionList: {method:'get', isArray:true, cache:false, params:{subAction:'version_list'}},
-                   approvedVersion: {method:'get', cache:false, params:{subAction:'approved_version'}}
+                   approvedVersion: {method:'get', cache:false, params:{subAction:'approved_version'}},
+                   approveLatestVersions: {method:'post', params:{subAction:'approve_latest_versions'}},
+                   unapprove: {method:'delete'}
                })),
                event: $resource(Routes.generate('api.event', [':id']), {id:'@id'}, angular.extend(_methods(), {
                    // more custom methods here
