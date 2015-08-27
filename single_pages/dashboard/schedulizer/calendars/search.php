@@ -36,7 +36,7 @@
         </div>
 
         <div class="app-wrap">
-            <form class="calendar-event-search">
+            <form class="search-form">
                 <a class="btn btn-sm clear-fields" ng-click="clearSearchFields()">Clear</a>
                 <div class="container-fluid">
                     <div class="row">
@@ -77,23 +77,23 @@
                 </div>
             </form>
 
-            <table border="0" cellspacing="0" cellpadding="0" class="ccm-search-results-table event-search-table">
+            <table border="0" cellspacing="0" cellpadding="0" class="ccm-search-results-table search-table">
                 <thead>
                 <tr>
-                    <th><a>Title</a></th>
-                    <th><a>Calendar</a></th>
-                    <th><a>Start Date</a></th>
-                    <th><a>Active</a></th>
-                    <th ng-show="doGrouping"><a>Occurrences</a></th>
+                    <th><span>Title</span></th>
+                    <th><span>Calendar</span></th>
+                    <th><span>Start Date</span></th>
+                    <th><span>Active</span></th>
+                    <th ng-show="doGrouping"><span>Occurrences</span></th>
                 </tr>
                 </thead>
                 <tbody>
                     <tr ng-repeat="eventObj in resultData" ng-cloak>
                         <td><a class="text-wrap" modalize="/event_form" data-using="{eventObj:eventObj}">{{ eventObj.title }}</a></td>
                         <td><a ng-href="/dashboard/schedulizer/calendars/manage/{{ eventObj.calendarID }}">{{ eventObj.calendarTitle }}</a></td>
-                        <td>{{ momentJS(eventObj.computedStartLocal).format('MMM DD, YYYY / h:mm a') }}</td>
-                        <td>{{ eventObj.isActive ? 'Yes' : 'No' }}</td>
-                        <td ng-show="doGrouping">{{ eventObj.occurrences }}</td>
+                        <td><span>{{ momentJS(eventObj.computedStartLocal).format('MM/DD/YYYY | h:mm a') }}</span></td>
+                        <td class="text-center"><span class="active-status" ng-class="{'active':eventObj.isActive,'inactive':!eventObj.isActive}"></span></td>
+                        <td class="text-center" ng-show="doGrouping">{{ eventObj.occurrences }}</td>
                     </tr>
                 </tbody>
             </table>

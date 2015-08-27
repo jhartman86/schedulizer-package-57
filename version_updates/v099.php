@@ -21,7 +21,7 @@
                     $pkEditEvents = SchedulizerCalendarKey::getByHandle('edit_events');
                     $pkEditEvents->setPermissionObject($calendarObj);
                     $paEdit = $pkEditEvents->getPermissionAccessObject();
-                    if( !is_object($paObj) ){
+                    if( !is_object($paEdit) ){
                         $paEdit = PermissionAccess::create($pkEditEvents);
                     }
                     $peOwner = CalendarOwnerAccessEntity::getOrCreate();

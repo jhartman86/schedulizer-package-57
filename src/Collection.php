@@ -1,6 +1,7 @@
 <?php namespace Concrete\Package\Schedulizer\Src {
 
     use Permissions;
+    use \Concrete\Package\Schedulizer\Src\Calendar;
     use \Concrete\Package\Schedulizer\Src\Persistable\Contracts\Persistant;
     use \Concrete\Package\Schedulizer\Src\Persistable\Mixins\Crud;
 
@@ -8,6 +9,7 @@
      * Class Collection
      * @package Concrete\Package\Schedulizer\Src
      * @definition({"table":"SchedulizerCollection"})
+     * @todo: foreign keys; update primary _eventListQuery to include collections
      */
     class Collection extends Persistant {
 
@@ -68,6 +70,53 @@
             return $colObj;
         }
 
+        /**
+         * Even though the pseudo-ORM doesn't handle the $data->collectionCalendars[]
+         * property automatically, we still expect it to be set (hence why we're overriding
+         * the update() method).
+         * @param $data
+         */
+        public function update( $data ){
+            $collectionID = $this->id;
+            $calendarIDs  = $data->collectionCalendars;
+
+            // Since we're updating, the very first thing we have to do is make sure that for any
+            // calendars no longer in the collection, we move any event records associated with them.
+            // So, instead of diff'ing which calendars were added or remove, we can do a single query
+            // and say remove collection events that are not parts of calendars (1,2,...)
+            $this->deleteCollectionEventsNotInCalendars($calendarIDs);
+
+            // First purge all collection -> calendarID associations
+            self::adhocQuery(function( \PDO $connection ) use ($collectionID){
+                $statement = $connection->prepare("DELETE FROM SchedulizerCollectionCalendars WHERE collectionID = :collectionID");
+                $statement->bindValue(':collectionID', $collectionID);
+                return $statement;
+            });
+
+            // Now recreate them...
+            foreach($calendarIDs AS $calID){
+                self::adhocQuery(function( \PDO $connection ) use ($collectionID, $calID){
+                    $statement = $connection->prepare("INSERT INTO SchedulizerCollectionCalendars (collectionID,calendarID) VALUES (:collectionID,:calendarID)");
+                    $statement->bindValue(":collectionID", $collectionID);
+                    $statement->bindValue(":calendarID", $calID);
+                    return $statement;
+                });
+            }
+
+            // Now we run normal update on the collection record
+            $this->mergePropertiesFrom($data);
+            $this->save();
+        }
+
+        public function jsonSerialize(){
+            $properties = (object) get_object_vars($this);
+            // return an array of calendar IDs
+            $properties->collectionCalendars = array_map(function( $calendarObj ){
+                return $calendarObj->getID();
+            },$this->fetchCollectionCalendars());
+            return $properties;
+        }
+
         /****************************************************************
          * Fetch Methods
          ***************************************************************/
@@ -78,10 +127,20 @@
             });
         }
 
+        public function fetchCollectionCalendars(){
+            return Calendar::fetchCalendarsInCollection($this->id);
+        }
 
-        public function fetchAllAvailableEvents(){
+        /**
+         * Get all events available to the collection, optionally filtered by a
+         * calendarID.
+         * @param null $calendarID
+         * @return mixed
+         */
+        public function fetchAllAvailableEvents( $calendarID = null ){
             $collectionID = $this->id;
-            $query = self::adhocQuery(function( \PDO $connection ) use ($collectionID){
+            $query = self::adhocQuery(function( \PDO $connection ) use ($collectionID, $calendarID){
+                $calendarFilter = $calendarID ? sprintf("AND _calendars.id = %s", (int)$calendarID) : '';
                 $statement = $connection->prepare("
                     SELECT
                       _events.id AS eventID,
@@ -105,6 +164,7 @@
                       ON _collectionEvents.collectionID = _collectionCalendars.collectionID
                       AND _collectionEvents.eventID = _events.id
                     WHERE _collectionCalendars.collectionID = :collectionID
+                    $calendarFilter
                     ORDER BY _versionInfo.title ASC");
                 $statement->bindValue(':collectionID', $collectionID);
                 return $statement;
@@ -126,7 +186,15 @@
         }
 
 
-        public static function fetchApprovedEventVersionID( $collectionID, $eventID ){
+        /**
+         * What is the currently approved versionID for a specific collection event? Used
+         * when we're inspecting an INDIVIDUAL event, to denote what the approved current
+         * version is.
+         * @param $collectionID
+         * @param $eventID
+         * @return mixed
+         */
+        public static function fetchApprovedEventVersionRecord( $collectionID, $eventID ){
             $query = self::adhocQuery(function( \PDO $connection ) use ($collectionID, $eventID){
                 $statement = $connection->prepare("
                     SELECT * FROM SchedulizerCollectionEvents
@@ -139,6 +207,11 @@
         }
 
 
+        /**
+         * Approve a SINGLE event at a specified version.
+         * @param $eventID
+         * @param $approvedVersionID
+         */
         public function approveEventVersion( $eventID, $approvedVersionID ){
             $collectionID = $this->id;
             self::adhocQuery(function( \PDO $connection ) use ($collectionID, $eventID, $approvedVersionID){
@@ -190,6 +263,30 @@
                   DELETE FROM SchedulizerCollectionEvents
                   WHERE collectionID = :collectionID
                   AND eventID IN ($eventIDs)
+                ");
+                $statement->bindValue(":collectionID", $collectionID);
+                return $statement;
+            });
+        }
+
+        /**
+         * When we're updating a collection (and thus possibly changing calendars which
+         * are members of the collection), we need to make sure to remove any events
+         * that have been approved in the collection that belong to calendars which are
+         * no longer members.
+         * @param array $calendarIDs
+         */
+        public function deleteCollectionEventsNotInCalendars( array $calendarIDs = array() ){
+            $collectionID = $this->id;
+            $calendarIDs  = join(',', $calendarIDs);
+            self::adhocQuery(function( \PDO $connection ) use ($collectionID, $calendarIDs){
+                $statement = $connection->prepare("
+                    DELETE _collEvent FROM SchedulizerCollectionEvents _collEvent
+                    JOIN SchedulizerEvent _schedEvent ON _collEvent.eventID = _schedEvent.id
+                    JOIN SchedulizerCollectionCalendars _collCalendar ON _collCalendar.calendarID = _schedEvent.calendarID
+                    AND _collCalendar.collectionID = _collEvent.collectionID
+                    WHERE _collEvent.collectionID = :collectionID
+                    AND _schedEvent.calendarID NOT IN ($calendarIDs)
                 ");
                 $statement->bindValue(":collectionID", $collectionID);
                 return $statement;

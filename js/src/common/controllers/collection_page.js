@@ -1,12 +1,13 @@
 angular.module('schedulizer.app').
 
-    controller('CtrlCollectionPage', ['$rootScope', '$scope', 'API',
-        function( $rootScope, $scope, API ){
+    controller('CtrlCollectionPage', ['$rootScope', '$scope', '$q', 'API',
+        function( $rootScope, $scope, $q, API ){
 
             $scope.collectionID     = null; // set via ng-init
             $scope.checkToggleAll   = false;
             $scope.checkboxes       = {};
             $scope.eventList        = [];
+            $scope.filterByCalendar = null;
 
             function checkedEventIDs(){
                 var _checked = [];
@@ -20,7 +21,7 @@ angular.module('schedulizer.app').
 
             $scope.$watchCollection('checkboxes', function(){
                 var ids = checkedEventIDs();
-                $scope.boxesAreChecked = ids.length >= 1;
+                $scope.boxesAreChecked = (ids.length >= 1);
             });
 
             $scope.toggleAllCheckboxes = function(){
@@ -30,17 +31,15 @@ angular.module('schedulizer.app').
             };
 
             $scope.refreshEventList = function(){
-                API.collection.allEventsList({id:$scope.collectionID}, function( resp ){
+                API.collection.allEventsList({
+                    id          : $scope.collectionID,
+                    calendarID  : $scope.filterByCalendar
+                }, function( resp ){
+                    $scope.checkboxes = {};
                     $scope.eventList = resp;
+                    $scope.checkToggleAll = false;
                 });
             };
-
-            var unregisterWatch = $scope.$watch('collectionID', function( val ){
-                if( val ){
-                    $scope.refreshEventList();
-                    unregisterWatch();
-                }
-            });
 
             $scope.approveLatest = function(){
                 API.collectionEvent.approveLatestVersions({
@@ -49,6 +48,7 @@ angular.module('schedulizer.app').
                 }, function(){
                     $scope.refreshEventList();
                 });
+
             };
 
             $scope.unapprove = function(){
@@ -60,160 +60,26 @@ angular.module('schedulizer.app').
                 });
             };
 
+            var unbindAfterOneCycle = $scope.$watch('collectionID', function( val ){
+                if( val ){
+                    unbindAfterOneCycle();
+                    $scope.refreshEventList();
+
+                    $q.all([
+                        API.collection.get({id:val}).$promise,
+                        API.calendarList.get().$promise
+                    ]).then(function( responses ){
+                        // Set collection object on the scope
+                        $scope.collectionObj = responses[0];
+                        var calendarList = responses[1].filter(function( calObj ){
+                            return $scope.collectionObj.collectionCalendars.indexOf(calObj.id) !== -1;
+                        });
+                        calendarList.unshift({id:null, title:'Filter By Calendar'});
+                        $scope.calendarList = calendarList;
+                    });
+                }
+            });
+
             $rootScope.$on('collection:refreshEventList', $scope.refreshEventList);
-
-            //$scope.updateInProgress     = false;
-            //$scope.searchOpen           = false;
-            //$scope.eventTagList         = [];
-            //$scope.eventCategoryList    = [];
-            //$scope.searchFiltersSet     = false;
-            //$scope.searchFields         = {
-            //    keywords: null,
-            //    tags: [],
-            //    categories: []
-            //};
-            //
-            //$scope.toggleSearch = function(){
-            //    $scope.searchOpen = !$scope.searchOpen;
-            //};
-            //
-            //API.eventTags.query().$promise.then(function( results ){
-            //    $scope.eventTagList = results;
-            //});
-            //
-            //API.eventCategories.query().$promise.then(function( results ){
-            //    $scope.eventCategoryList = results;
-            //});
-            //
-            //// $scope.calendarID is ng-init'd from the view!
-            //var _cache = $cacheFactory('calendarData');
-            //
-            //// Tell the API what fields we want back
-            //var _fields = [
-            //    'eventID', 'eventTimeID', 'calendarID', 'title', 'isActive',
-            //    'eventColor', 'isAllDay', 'isSynthetic', 'computedStartUTC',
-            //    'computedStartLocal'
-            //];
-            //
-            ///**
-            // * Turn the search button green if any search fields are filled in to indicate
-            // * to the user that search filters are being applied.
-            // */
-            //$scope.$watch('searchFields', function(val){
-            //    var filtersSet = false;
-            //    if( val.keywords ){filtersSet = true;}
-            //    if( val.tags.length !== 0 ){filtersSet = true;}
-            //    if( val.categories.length !== 0 ){filtersSet = true;}
-            //    $scope.searchFiltersSet = filtersSet;
-            //}, true);
-            //
-            ///**
-            // * We need to pre-process the $scope.searchFields and format them for
-            // * querying; this does so.
-            // * @returns {{keywords: null, tags: *}}
-            // */
-            //function parameterizedSearchFields(){
-            //    return {
-            //        includeinactives: true,
-            //        keywords: $scope.searchFields.keywords,
-            //        tags: $scope.searchFields.tags.map(function( tag ){
-            //            return tag.id;
-            //        }).join(','),
-            //        categories: $scope.searchFields.categories.map(function( cat ){
-            //            return cat.id;
-            //        }).join(',')
-            //    };
-            //}
-            //
-            ///**
-            // * Receive a month map object from calendry and setup the request as
-            // * you see fit.
-            // * @param monthMapObj
-            // * @returns {HttpPromise}
-            // * @private
-            // */
-            //function _fetch( monthMapObj ){
-            //    return $http.get(API._routes.generate('api.eventList', [$scope.calendarID]), {
-            //        cache: _cache,
-            //        params: angular.extend({
-            //            start: monthMapObj.calendarStart.format('YYYY-MM-DD'),
-            //            end: monthMapObj.calendarEnd.format('YYYY-MM-DD'),
-            //            fields: _fields.join(',')
-            //        }, parameterizedSearchFields())
-            //    });
-            //}
-            //
-            ///**
-            // * Trigger refreshing the calendar.
-            // * @private
-            // */
-            //function _updateCalendar( uncache ){
-            //    $scope.updateInProgress = true;
-            //    if( uncache === true ){
-            //        _cache.removeAll();
-            //    }
-            //    _fetch($scope.instance.monthMap).success(function( resp ){
-            //        $scope.instance.events = resp;
-            //        $scope.updateInProgress = false;
-            //    }).error(function( data, status, headers, config ){
-            //        $scope.updateInProgress = false;
-            //        console.warn(status, 'Failed fetching calendar data.');
-            //    });
-            //    $scope.searchOpen = false;
-            //}
-            //
-            ///**
-            // * Clear the search fields and update calendar.
-            // */
-            //$scope.clearSearchFields = function(){
-            //    $scope.searchFields = {
-            //        keywords: null,
-            //        tags: [],
-            //        categories: []
-            //    };
-            //    _updateCalendar();
-            //};
-            //
-            ///**
-            // * Method to trigger calendar refresh callable from the scope.
-            // * @type {_updateCalendar}
-            // */
-            //$scope.sendSearch = function(){
-            //    _updateCalendar();
-            //};
-            //
-            ///**
-            // * Handlers for calendry stuff.
-            // * @type {{onMonthChange: Function, onDropEnd: Function}}
-            // */
-            //$scope.instance = {
-            //    parseDateField: 'computedStartLocal',
-            //    onMonthChange: function( monthMap ){
-            //        _updateCalendar();
-            //    },
-            //    onDropEnd: function( landingMoment, eventObj ){
-            //        console.log(landingMoment, eventObj);
-            //    }
-            //};
-            //
-            ///**
-            // * calendar.refresh IS NOT issued by the calendry directive; it comes
-            // * from other things in the app.
-            // */
-            //$rootScope.$on('calendar.refresh', function(){
-            //    _updateCalendar(true);
-            //});
-            //
-            //// Launch C5's default modal stuff
-            //$scope.permissionModal = function( _href ){
-            //    jQuery.fn.dialog.open({
-            //        title:  'Calendar Permissions',
-            //        href:   _href,
-            //        modal:  false,
-            //        width:  500,
-            //        height: 380
-            //    });
-            //};
-
         }
     ]);

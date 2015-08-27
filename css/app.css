@@ -3257,7 +3257,7 @@
       -ms-transform: translateY(0);
       -webkit-transform: translateY(0);
       transform: translateY(0); }
-      .schedulizer-app .ccm-dashboard-content-full .app-wrap .calendar-event-search {
+      .schedulizer-app .ccm-dashboard-content-full .app-wrap .search-form {
         padding: 1rem 0;
         height: 100%;
         background: #414d59;
@@ -3270,7 +3270,7 @@
         overflow-x: hidden;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch; }
-        .schedulizer-app .ccm-dashboard-content-full .app-wrap .calendar-event-search .clear-fields {
+        .schedulizer-app .ccm-dashboard-content-full .app-wrap .search-form .clear-fields {
           position: absolute;
           top: 0;
           right: 0;
@@ -3285,20 +3285,58 @@
     .schedulizer-app .ccm-dashboard-content-full.search-page input.date-selector {
       display: inline-block;
       max-width: 90px; }
-    .schedulizer-app .ccm-dashboard-content-full.search-page table.event-search-table tbody td {
-      padding-left: 10px;
-      padding-right: 10px;
+    .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table a {
+      cursor: pointer; }
+    .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table a, .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table span {
+      display: inline-block;
+      padding: 0 8px; }
+    .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table thead th {
+      padding: 0 2px; }
+      .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table thead th span {
+        padding: 5px 8px; }
+    .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table tbody td {
+      padding: 20px 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis; }
-      .schedulizer-app .ccm-dashboard-content-full.search-page table.event-search-table tbody td a {
-        padding: 0; }
-      .schedulizer-app .ccm-dashboard-content-full.search-page table.event-search-table tbody td .text-wrap {
+      .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table tbody td .text-wrap {
         max-width: 90%;
         display: block;
         white-space: pre-line;
         overflow: hidden;
         text-overflow: ellipsis; }
+      .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table tbody td .active-status {
+        padding: 0;
+        line-height: 0;
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%; }
+        .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table tbody td .active-status.active {
+          background: #42c648; }
+        .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table tbody td .active-status.inactive {
+          background: #fd3d39; }
+    .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list .split-row {
+      text-align: center;
+      font-size: 12px; }
+      .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list .split-row.divided {
+        border-bottom: 1px dotted #394F63; }
+      .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list .split-row span {
+        padding: 5px 8px; }
+    .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list thead tr th[checkbox-wrap],
+    .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list tbody tr td[checkbox-wrap] {
+      text-align: center;
+      padding: 0 12px; }
+    .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list tbody tr td {
+      white-space: nowrap; }
+      .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list tbody tr td.event-title a {
+        max-width: 350px;
+        white-space: inherit;
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis; }
+      .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list tbody tr td span[select-wrap] {
+        padding: 0; }
   .schedulizer-app label {
     font-weight: normal; }
     .schedulizer-app label.btn input[type="checkbox"] {
@@ -3372,26 +3410,6 @@
     height: 100%;
     background: rgba(50, 50, 50, 0.35) url("/packages/schedulizer/images//spinner.svg") no-repeat 50% 50%;
     z-index: 5; }
-  .schedulizer-app .tbl-collection-list a {
-    cursor: pointer; }
-  .schedulizer-app .tbl-collection-list .split-row {
-    text-align: center;
-    font-size: 12px; }
-    .schedulizer-app .tbl-collection-list .split-row.divided {
-      border-bottom: 1px dotted #394F63; }
-    .schedulizer-app .tbl-collection-list .split-row span {
-      padding: 5px 8px; }
-  .schedulizer-app .tbl-collection-list .active-status {
-    padding: 0;
-    line-height: 0;
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%; }
-    .schedulizer-app .tbl-collection-list .active-status.active {
-      background: #42c648; }
-    .schedulizer-app .tbl-collection-list .active-status.inactive {
-      background: #fd3d39; }
 
 @media screen and (min-width: 1000px) and (min-height: 820px) {
   html {

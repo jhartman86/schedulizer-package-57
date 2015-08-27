@@ -139,6 +139,18 @@
             });
         }
 
+        public static function fetchCalendarsInCollection( $collectionID ){
+            return (array) self::fetchMultipleBy(function( \PDO $connection, $tableName ) use ($collectionID){
+                $statement = $connection->prepare("
+                SELECT _calendars.* FROM {$tableName} _calendars
+                RIGHT JOIN SchedulizerCollectionCalendars _collectionCalendars ON _calendars.id = _collectionCalendars.calendarID
+                WHERE _collectionCalendars.collectionID = :collectionID;
+                ");
+                $statement->bindValue(':collectionID', $collectionID);
+                return $statement;
+            });
+        }
+
 
         /****************************************************************
          * Permissioning stuff

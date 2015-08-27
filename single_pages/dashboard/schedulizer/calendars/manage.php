@@ -46,7 +46,7 @@
         </div>
 
         <div class="app-wrap">
-            <form class="calendar-event-search">
+            <form class="search-form">
                 <a class="btn btn-sm clear-fields" ng-click="clearSearchFields()">Clear</a>
                 <div class="container-fluid">
                     <div class="row">

@@ -29,6 +29,11 @@ angular.module('schedulizer.app').
 
             $scope.viewVersion = function( version ){
                 $scope.viewingVersion = version;
+                console.log(version);
+                //API.event.get({id:version.eventID}, function( resp ){
+                //    $scope.viewingVersion = resp;
+                //});
+                //console.log(version);
             };
 
             $scope.approveVersion = function(){

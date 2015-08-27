@@ -21,7 +21,12 @@
                 case self::SUBACTION_GET_APPROVED_EVENT_VERSION:
                     $eventID      = (int) $_REQUEST['eventID'];
                     $collectionID = (int) $_REQUEST['collectionID'];
-                    $this->setResponseData(Collection::fetchApprovedEventVersionID( $collectionID, $eventID ));
+                    $record       = Collection::fetchApprovedEventVersionRecord( $collectionID, $eventID );
+                    $this->setResponseData((object) array(
+                        'approvedVersionID' => (int) $record->approvedVersionID,
+                        'collectionID'      => (int) $record->collectionID,
+                        'eventID'           => (int) $record->eventID
+                    ));
                     break;
 
                 default:

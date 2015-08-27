@@ -71,7 +71,7 @@
                     <tbody>
                         <tr ng-repeat="calendarObj in calendarList">
                             <td>
-                                <input name="selectedCalendars[]" type="checkbox" ng-model="calendarObj.selected" />
+                                <input name="selectedCalendars[]" type="checkbox" ng-model="selectedCals[calendarObj.id]" />
                             </td>
                             <td class="col-sm-11">
                                 {{ calendarObj.title }}
