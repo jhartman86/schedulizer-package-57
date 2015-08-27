@@ -1,7 +1,7 @@
 angular.module('schedulizer.app').
 
-    controller('CtrlCollectionForm', ['$window', '$rootScope', '$scope', 'API', 'ModalManager',
-        function( $window, $rootScope, $scope, API, ModalManager ){
+    controller('CtrlCollectionForm', ['$window', '$rootScope', '$scope', 'API', 'ModalManager', 'Alerter',
+        function( $window, $rootScope, $scope, API, ModalManager, Alerter ){
 
             // Show loading message
             $scope._ready       = true;
@@ -39,6 +39,14 @@ angular.module('schedulizer.app').
                         $window.location.href = API._routes.generate('dashboard', ['calendars', 'collections', 'manage', resp.id]);
                     }
                 );
+            };
+
+            $scope.deleteCollection = function(){
+                $scope.entity.$delete(function(){
+                    // If this function gets called, server responded w/ header code 20{x}, meaning "OK"
+                    Alerter.add({msg:'Collection Removed!', success: true});
+                    $window.location.href = API._routes.generate('dashboard', ['calendars', 'collections']);
+                });
             };
         }
     ]);

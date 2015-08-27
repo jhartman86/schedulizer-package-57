@@ -81,13 +81,23 @@
                    get: {isArray:true, cache:true}
                }),
                collection: $resource(Routes.generate('api.collection', [':id', ':subAction']), {id:'@id'}, angular.extend(_methods(), {
-                   allEventsList: {method:'get', isArray:true, cache:false, params:{subAction:'all_events_list'}}
+                   //allEventsList: {method:'get', isArray:true, cache:false, params:{subAction:'all_events_list'}}
                })),
                collectionEvent: $resource(Routes.generate('api.collectionEvent', [':subAction']), {}, angular.extend(_methods(), {
+                   allEventsList: {method:'get', isArray:true, cache:false, params:{subAction:'all_events_list'}},
                    versionList: {method:'get', isArray:true, cache:false, params:{subAction:'version_list'}},
                    approvedVersion: {method:'get', cache:false, params:{subAction:'approved_version'}},
                    approveLatestVersions: {method:'post', params:{subAction:'approve_latest_versions'}},
-                   unapprove: {method:'delete'}
+                   unapprove: {method:'delete'},
+                   saveSingleAutoApprovable: {method:'put', params:{_method:'PUT'}, transformRequest:function( data ){
+                       return angular.toJson({
+                           eventID: data.eventID,
+                           versionID: data.versionID,
+                           collectionID: data.collectionID,
+                           autoApprovable: data.autoApprovable
+                       });
+                   }},
+                   saveMultiAutoApprovable: {method:'put', params:{_method:'PUT',subAction:'multi_auto_approve'}}
                })),
                event: $resource(Routes.generate('api.event', [':id']), {id:'@id'}, angular.extend(_methods(), {
                    // more custom methods here

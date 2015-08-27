@@ -15,10 +15,10 @@
                 $collectionObj = Collection::getByID( $collectionID );
                 if( is_object($collectionObj) ){
                     $this->set('collectionObj', $collectionObj);
-                    //$this->set('availableEvents', $collectionObj->fetchAllAvailableEvents());
                     $this->set('pageTitle', $collectionObj->getTitle());
                     return;
                 }
+                throw new \Exception('No collection object');
             }catch(\Exception $e){
                 $this->redirect('/dashboard/schedulizer/calendars/collections');
             }

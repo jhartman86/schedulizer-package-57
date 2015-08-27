@@ -30,10 +30,13 @@ angular.module('schedulizer.app').
                 }
             };
 
+            /**
+             *
+             */
             $scope.refreshEventList = function(){
-                API.collection.allEventsList({
-                    id          : $scope.collectionID,
-                    calendarID  : $scope.filterByCalendar
+                API.collectionEvent.allEventsList({
+                    collectionID : $scope.collectionID,
+                    calendarID   : $scope.filterByCalendar
                 }, function( resp ){
                     $scope.checkboxes = {};
                     $scope.eventList = resp;
@@ -63,7 +66,6 @@ angular.module('schedulizer.app').
             var unbindAfterOneCycle = $scope.$watch('collectionID', function( val ){
                 if( val ){
                     unbindAfterOneCycle();
-                    $scope.refreshEventList();
 
                     $q.all([
                         API.collection.get({id:val}).$promise,
@@ -76,10 +78,41 @@ angular.module('schedulizer.app').
                         });
                         calendarList.unshift({id:null, title:'Filter By Calendar'});
                         $scope.calendarList = calendarList;
+                        $scope.refreshEventList();
                     });
                 }
             });
 
             $rootScope.$on('collection:refreshEventList', $scope.refreshEventList);
+
+
+            $scope.approvalList = [
+                {value:false, label:'Required'},
+                {value:true, label:'Auto'}
+            ];
+
+            /**
+             * Change the autoApprovable setting for a SINGLE event
+             * @param eventResource
+             */
+            $scope.updateEventApproval = function( eventResource ){
+                eventResource.$saveSingleAutoApprovable(function(resource){
+                    // Since the response from the server is just an HTTP header code, the resource
+                    // in this callback isn't an "updated" version. But to fake an update to the user,
+                    // we can just set approvedVersionID to the versionID property (which should be
+                    // accurate anyways)
+                    resource.approvedVersionID = resource.versionID;
+                });
+            };
+
+            /**
+             * Change the autoApprovable settings for multiple events
+             */
+            $scope.makeAutoApprovable = function(){
+                API.collectionEvent.saveMultiAutoApprovable({
+                    collectionID: +($scope.collectionID),
+                    events: checkedEventIDs()
+                }, $scope.refreshEventList);
+            };
         }
     ]);

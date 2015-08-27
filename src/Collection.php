@@ -2,6 +2,7 @@
 
     use Permissions;
     use \Concrete\Package\Schedulizer\Src\Calendar;
+    use \Concrete\Package\Schedulizer\Src\Event AS SchedulizerEvent;
     use \Concrete\Package\Schedulizer\Src\Persistable\Contracts\Persistant;
     use \Concrete\Package\Schedulizer\Src\Persistable\Mixins\Crud;
 
@@ -9,7 +10,7 @@
      * Class Collection
      * @package Concrete\Package\Schedulizer\Src
      * @definition({"table":"SchedulizerCollection"})
-     * @todo: foreign keys; update primary _eventListQuery to include collections
+     * @todo: update primary _eventListQuery to include collections
      */
     class Collection extends Persistant {
 
@@ -121,15 +122,25 @@
          * Fetch Methods
          ***************************************************************/
 
+        /**
+         * Get a list of all collections.
+         * @return array
+         */
         public static function fetchAll(){
             return (array) self::fetchMultipleBy(function( \PDO $connection, $tableName ){
                 return $connection->prepare("SELECT * FROM {$tableName}");
             });
         }
 
+
+        /**
+         * Get a list of all the calendars (as full objects) that belong to a collection.
+         * @return array
+         */
         public function fetchCollectionCalendars(){
             return Calendar::fetchCalendarsInCollection($this->id);
         }
+
 
         /**
          * Get all events available to the collection, optionally filtered by a
@@ -148,7 +159,9 @@
                       _events.isActive,
                       _versionInfo.title AS eventTitle,
                       _calendars.title AS calendarTitle,
-                      _collectionEvents.approvedVersionID
+                      _collectionCalendars.collectionID,
+                      _collectionEvents.approvedVersionID,
+                      _collectionEvents.autoApprovable
                     FROM SchedulizerEvent _events
                     LEFT JOIN (
                       SELECT _eventVersions.*
@@ -173,6 +186,11 @@
         }
 
 
+        /**
+         * Get all the version records for a given event.
+         * @param $eventID
+         * @return mixed
+         */
         public static function fetchEventVersionList( $eventID ){
             $query = self::adhocQuery(function( \PDO $connection ) use ($eventID){
                 $statement = $connection->prepare("
@@ -208,7 +226,8 @@
 
 
         /**
-         * Approve a SINGLE event at a specified version.
+         * Approve a SINGLE event at a specified version. By doing this, it automatically
+         * assumes we're turning autoApproval to off.
          * @param $eventID
          * @param $approvedVersionID
          */
@@ -216,17 +235,36 @@
             $collectionID = $this->id;
             self::adhocQuery(function( \PDO $connection ) use ($collectionID, $eventID, $approvedVersionID){
                 $statement = $connection->prepare("
-                REPLACE INTO SchedulizerCollectionEvents (collectionID,eventID,approvedVersionID)
-                VALUES (:collectionID,:eventID,:approvedVersionID)");
+                REPLACE INTO SchedulizerCollectionEvents (collectionID,eventID,approvedVersionID,autoApprovable)
+                VALUES (:collectionID,:eventID,:approvedVersionID,:autoApprovable)");
                 $statement->bindValue(":collectionID", $collectionID);
                 $statement->bindValue(":eventID", $eventID);
                 $statement->bindValue(":approvedVersionID", $approvedVersionID);
+                $statement->bindValue(":autoApprovable", 0);
+                return $statement;
+            });
+        }
+
+        public function markEventAutoApprovable( $eventID, $isApprovable ){
+            $collectionID = $this->id;
+            $eventObj     = SchedulizerEvent::getByID($eventID);
+            self::adhocQuery(function( \PDO $connection ) use ($collectionID, $eventObj, $isApprovable){
+                $statement = $connection->prepare("
+                    REPLACE INTO SchedulizerCollectionEvents (collectionID,eventID,approvedVersionID,autoApprovable)
+                    VALUES (:collectionID,:eventID,:approvedVersionID,:autoApprovable)
+                ");
+                $statement->bindValue(":collectionID", $collectionID);
+                $statement->bindValue(":eventID", $eventObj->getID());
+                $statement->bindValue(":approvedVersionID", $eventObj->getVersionID());
+                $statement->bindValue(":autoApprovable", (int)$isApprovable);
                 return $statement;
             });
         }
 
         /**
-         * @todo: major sql-injection vulnerability where we're just doing join()
+         * Given a list of eventIDs, this will mark the latest versions as approved for
+         * all events in the given collection.
+         * @todo: sql-injection vulnerability where we're just doing join()
          * directly on user input; validate that shit first.
          * @param array $eventIDs
          */
@@ -253,7 +291,10 @@
         }
 
         /**
-         * "Unapprove" means "delete"...
+         * "Unapprove" means "delete" all the event approvals from the collection's
+         * event records.
+         * @param array $eventIDs
+         * @return void
          */
         public function unapproveCollectionEvents( array $eventIDs = array() ){
             $collectionID = $this->id;

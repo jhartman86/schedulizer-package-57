@@ -22,6 +22,7 @@
                                 With Checked:
                                 <button type="button" class="btn btn-default" ng-click="approveLatest()">Approve Latest</button>
                                 <button type="button" class="btn btn-default" ng-click="unapprove()">Unapprove</button>
+                                <button type="button" class="btn btn-success" ng-click="makeAutoApprovable()">Make Auto Approvable</button>
                             </div>
                             <div ng-hide="boxesAreChecked">
                                 <span select-wrap><select class="form-control" ng-change="refreshEventList()" ng-options="opt.id as opt.title for opt in calendarList" ng-model="filterByCalendar"></select></span>
@@ -56,7 +57,9 @@
                     <td class="text-center"><span class="active-status" ng-class="{'active':event.isActive,'inactive':!event.isActive}"></span></td>
                     <td class="text-center"><span>{{ event.versionID }}</span></td>
                     <td class="text-center"><span>{{ event.approvedVersionID || '--' }}</span></td>
-                    <td class="text-center"><span select-wrap><select class="form-control"><option>Required</option><option>Auto</option></select></span></td>
+                    <td class="text-center"><span select-wrap>
+                            <select class="form-control" ng-change="updateEventApproval(event)" ng-options="opt.value as opt.label for opt in approvalList" ng-model="event.autoApprovable"></select>
+                        </span></td>
                 </tr>
                 </tbody>
             </table>

@@ -3320,7 +3320,7 @@
       text-align: center;
       font-size: 12px; }
       .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list .split-row.divided {
-        border-bottom: 1px dotted #394F63; }
+        border-bottom: 1px solid #394F63; }
       .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list .split-row span {
         padding: 5px 8px; }
     .schedulizer-app .ccm-dashboard-content-full.search-page table.search-table.tbl-collection-event-list thead tr th[checkbox-wrap],
@@ -3560,6 +3560,10 @@
       position: relative;
       top: 4px;
       margin-left: 4px; }
+  [modal-window] form.collection-event-form .col-left-bar, [modal-window] form.collection-event-form .col-right-main {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; }
   [modal-window] form.collection-event-form .col-left-bar {
     position: absolute;
     top: 0;
@@ -3572,14 +3576,19 @@
     [modal-window] form.collection-event-form .col-left-bar a {
       color: inherit; }
     [modal-window] form.collection-event-form .col-left-bar ul {
-      padding: 1rem;
+      padding: 0;
       margin: 0; }
-      [modal-window] form.collection-event-form .col-left-bar ul li a {
-        display: block;
-        padding: 0.25rem 0; }
-      [modal-window] form.collection-event-form .col-left-bar ul li.active a {
-        color: #56E1A2;
-        font-weight: bold; }
+      [modal-window] form.collection-event-form .col-left-bar ul li {
+        border-bottom: 1px solid #37414c; }
+        [modal-window] form.collection-event-form .col-left-bar ul li a {
+          display: block;
+          padding: 0.75rem 1rem; }
+        [modal-window] form.collection-event-form .col-left-bar ul li.viewing a {
+          font-weight: bold;
+          background: #2e363f; }
+        [modal-window] form.collection-event-form .col-left-bar ul li.active a {
+          color: #56E1A2;
+          background: rgba(86, 225, 162, 0.05); }
   [modal-window] form.collection-event-form .col-right-main {
     position: absolute;
     top: 0;

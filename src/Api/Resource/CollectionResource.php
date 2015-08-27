@@ -7,35 +7,16 @@
 
     class CollectionResource extends \Concrete\Package\Schedulizer\Src\Api\ApiDispatcher {
 
-        const SUBACTION_GET_ALL_EVENTS_LIST = 'all_events_list';
-
+        /**
+         * @todo: permissioning, error handling if collection not found
+         * @param $collectionID
+         * @param null $subAction
+         */
         protected function httpGet( $collectionID, $subAction = null ){
             $collectionObj = Collection::getByID($collectionID);
-
-            switch($subAction):
-                // List all events
-                case self::SUBACTION_GET_ALL_EVENTS_LIST:
-                    $castedTypes = array();
-                    $calendarID  = ((int)$_REQUEST['calendarID'] >= 1) ? (int)$_REQUEST['calendarID'] : null;
-                    $eventsList  = $collectionObj->fetchAllAvailableEvents($calendarID);
-                    foreach($eventsList AS $row){
-                        array_push($castedTypes, (object) array(
-                            'approvedVersionID' => $row->approvedVersionID ? (int) $row->approvedVersionID : null,
-                            'calendarTitle'     => $row->calendarTitle,
-                            'eventID'           => (int) $row->eventID,
-                            'eventTitle'        => $row->eventTitle,
-                            'isActive'          => (bool) (int) $row->isActive,
-                            'versionID'         => (int) $row->versionID
-                        ));
-                    }
-                    $this->setResponseData($castedTypes);
-                    break;
-
-                // Get one event by ID
-                default:
-                    $this->setResponseData(Collection::getByID($collectionID));
-            endswitch;
+            $this->setResponseData($collectionObj);
         }
+
 
         /**
          * @todo: permissioning?; fail if no calendars set
@@ -50,6 +31,7 @@
             $this->setResponseCode(Response::HTTP_CREATED);
         }
 
+
         protected function httpPut( $id ){
             $data = $this->scrubbedPostData();
             if( empty($data->collectionCalendars) ){
@@ -61,8 +43,15 @@
             $this->setResponseData($collectionObj);
         }
 
-        protected function httpDelete(){
-            $this->setResponseData(array('ok' => 'mkkkk'));
+
+        protected function httpDelete( $collectionID ){
+            $collectionObj = Collection::getByID((int)$collectionID);
+            if( $collectionObj ){
+                $collectionObj->delete();
+                $this->setResponseCode(Response::HTTP_NO_CONTENT);
+                return;
+            }
+            throw ApiException::generic('Collection no longer exists.');
         }
 
     }

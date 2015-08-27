@@ -74,7 +74,7 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
 
         &.tbl-collection-event-list {
           .split-row {text-align:center;font-size:12px;
-            &.divided {border-bottom:1px dotted #394F63;}
+            &.divided {border-bottom:1px solid #394F63;}
             span {padding:5px 8px;}
           }
           thead tr th[checkbox-wrap],
@@ -180,12 +180,14 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
     }
 
     &.collection-event-form {
+      .col-left-bar, .col-right-main {overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;}
       .col-left-bar {position:absolute;top:0;left:0;bottom:0;width:220px;height:100%;background:#333c46;color:#97aabc;
         a {color:inherit;}
-        ul {padding:1rem;margin:0;
-          li {
-            a {display:block;padding:0.25rem 0;}
-            &.active a {color:#56E1A2;font-weight:bold;}
+        ul {padding:0;margin:0;
+          li {border-bottom:1px solid lighten(#333c46, 2%);
+            a {display:block;padding:0.75rem 1rem;}
+            &.viewing a {font-weight:bold;background:darken(#333c46, 2.5%);}
+            &.active a {color:#56E1A2;background:rgba(#56E1A2,0.05);}
           }
         }
       }

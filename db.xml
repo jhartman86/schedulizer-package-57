@@ -458,17 +458,18 @@
         <field name="collectionID" type="I" size="11">
             <NOTNULL/>
             <unsigned />
-            <!--<KEY/>-->
         </field>
         <field name="eventID" type="I" size="11">
             <NOTNULL/>
             <unsigned />
-            <!--<KEY/>-->
         </field>
         <field name="approvedVersionID" type="I">
             <NOTNULL/>
             <unsigned />
-            <!--<KEY/>-->
+        </field>
+        <field name="autoApprovable" type="I" size="1">
+            <notnull/>
+            <default value="0"/>
         </field>
 
         <index name="collectionEventEventVersionIDs">

@@ -44,7 +44,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '1.04';
+        protected $pkgVersion               = '1.05';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -409,6 +409,15 @@
                     ),
                     'eventCategorizedCategoryID' => array(
                         'table' => 'SchedulizerCategorizedEvents', 'fkCol' => 'eventCategoryID', 'fkRefs' => 'SchedulizerEventCategory(id)', 'cascades' => array('delete')
+                    ),
+                    'collectionCalendarCollectionID' => array(
+                        'table' => 'SchedulizerCollectionCalendars', 'fkCol' => 'collectionID', 'fkRefs' => 'SchedulizerCollection(id)', 'cascades' => array('delete')
+                    ),
+                    'collectionEventCollectionID' => array(
+                        'table' => 'SchedulizerCollectionEvents', 'fkCol' => 'collectionID', 'fkRefs' => 'SchedulizerCollection(id)', 'cascades' => array('delete')
+                    ),
+                    'collectionEventEventID' => array(
+                        'table' => 'SchedulizerCollectionEvents', 'fkCol' => 'eventID', 'fkRefs' => 'SchedulizerEvent(id)', 'cascades' => array('delete')
                     )
                 );
 

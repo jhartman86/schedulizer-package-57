@@ -70,8 +70,24 @@
             parent::save_version();
             // Configurable setting - create event pages?
             $this->createEventPageIfConfigured();
+            // If a collection has this event marked as autoApprovable, update it
+            $this->updateAutoApprovableCollectionEventVersion();
             // Fire event
             Events::dispatch(self::EVENT_ON_SAVE, new SystemEventOnSave($this));
+        }
+
+        protected function updateAutoApprovableCollectionEventVersion(){
+            $eventID   = $this->getID();
+            $versionID = $this->getVersionID();
+            self::adhocQuery(function( \PDO $connection ) use ($eventID, $versionID){
+                $statement = $connection->prepare("
+                    UPDATE SchedulizerCollectionEvents SET approvedVersionID = :approvedVersionID
+                    WHERE eventID = :eventID AND autoApprovable = 1;
+                ");
+                $statement->bindValue(":eventID", $eventID);
+                $statement->bindValue(":approvedVersionID", $versionID);
+                return $statement;
+            });
         }
 
         /**

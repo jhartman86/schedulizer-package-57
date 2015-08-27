@@ -81,13 +81,23 @@
                    get: {isArray:true, cache:true}
                }),
                collection: $resource(Routes.generate('api.collection', [':id', ':subAction']), {id:'@id'}, angular.extend(_methods(), {
-                   allEventsList: {method:'get', isArray:true, cache:false, params:{subAction:'all_events_list'}}
+                   //allEventsList: {method:'get', isArray:true, cache:false, params:{subAction:'all_events_list'}}
                })),
                collectionEvent: $resource(Routes.generate('api.collectionEvent', [':subAction']), {}, angular.extend(_methods(), {
+                   allEventsList: {method:'get', isArray:true, cache:false, params:{subAction:'all_events_list'}},
                    versionList: {method:'get', isArray:true, cache:false, params:{subAction:'version_list'}},
                    approvedVersion: {method:'get', cache:false, params:{subAction:'approved_version'}},
                    approveLatestVersions: {method:'post', params:{subAction:'approve_latest_versions'}},
-                   unapprove: {method:'delete'}
+                   unapprove: {method:'delete'},
+                   saveSingleAutoApprovable: {method:'put', params:{_method:'PUT'}, transformRequest:function( data ){
+                       return angular.toJson({
+                           eventID: data.eventID,
+                           versionID: data.versionID,
+                           collectionID: data.collectionID,
+                           autoApprovable: data.autoApprovable
+                       });
+                   }},
+                   saveMultiAutoApprovable: {method:'put', params:{_method:'PUT',subAction:'multi_auto_approve'}}
                })),
                event: $resource(Routes.generate('api.event', [':id']), {id:'@id'}, angular.extend(_methods(), {
                    // more custom methods here
@@ -747,6 +757,13 @@ angular.module('schedulizer.app').
     controller('CtrlCollectionEventForm', ['$rootScope', '$scope', '$q', 'ModalManager', 'API',
         function( $rootScope, $scope, $q, ModalManager, API ){
 
+            /**
+             * Queue requests for
+             * 1) Getting the list of ALL versions of the event
+             * 2) Get the approved version record (*if* it is approved)
+             * @type {*[]}
+             * @private
+             */
             var _requests = [
                 API.collectionEvent.versionList({
                     eventID: ModalManager.data.eventID
@@ -758,36 +775,39 @@ angular.module('schedulizer.app').
                 }).$promise
             ];
 
+            /**
+             * When requests are completed, then move on...
+             */
             $q.all(_requests).then(function( results ){
                 $scope.versionList      = results[0];
-                $scope.approvedVersion  = results[1];
+                $scope.approvedVersion  = results[1] || null;
 
                 if( angular.isObject($scope.approvedVersion) ){
-                    $scope.versionList.forEach(function(obj, key){
-                        if( +(obj.versionID) === +($scope.approvedVersion.approvedVersionID) ){
-                            $scope.viewVersion(obj);
+                    $scope.versionList.forEach(function( versionObj ){
+                        if( +(versionObj.versionID) === +($scope.approvedVersion.approvedVersionID) ){
+                            $scope.viewVersion(versionObj);
                         }
                     });
                 }
             });
 
+            /**
+             * View details for a specific version.
+             * @param version
+             */
             $scope.viewVersion = function( version ){
                 $scope.viewingVersion = version;
-                console.log(version);
-                //API.event.get({id:version.eventID}, function( resp ){
-                //    $scope.viewingVersion = resp;
-                //});
-                //console.log(version);
             };
 
-            $scope.approveVersion = function(){
-                var $cev = new API.collectionEvent({
-                    collectionID: ModalManager.data.collectionID,
-                    eventID: ModalManager.data.eventID,
-                    approvedVersionID: $scope.viewingVersion.versionID
-                });
-
-                $cev.$save(function( resp ){
+            /**
+             * Approve a version
+             */
+            $scope.approveVersion = function( versionToApprove ){
+                (new API.collectionEvent({
+                    collectionID        : +(ModalManager.data.collectionID),
+                    eventID             : +(ModalManager.data.eventID),
+                    approvedVersionID   : +(versionToApprove.versionID)
+                })).$save().then(function( resp ){
                     $scope.approvedVersion = resp;
                     $rootScope.$emit('collection:refreshEventList');
                     ModalManager.classes.open = false;
@@ -798,8 +818,8 @@ angular.module('schedulizer.app').
     ]);
 angular.module('schedulizer.app').
 
-    controller('CtrlCollectionForm', ['$window', '$rootScope', '$scope', 'API', 'ModalManager',
-        function( $window, $rootScope, $scope, API, ModalManager ){
+    controller('CtrlCollectionForm', ['$window', '$rootScope', '$scope', 'API', 'ModalManager', 'Alerter',
+        function( $window, $rootScope, $scope, API, ModalManager, Alerter ){
 
             // Show loading message
             $scope._ready       = true;
@@ -838,6 +858,14 @@ angular.module('schedulizer.app').
                     }
                 );
             };
+
+            $scope.deleteCollection = function(){
+                $scope.entity.$delete(function(){
+                    // If this function gets called, server responded w/ header code 20{x}, meaning "OK"
+                    Alerter.add({msg:'Collection Removed!', success: true});
+                    $window.location.href = API._routes.generate('dashboard', ['calendars', 'collections']);
+                });
+            };
         }
     ]);
 
@@ -873,10 +901,13 @@ angular.module('schedulizer.app').
                 }
             };
 
+            /**
+             *
+             */
             $scope.refreshEventList = function(){
-                API.collection.allEventsList({
-                    id          : $scope.collectionID,
-                    calendarID  : $scope.filterByCalendar
+                API.collectionEvent.allEventsList({
+                    collectionID : $scope.collectionID,
+                    calendarID   : $scope.filterByCalendar
                 }, function( resp ){
                     $scope.checkboxes = {};
                     $scope.eventList = resp;
@@ -906,7 +937,6 @@ angular.module('schedulizer.app').
             var unbindAfterOneCycle = $scope.$watch('collectionID', function( val ){
                 if( val ){
                     unbindAfterOneCycle();
-                    $scope.refreshEventList();
 
                     $q.all([
                         API.collection.get({id:val}).$promise,
@@ -919,11 +949,42 @@ angular.module('schedulizer.app').
                         });
                         calendarList.unshift({id:null, title:'Filter By Calendar'});
                         $scope.calendarList = calendarList;
+                        $scope.refreshEventList();
                     });
                 }
             });
 
             $rootScope.$on('collection:refreshEventList', $scope.refreshEventList);
+
+
+            $scope.approvalList = [
+                {value:false, label:'Required'},
+                {value:true, label:'Auto'}
+            ];
+
+            /**
+             * Change the autoApprovable setting for a SINGLE event
+             * @param eventResource
+             */
+            $scope.updateEventApproval = function( eventResource ){
+                eventResource.$saveSingleAutoApprovable(function(resource){
+                    // Since the response from the server is just an HTTP header code, the resource
+                    // in this callback isn't an "updated" version. But to fake an update to the user,
+                    // we can just set approvedVersionID to the versionID property (which should be
+                    // accurate anyways)
+                    resource.approvedVersionID = resource.versionID;
+                });
+            };
+
+            /**
+             * Change the autoApprovable settings for multiple events
+             */
+            $scope.makeAutoApprovable = function(){
+                API.collectionEvent.saveMultiAutoApprovable({
+                    collectionID: +($scope.collectionID),
+                    events: checkedEventIDs()
+                }, $scope.refreshEventList);
+            };
         }
     ]);
 
