@@ -76,6 +76,12 @@
             Events::dispatch(self::EVENT_ON_SAVE, new SystemEventOnSave($this));
         }
 
+        /**
+         * Collections can indicate that an event does not require manual approval to show
+         * the latest version. So, whenever an event update occurs, this looks for events that
+         * are marked as autoApprovable, and indicates that the latest version should be used.
+         * @return void
+         */
         protected function updateAutoApprovableCollectionEventVersion(){
             $eventID   = $this->getID();
             $versionID = $this->getVersionID();
