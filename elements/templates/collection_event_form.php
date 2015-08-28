@@ -15,7 +15,19 @@
             <div class="version-stat">
                 <button type="button" class="btn btn-success" ng-click="approveVersion(viewingVersion)">Approve Version {{ viewingVersion.versionID }}</button>
             </div>
-            {{ viewingVersion }}
+
+            <h6 class="lead">{{ viewingVersion.title }}</h6>
+
+            <h6 class="lead">Description</h6>
+            <div ng-bind-html="viewingVersion.description"></div>
+
+            <h6 class="lead">Photo</h6>
+            <div ng-show="versionThumbnail">
+                <img class="img-responsive" ng-src="{{ versionThumbnail }}" />
+            </div>
+            <div ng-show="!versionThumbnail">
+                <h5>No thumbnail image available</h5>
+            </div>
         </div>
     </div>
 </form>

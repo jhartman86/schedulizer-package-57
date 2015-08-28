@@ -1,5 +1,6 @@
 <?php namespace Concrete\Package\Schedulizer\Src\Api\Resource {
 
+    use File;
     use Permissions;
     use \Concrete\Package\Schedulizer\Src\Bin\EntityCloner;
     use \Concrete\Package\Schedulizer\Src\Calendar;
@@ -24,9 +25,29 @@
          * @param $id
          * @throws ApiException
          * @throws \Exception
+         * @todo: error handling (ie. if $id isn't set and we're supposed to be getting an
+         * event object instead of a thumbnail, ALSO - errors w/ the 4-level-deep nested if statements)
          */
-        protected function httpGet( $id ){
-            $this->setResponseData($this->getEventByID($id));
+        protected function httpGet( $id, $subAction = null ){
+            switch($subAction):
+                case 'image_path':
+                    $eventObj = $this->getEventByID($id);
+                    if( $eventObj ){
+                        $fileID = $eventObj->getFileID();
+                        if( $fileID ){
+                            $eventFileObj = File::getByID($fileID);
+                            if( is_object($eventFileObj) ){
+                                $this->setResponseData((object) array(
+                                    'url' => $eventFileObj->getThumbnailURL('event_thumb')
+                                ));
+                            }
+                        }
+                    }
+                    break;
+
+                default:
+                    $this->setResponseData($this->getEventByID($id));
+            endswitch;
         }
 
         /**

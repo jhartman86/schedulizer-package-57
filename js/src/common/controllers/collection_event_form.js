@@ -3,6 +3,8 @@ angular.module('schedulizer.app').
     controller('CtrlCollectionEventForm', ['$rootScope', '$scope', '$q', 'ModalManager', 'API',
         function( $rootScope, $scope, $q, ModalManager, API ){
 
+            $scope.versionThumbnail = null;
+
             /**
              * Queue requests for
              * 1) Getting the list of ALL versions of the event
@@ -44,6 +46,19 @@ angular.module('schedulizer.app').
             $scope.viewVersion = function( version ){
                 $scope.viewingVersion = version;
             };
+
+            $scope.$watch('viewingVersion', function( v ){
+                //console.log(v);
+                if( v ){
+                    API.event.image_path({id: +(v.eventID)}, function( resp ){
+                        if( angular.isObject(resp) ){
+                            $scope.versionThumbnail = resp.url;
+                        }else{
+                            $scope.versionThumbnail = null;
+                        }
+                    });
+                }
+            });
 
             /**
              * Approve a version

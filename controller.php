@@ -336,7 +336,8 @@
                  ->setupBlocks()
                  ->setupSinglePages()
                  ->setupAttributeCategories()
-                 ->setupPermissions();
+                 ->setupPermissions()
+                 ->setupThumbnailTypes();
         }
 
 
@@ -582,6 +583,23 @@
                 if( ! SchedulizerCalendarPermissionKey::getByHandle($keyHandle) ){
                     SchedulizerCalendarPermissionKey::add('schedulizer_calendar', $keyHandle, $keyData['name'], $keyData['descr'], 1, 0, $this->packageObject());
                 }
+            }
+
+            return $this;
+        }
+
+        /**
+         * Setup event thumbnail image type.
+         * @return $this
+         */
+        private function setupThumbnailTypes(){
+            $eventThumbnail = \Concrete\Core\File\Image\Thumbnail\Type\Type::getByHandle('event_thumb');
+            if( ! is_object($eventThumbnail) ){
+                $type = new \Concrete\Core\File\Image\Thumbnail\Type\Type();
+                $type->setName('Event Thumb');
+                $type->setHandle('event_thumb');
+                $type->setWidth(740);
+                $type->save();
             }
 
             return $this;
