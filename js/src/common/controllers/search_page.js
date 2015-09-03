@@ -25,7 +25,7 @@ angular.module('schedulizer.app').
             $scope.doGrouping           = true;
             $scope.searchStart          = _moment();
             $scope.searchEnd            = _moment().add(1, 'month');
-            $scope.searchFields         = {keywords:null, tags:[], categories:[]};
+            $scope.searchFields         = {keywords:null, tags:[], categories:[], calendar:null};
 
             $scope.toggleSearch = function(){
                 $scope.searchOpen = !$scope.searchOpen;
@@ -39,6 +39,11 @@ angular.module('schedulizer.app').
                 $scope.eventCategoryList = results;
             });
 
+            API.calendarList.get().$promise.then(function( results ){
+                results.unshift({id:null, title:'Filter By Calendar'});
+                $scope.calendarList = results;
+            });
+
             /**
              * Turn the search button green if any search fields are filled in to indicate
              * to the user that search filters are being applied.
@@ -48,6 +53,7 @@ angular.module('schedulizer.app').
                 if( val.keywords ){filtersSet = true;}
                 if( val.tags.length !== 0 ){filtersSet = true;}
                 if( val.categories.length !== 0 ){filtersSet = true;}
+                if( +(val.calendar) >= 1 ){filtersSet = true;}
                 $scope.searchFiltersSet = filtersSet;
             }, true);
 
@@ -71,6 +77,7 @@ angular.module('schedulizer.app').
              */
             function parameterizedSearchFields(){
                 return angular.extend({
+                    calendars:  $scope.searchFields.calendar,
                     start:      _moment($scope.searchStart).format('YYYY-MM-DD'),
                     end:        _moment($scope.searchEnd).format('YYYY-MM-DD'),
                     fields:     _fields.join(','),

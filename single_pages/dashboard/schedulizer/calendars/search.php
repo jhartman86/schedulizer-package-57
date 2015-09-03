@@ -40,6 +40,14 @@
                 <a class="btn btn-sm clear-fields" ng-click="clearSearchFields()">Clear</a>
                 <div class="container-fluid">
                     <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Calendar</label>
+                                <span select-wrap style="display:block;"><select class="form-control" ng-options="opt.id as opt.title for opt in calendarList" ng-model="searchFields.calendar"></select></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <label>Keyword Search</label>
