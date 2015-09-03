@@ -30,9 +30,6 @@ angular.module('schedulizer.app').
                 }
             };
 
-            /**
-             *
-             */
             $scope.refreshEventList = function(){
                 API.collectionEvent.allEventsList({
                     collectionID : $scope.collectionID,

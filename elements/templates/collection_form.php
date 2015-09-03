@@ -64,14 +64,15 @@
                 <table class="table table-striped table-condensed">
                     <thead>
                         <tr>
-                            <th><input type="checkbox" /></th>
+                            <th><input type="checkbox" ng-model="checkToggleAll" ng-change="toggleAllCheckboxes()" /></th>
                             <th>Calendar Name</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr ng-repeat="calendarObj in calendarList">
                             <td>
-                                <input name="selectedCalendars[]" type="checkbox" ng-model="selectedCals[calendarObj.id]" />
+                                <input type="checkbox" ng-model="selectedCals[calendarObj.id]" ng-init="selectedCals[calendarObj.id] = false" />
+<!--                                <input name="selectedCalendars[]" type="checkbox" ng-model="selectedCals[calendarObj.id]" />-->
                             </td>
                             <td class="col-sm-11">
                                 {{ calendarObj.title }}

@@ -4,9 +4,10 @@ angular.module('schedulizer.app').
         function( $window, $rootScope, $scope, API, ModalManager, Alerter ){
 
             // Show loading message
-            $scope._ready       = true;
-            $scope._requesting  = false;
-            $scope.selectedCals = {};
+            $scope._ready           = true;
+            $scope._requesting      = false;
+            $scope.selectedCals     = {};
+            $scope.checkToggleAll   = false;
 
             // Load list of available calendars
             API.calendarList.get().$promise.then(function( calendarList ){
@@ -25,6 +26,12 @@ angular.module('schedulizer.app').
                     });
                 }
             });
+
+            $scope.toggleAllCheckboxes = function(){
+                for(var k in $scope.selectedCals){
+                    $scope.selectedCals[k] = $scope.checkToggleAll;
+                }
+            };
 
             $scope.submitHandler = function(){
                 $scope._requesting = true;

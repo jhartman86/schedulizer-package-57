@@ -64,7 +64,7 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
         thead th {padding:0 2px;
           span {padding:5px 8px;}
         }
-        tbody td {padding:20px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+        tbody td {padding:20px 2px;//white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
           .text-wrap {max-width:90%;display:block;white-space:pre-line;overflow:hidden;text-overflow:ellipsis;}
           .active-status {padding:0;line-height:0;display:inline-block;width:8px;height:8px;border-radius:50%;
             &.active {background:#42c648;}
@@ -79,9 +79,9 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
           }
           thead tr th[checkbox-wrap],
           tbody tr td[checkbox-wrap]{text-align:center;padding:0 12px;}
-          tbody tr td {white-space:nowrap;
-            &.event-title a {max-width:350px;white-space:inherit;display:block;overflow:hidden;text-overflow:ellipsis;}
-            span[select-wrap]{padding:0;}
+          tbody tr td {//white-space:nowrap;
+            //&.event-title a {max-width:100%;white-space:inherit;display:block;overflow:hidden;text-overflow:ellipsis;}
+            span[select-wrap]{padding:0;min-width:100px;margin-right:8px;}
           }
         }
       }
