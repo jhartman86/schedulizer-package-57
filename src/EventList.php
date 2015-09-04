@@ -1,5 +1,6 @@
 <?php namespace Concrete\Package\Schedulizer\Src {
 
+    use Package;
     use Loader;
     use DateTime;
     use DateTimeZone;
@@ -41,6 +42,8 @@
         protected $tagIDs       = array();
         // "collectionID" refers to a SCHEDULIZER collection, NOT C5 collection!
         protected $collectionID = null;
+        // If a master collection is enabled (determine in logic below); this always override $collectionID
+        protected $filterByMasterCollection = false;
         protected $queryDaySpan = self::DAYS_IN_FUTURE;
         protected $fullTextSearch = null;
         protected $fetchColumns = array(
@@ -178,6 +181,26 @@
                 return;
             }
             $this->collectionID = (int)$collectionID;
+        }
+
+
+        /**
+         * If master collection is enabled, this lets us declare that the list SHOULD
+         * be filtered by it. We don't set the collectionID here in case setSchedulizerCollectionID
+         * were to be called after, as this will *always* override.
+         * @param bool $to
+         */
+        public function setFilterByMasterCollection( $to = false ){
+            $this->filterByMasterCollection = (bool) $to;
+        }
+
+
+        /**
+         * If using the API programmatically, this just makes it so you can pass a collection object in directly
+         * and have it extract the ID.
+         */
+        public function filterByCollectionObject( \Concrete\Package\Schedulizer\Src\Collection $collectionObj ){
+            $this->setSchedulizerCollectionID($collectionObj->getID());
         }
 
 
@@ -424,6 +447,18 @@
             }else{
                 $this->endDTO = clone $this->startDTO;
                 $this->endDTO->modify("+{$this->queryDaySpan} days");
+            }
+
+            // Are we trying to filter by a master collection?
+            if( $this->filterByMasterCollection ){
+                $packageObj = Package::getByHandle('schedulizer');
+                if( (bool) $packageObj->configGet($packageObj::CONFIG_ENABLE_MASTER_COLLECTION) ){
+                    $masterCollID = (int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID);
+                    $collectionObj = \Concrete\Package\Schedulizer\Src\Collection::getByID($masterCollID);
+                    if( is_object($collectionObj) ){
+                        $this->filterByCollectionObject($collectionObj);
+                    }
+                }
             }
 
             return $this;

@@ -7,7 +7,10 @@ angular.module('schedulizer.app').
             $scope.checkToggleAll   = false;
             $scope.checkboxes       = {};
             $scope.eventList        = [];
-            $scope.filterByCalendar = null;
+            $scope.filters          = {
+                calendarID: null,
+                discrepancies: null
+            };
 
             function checkedEventIDs(){
                 var _checked = [];
@@ -18,6 +21,11 @@ angular.module('schedulizer.app').
                 }
                 return _checked;
             }
+
+            $scope.toggleDiscrepanciesFilter = function(){
+                $scope.filters.discrepancies = $scope.filters.discrepancies === true ? null : true;
+                $scope.refreshEventList();
+            };
 
             $scope.$watchCollection('checkboxes', function(){
                 var ids = checkedEventIDs();
@@ -31,10 +39,9 @@ angular.module('schedulizer.app').
             };
 
             $scope.refreshEventList = function(){
-                API.collectionEvent.allEventsList({
-                    collectionID : $scope.collectionID,
-                    calendarID   : $scope.filterByCalendar
-                }, function( resp ){
+                API.collectionEvent.allEventsList(angular.extend({
+                    collectionID : $scope.collectionID
+                }, $scope.filters), function( resp ){
                     $scope.checkboxes = {};
                     $scope.eventList = resp;
                     $scope.checkToggleAll = false;

@@ -20,6 +20,7 @@
             try {
                 $this->eventListObj = new EventList(array($calendarID));
                 $this->setCollectionFilter()
+                     ->setUseMasterCollectionFilter()
                      ->setFullTextSearchOn()
                      ->setIncludeInactiveEvents()
                      ->setCalendarIDsOn()
@@ -40,12 +41,25 @@
         }
 
         /**
-         * eg. ?collection=1
+         * eg. ?collection_id=1
          * @return $this
          */
         private function setCollectionFilter(){
-            if( !empty($this->requestParams()->collection) ){
-                $this->eventListObj->setSchedulizerCollectionID($this->requestParams()->collection);
+            if( !empty($this->requestParams()->collection_id) ){
+                $this->eventListObj->setSchedulizerCollectionID($this->requestParams()->collection_id);
+            }
+            return $this;
+        }
+
+        /**
+         * Instead of specifying an explicit collectionID, we can just say filter
+         * by the master collection.
+         * eg. ?master_collection=true|1 (just needs to be set)
+         * @return $this
+         */
+        private function setUseMasterCollectionFilter(){
+            if( !empty($this->requestParams()->master_collection) ){
+                $this->eventListObj->setFilterByMasterCollection(true);
             }
             return $this;
         }

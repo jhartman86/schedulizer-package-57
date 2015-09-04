@@ -52,6 +52,16 @@ foreach($pageTypesList AS $pageTypeObj){ /** @var $pageTypeObj \Concrete\Core\Pa
                     <td class="config-label"><label>Timezone</label></td>
                     <td><?php echo $formHelper->select($packageObj::CONFIG_DEFAULT_TIMEZONE, array_combine(DateTimeZone::listIdentifiers(), DateTimeZone::listIdentifiers()), $packageObj->configGet($packageObj::CONFIG_DEFAULT_TIMEZONE)); ?></td>
                 </tr>
+                <tr>
+                    <td class="config-label"><label>Collections</label></td>
+                    <td>
+                        <?php echo $formHelper->checkbox($packageObj::CONFIG_ENABLE_MASTER_COLLECTION, 1, (int)$packageObj->configGet($packageObj::CONFIG_ENABLE_MASTER_COLLECTION)); ?> Enable Master Collection
+                        <?php
+                            // if( $packageObj->getPackageID() )
+                            // OR set options from the settings page controller and show if set
+                        ?>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>

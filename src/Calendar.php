@@ -1,5 +1,6 @@
 <?php namespace Concrete\Package\Schedulizer\Src {
 
+    use Package;
     use DateTimeZone;
     use \Concrete\Package\Schedulizer\Src\Persistable\Contracts\Persistant;
     use \Concrete\Package\Schedulizer\Src\Persistable\Mixins\Crud;
@@ -15,6 +16,7 @@
     use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerCalendarKey AS SchedulizerCalendarPermKey;
     use \Concrete\Core\Permission\Category AS PermissionKeyCategory;
     use UserInfo;
+    use \Concrete\Package\Schedulizer\Src\Collection AS SchedulizerCollection;
 
     /**
      * Class Calendar
@@ -101,8 +103,11 @@
             return $properties;
         }
 
-        public function onAfterPersist(){
-            // Add events
+        /**
+         * Only called first time after creation.
+         */
+        protected function onAfterCreate(){
+            // Permission entities for "edit_events"
             $pkEditEvents = SchedulizerCalendarPermKey::getByHandle('edit_events');
             $pkEditEvents->setPermissionObject($this);
             $pa = $pkEditEvents->getPermissionAccessObject();
@@ -115,7 +120,7 @@
                 $pkEditEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
             }
 
-            // Delete events
+            // Permission entities for "delete_events"
             $pkDeleteEvents = SchedulizerCalendarPermKey::getByHandle('delete_events');
             $pkDeleteEvents->setPermissionObject($this);
             $pa = $pkDeleteEvents->getPermissionAccessObject();
@@ -126,6 +131,24 @@
                 $peAdministrators = GroupPermissionAccessEntity::getOrCreate(Group::getByID(ADMIN_GROUP_ID));
                 $pa->addListItem($peAdministrators);
                 $pkDeleteEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
+            }
+
+            $this->autoAddToMasterCollectionIfConfigured();
+        }
+
+        /**
+         * If using master collection is enabled, auto-add the calendar.
+         */
+        private function autoAddToMasterCollectionIfConfigured(){
+            /** @var $packageObj \Concrete\Package\Schedulizer\Controller */
+            $packageObj = Package::getByHandle(self::PACKAGE_HANDLE);
+            if( (bool) $packageObj->configGet($packageObj::CONFIG_ENABLE_MASTER_COLLECTION) ){
+                $masterCollID = (int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID);
+                /** @var $collectionObj \Concrete\Package\Schedulizer\Src\Collection */
+                $collectionObj = SchedulizerCollection::getByID($masterCollID);
+                if( is_object($collectionObj) ){
+                    $collectionObj->addOneCalendar($this);
+                }
             }
         }
 

@@ -43,7 +43,7 @@
                         <div class="form-group title-group">
                             <label for="" class="sr-only">Title</label>
                             <input required name="title" type="text" class="form-control input-title" placeholder="Title (Required)" ng-model="entity.title" />
-                            <span select-wrap ng-class="{'active-true':entity.isActive,'active-false':!entity.isActive}" bs-tooltip="'Important: Changing this trigger an immediate update, but only on the event status. No other changes are saved!'" data-template="/tpl-tooltip" data-placement="left" bs-enabled="(+(entity.id) >= 1)">
+                            <span select-wrap ng-class="{'active-true':entity.isActive,'active-false':!entity.isActive}" bs-tooltip="'Important: Changing this triggers an immediate update, but only on the event status. No other changes are saved!'" data-template="/tpl-tooltip" data-placement="left" bs-enabled="(+(entity.id) >= 1)">
                                 <select class="form-control" ng-options="opt.value as opt.label for opt in isActiveOptions" ng-model="entity.isActive"></select>
                             </span>
                         </div>

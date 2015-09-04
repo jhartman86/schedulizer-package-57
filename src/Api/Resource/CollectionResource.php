@@ -23,20 +23,27 @@
          */
         protected function httpPost(){
             $data = $this->scrubbedPostData();
-            if( empty($data->ownerID) ){
-                $data->ownerID = 1;
-            }
+            $data->ownerID = 1;
+//            if( empty($data->ownerID) ){
+//                $data->ownerID = 1;
+//            }
             $collectionObj = Collection::create($data);
             $this->setResponseData($collectionObj);
             $this->setResponseCode(Response::HTTP_CREATED);
         }
 
 
+        /**
+         * @todo: ownerID! (see how its done w/ calendars)
+         * @param $id
+         * @throws ApiException
+         */
         protected function httpPut( $id ){
             $data = $this->scrubbedPostData();
             if( empty($data->collectionCalendars) ){
                 throw ApiException::generic('Collections must have at least one calendar');
             }
+            $data->ownerID = 1;
             /** @var $collectionObj Collection */
             $collectionObj = Collection::getByID($id);
             $collectionObj->update($data);

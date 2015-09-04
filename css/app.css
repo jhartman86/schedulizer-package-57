@@ -692,6 +692,94 @@
 .ccm-ui .schedulizer-app input[type="reset"].btn-block,
 .ccm-ui .schedulizer-app input[type="button"].btn-block {
   width: 100%; }
+.ccm-ui .schedulizer-app .tooltip {
+  position: absolute;
+  z-index: 1070;
+  display: block;
+  visibility: visible;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: normal;
+  line-height: 1.4;
+  opacity: 0;
+  filter: alpha(opacity=0); }
+  .ccm-ui .schedulizer-app .tooltip.in {
+    opacity: 0.9;
+    filter: alpha(opacity=90); }
+  .ccm-ui .schedulizer-app .tooltip.top {
+    margin-top: -3px;
+    padding: 5px 0; }
+  .ccm-ui .schedulizer-app .tooltip.right {
+    margin-left: 3px;
+    padding: 0 5px; }
+  .ccm-ui .schedulizer-app .tooltip.bottom {
+    margin-top: 3px;
+    padding: 5px 0; }
+  .ccm-ui .schedulizer-app .tooltip.left {
+    margin-left: -3px;
+    padding: 0 5px; }
+.ccm-ui .schedulizer-app .tooltip-inner {
+  max-width: 200px;
+  padding: 3px 8px;
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  background-color: #000;
+  border-radius: 0; }
+.ccm-ui .schedulizer-app .tooltip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid; }
+.ccm-ui .schedulizer-app .tooltip.top .tooltip-arrow {
+  bottom: 0;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px 5px 0;
+  border-top-color: #000; }
+.ccm-ui .schedulizer-app .tooltip.top-left .tooltip-arrow {
+  bottom: 0;
+  right: 5px;
+  margin-bottom: -5px;
+  border-width: 5px 5px 0;
+  border-top-color: #000; }
+.ccm-ui .schedulizer-app .tooltip.top-right .tooltip-arrow {
+  bottom: 0;
+  left: 5px;
+  margin-bottom: -5px;
+  border-width: 5px 5px 0;
+  border-top-color: #000; }
+.ccm-ui .schedulizer-app .tooltip.right .tooltip-arrow {
+  top: 50%;
+  left: 0;
+  margin-top: -5px;
+  border-width: 5px 5px 5px 0;
+  border-right-color: #000; }
+.ccm-ui .schedulizer-app .tooltip.left .tooltip-arrow {
+  top: 50%;
+  right: 0;
+  margin-top: -5px;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #000; }
+.ccm-ui .schedulizer-app .tooltip.bottom .tooltip-arrow {
+  top: 0;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 0 5px 5px;
+  border-bottom-color: #000; }
+.ccm-ui .schedulizer-app .tooltip.bottom-left .tooltip-arrow {
+  top: 0;
+  right: 5px;
+  margin-top: -5px;
+  border-width: 0 5px 5px;
+  border-bottom-color: #000; }
+.ccm-ui .schedulizer-app .tooltip.bottom-right .tooltip-arrow {
+  top: 0;
+  left: 5px;
+  margin-top: -5px;
+  border-width: 0 5px 5px;
+  border-bottom-color: #000; }
 
 .schedulizer-app {
   margin: 0;
@@ -3298,6 +3386,9 @@
     display: none !important; }
   .schedulizer-app .ui-select-bootstrap.ng-dirty.ng-invalid > button.btn.ui-select-match {
     border-color: #D44950; }
+  .schedulizer-app .tooltip .tooltip-inner {
+    font-size: 13px;
+    padding: 1rem; }
   .schedulizer-app input:focus, .schedulizer-app select:focus, .schedulizer-app textarea:focus, .schedulizer-app button:focus, .schedulizer-app a:focus {
     outline: none !important; }
   .schedulizer-app a {
@@ -3311,7 +3402,6 @@
       margin: 0;
       padding: 4px 0;
       position: relative;
-      cursor: pointer;
       color: #006699; }
       .schedulizer-app .not-stupid-header-style h3 i {
         position: absolute;
@@ -3327,9 +3417,10 @@
         -webkit-transition: all 0.25s ease;
         -o-transition: all 0.25s ease;
         transition: all 0.25s ease; }
-      .schedulizer-app .not-stupid-header-style h3:hover {
-        text-decoration: underline; }
-        .schedulizer-app .not-stupid-header-style h3:hover i {
+      .schedulizer-app .not-stupid-header-style h3[modalize]:hover {
+        text-decoration: underline;
+        cursor: pointer; }
+        .schedulizer-app .not-stupid-header-style h3[modalize]:hover i {
           opacity: 1;
           -moz-transform: translateX(0);
           -ms-transform: translateX(0);
@@ -3575,7 +3666,8 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch; }
   [modal-window] .container-fluid {
-    width: 90%;
+    width: 95%;
+    max-width: 992px;
     text-align: left; }
   [modal-window] form [data-calendar-owner-picker] {
     font-weight: bold;
@@ -3734,6 +3826,10 @@ div#ccm-dashboard-content {
     margin: 0 auto; }
     div#ccm-dashboard-content .schedulizer-system-page-wrap .ccm-dashboard-header-buttons {
       top: 28px; }
+    div#ccm-dashboard-content .schedulizer-system-page-wrap .nav.nav-tabs > li > a {
+      -moz-border-radius: 0;
+      -webkit-border-radius: 0;
+      border-radius: 0; }
 
 html.schedulizer-modal {
   overflow-y: hidden; }

@@ -20,7 +20,8 @@
                     /** @var $collectionObj Collection */
                     $collectionObj = Collection::getByID((int)$_REQUEST['collectionID']);
                     $calendarID = ((int)$_REQUEST['calendarID'] >= 1) ? (int)$_REQUEST['calendarID'] : null;
-                    $eventsList = $collectionObj->fetchAllAvailableEvents($calendarID);
+                    $discrepancies = (bool)$_REQUEST['discrepancies'];
+                    $eventsList = $collectionObj->fetchAllAvailableEvents($calendarID, $discrepancies);
                     foreach ($eventsList AS $row) {
                         array_push($castedTypes, (object)array(
                             'approvedVersionID' => $row->approvedVersionID ? (int)$row->approvedVersionID : null,

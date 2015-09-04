@@ -9,6 +9,9 @@
         protected function onBeforePersist(){}
         protected function onAfterPersist(){}
 
+        // On after create (only called once, after save, if didn't exist before)
+        protected function onAfterCreate(){}
+
         // If we're deleting
         protected function onBeforeDelete(){}
         protected function onAfterDelete(){}

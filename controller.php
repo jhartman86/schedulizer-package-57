@@ -34,18 +34,22 @@
               CONFIG_DEFAULT_TIMEZONE           = 'default_timezone',
               CONFIG_EVENT_AUTOGENERATE_PAGES   = 'autogenerate_pages',
               CONFIG_EVENT_PAGE_PARENT          = 'parent_page_id',
-              CONFIG_EVENT_PAGE_TYPE            = 'event_page_type';
+              CONFIG_EVENT_PAGE_TYPE            = 'event_page_type',
+              CONFIG_ENABLE_MASTER_COLLECTION   = 'enable_master_collection',
+              CONFIG_MASTER_COLLECTION_ID       = 'master_collection_id';
 
         protected static $configDefaults        = array(
             self::CONFIG_DEFAULT_TIMEZONE           => 'UTC',
             self::CONFIG_EVENT_AUTOGENERATE_PAGES   => 0,
             self::CONFIG_EVENT_PAGE_PARENT          => null,
-            self::CONFIG_EVENT_PAGE_TYPE            => null
+            self::CONFIG_EVENT_PAGE_TYPE            => null,
+            self::CONFIG_ENABLE_MASTER_COLLECTION   => 1,
+            self::CONFIG_MASTER_COLLECTION_ID       => null
         );
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '1.11';
+        protected $pkgVersion               = '1.12';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -316,6 +320,8 @@
             $this->configSet(self::CONFIG_EVENT_PAGE_PARENT, (int)$_POST[self::CONFIG_EVENT_PAGE_PARENT]);
             $this->configSet(self::CONFIG_DEFAULT_TIMEZONE, $_POST[self::CONFIG_DEFAULT_TIMEZONE]);
             $this->configSet(self::CONFIG_EVENT_PAGE_TYPE, (int)$_POST[self::CONFIG_EVENT_PAGE_TYPE]);
+            $this->configSet(self::CONFIG_ENABLE_MASTER_COLLECTION, (int)$_POST[self::CONFIG_ENABLE_MASTER_COLLECTION]);
+            $this->configSet(self::CONFIG_MASTER_COLLECTION_ID, (int)$_POST[self::CONFIG_MASTER_COLLECTION_ID]);
 
             return $this;
         }
@@ -324,7 +330,7 @@
         /**
          * Run all update methods.
          */
-        private function installAndUpdate( $isFirstUpdate = false ){
+        private function installAndUpdate( $isInstall = false ){
             $this->tryVersionSpecificUpdates()
                  ->setupDatabaseExtra()
                  ->setupBlocks()
@@ -333,8 +339,10 @@
                  ->setupPermissions()
                  ->setupThumbnailTypes();
 
-            if( $isFirstUpdate ){
-                $this->setupPermissionAccessEntities();
+            // Only run on install
+            if( $isInstall ){
+                $this->setupPermissionAccessEntities()
+                     ->setupMasterCollectionIfEnabled();
             }
         }
 
@@ -637,6 +645,25 @@
                     $paObj->addListItem($peCalendarOwner);
                     $pkObj->getPermissionAssignmentObject()->assignPermissionAccess($paObj);
                 }
+            }
+
+            return $this;
+        }
+
+        /**
+         * During install, the default is to enable a master collection. In which case we
+         * create a collection automatically, and save it as the master collectionID.
+         * @return $this
+         */
+        private function setupMasterCollectionIfEnabled(){
+            if( (bool) $this->configGet(self::CONFIG_ENABLE_MASTER_COLLECTION) ){
+                $collectionObj = \Concrete\Package\Schedulizer\Src\Collection::create((object) array(
+                    'title'     => 'Approvals',
+                    'ownerID'   => 1, // @todo: might fail on auto-incr systems other than +1
+                    'collectionCalendars' => array()
+                ));
+
+                $this->configSet(self::CONFIG_MASTER_COLLECTION_ID, $collectionObj->getID());
             }
 
             return $this;

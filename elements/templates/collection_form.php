@@ -38,29 +38,6 @@
                     </div>
                 </div>
 
-                <!-- collection owner -->
-                <div class="row">
-                    <div class="col-sm-12">
-                        <label>Collection Owner</label>
-                        <div class="form-group white">
-                            <a data-calendar-owner-picker data-default-owner-id="<?php echo $currentUser->getUserID(); ?>" dialog-append-buttons="true" dialog-width="90%" dialog-height="70%" dialog-modal="false" dialog-title="Choose User" href="/ccm/system/dialogs/user/search">
-                                <?php
-                                if( is_object($calendarObj) ){
-                                    $ownerUserInfoObj = $calendarObj->getCalendarOwnerUserInfoObj();
-                                    if( is_object($ownerUserInfoObj) ){
-                                        echo $ownerUserInfoObj->getUserName();
-                                    }else{
-                                        echo 'Unassigned';
-                                    }
-                                }else{
-                                    echo $currentUser->getUserName();
-                                }
-                                ?>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
                 <table class="table table-striped table-condensed">
                     <thead>
                         <tr>
@@ -72,7 +49,6 @@
                         <tr ng-repeat="calendarObj in calendarList">
                             <td>
                                 <input type="checkbox" ng-model="selectedCals[calendarObj.id]" ng-init="selectedCals[calendarObj.id] = false" />
-<!--                                <input name="selectedCalendars[]" type="checkbox" ng-model="selectedCals[calendarObj.id]" />-->
                             </td>
                             <td class="col-sm-11">
                                 {{ calendarObj.title }}

@@ -70,10 +70,13 @@
          * @return $this
          */
         public function save(){
+            // Check BEFORE we do any persisting, so we know whether to call onAfterCreate()
+            $exists = $this->isPersisted();
             $this->onBeforePersist();
             $handler = new Handler(DefinitionInspector::parse($this), $this);
             $handler->commit();
             $this->onAfterPersist();
+            if( ! $exists ){ $this->onAfterCreate(); }
             return $this;
         }
 

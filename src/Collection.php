@@ -103,6 +103,9 @@
             $this->deleteCollectionEventsNotInCalendars($calendarIDs);
 
             // First purge all collection -> calendarID associations
+            // THIS CAN BE CONFUSING: with foreign keys, you'd think this would delete all
+            // CollectionEvent records as well; not the case. CollectionEvents are tied directly
+            // to collections - not via many to many association in this table!
             self::adhocQuery(function( \PDO $connection ) use ($collectionID){
                 $statement = $connection->prepare("DELETE FROM SchedulizerCollectionCalendars WHERE collectionID = :collectionID");
                 $statement->bindValue(':collectionID', $collectionID);
@@ -123,6 +126,22 @@
             $this->mergePropertiesFrom($data);
             $this->save();
         }
+
+
+        /**
+         * @param $calendarObj \Concrete\Package\Schedulizer\Src\Calendar
+         */
+        public function addOneCalendar( \Concrete\Package\Schedulizer\Src\Calendar $calendarObj ){
+            $collectionID = $this->getID();
+            $calendarID   = $calendarObj->getID();
+            self::adhocQuery(function( \PDO $connection ) use ($collectionID, $calendarID){
+                $statement = $connection->prepare("INSERT INTO SchedulizerCollectionCalendars (collectionID,calendarID) VALUES (:collectionID,:calendarID)");
+                $statement->bindValue(":collectionID", $collectionID);
+                $statement->bindValue(":calendarID", $calendarID);
+                return $statement;
+            });
+        }
+
 
         public function jsonSerialize(){
             $properties = (object) get_object_vars($this);
@@ -177,10 +196,12 @@
          * @param null $calendarID
          * @return mixed
          */
-        public function fetchAllAvailableEvents( $calendarID = null ){
+        public function fetchAllAvailableEvents( $calendarID = null, $discrepancies = false ){
             $collectionID = $this->id;
-            $query = self::adhocQuery(function( \PDO $connection ) use ($collectionID, $calendarID){
-                $calendarFilter = $calendarID ? sprintf("AND _calendars.id = %s", (int)$calendarID) : '';
+            $query = self::adhocQuery(function( \PDO $connection ) use ($collectionID, $calendarID, $discrepancies){
+                $calendarFilter     = $calendarID ? sprintf("AND _calendars.id = %s", (int)$calendarID) : '';
+                $discrepancyFilter  = $discrepancies ? "AND (_versionInfo.versionID != _collectionEvents.approvedVersionID || _collectionEvents.approvedVersionID IS NULL)" : '';
+
                 $statement = $connection->prepare("
                     SELECT
                       _events.id AS eventID,
@@ -206,8 +227,10 @@
                       ON _collectionEvents.collectionID = _collectionCalendars.collectionID
                       AND _collectionEvents.eventID = _events.id
                     WHERE _collectionCalendars.collectionID = :collectionID
+                    $discrepancyFilter
                     $calendarFilter
                     ORDER BY _versionInfo.title ASC");
+
                 $statement->bindValue(':collectionID', $collectionID);
                 return $statement;
             });
