@@ -1,6 +1,5 @@
 <?php namespace Concrete\Package\Schedulizer\Src\Api\Resource {
 
-    use Permissions;
     use \Concrete\Package\Schedulizer\Src\Calendar;
     use \Concrete\Package\Schedulizer\Src\Event;
     use \Concrete\Package\Schedulizer\Src\Api\ApiException;
@@ -37,8 +36,7 @@
          */
         protected function httpPost(){
             // Allowed to create calendars?
-            $permissions = new Permissions();
-            if( ! $permissions->canCreateCalendar() ){
+            if( ! $this->getGenericTaskPermissionObj()->canCreateCalendar() ){
                 throw ApiException::permissionInvalid('You do not have permission to create calendars.');
             }
             // User has permission, proceed...
@@ -59,13 +57,13 @@
          * @todo: permission to update?
          */
         public function httpPut( $id ){
+            $calendarObj = $this->getCalendarBy($id);
+
             // Allowed to update a calendar?
-            $permissions = new Permissions();
-            if( ! $permissions->canEditCalendar() ){
+            if( ! $calendarObj->getPermissions()->canEditCalendar() ){
                 throw ApiException::permissionInvalid('You do not have permission to edit this calendar.');
             }
 
-            $calendarObj = $this->getCalendarBy($id);
             $calendarObj->update($this->scrubbedPostData());
             $this->setResponseData($calendarObj);
             $this->setResponseCode(Response::HTTP_ACCEPTED);

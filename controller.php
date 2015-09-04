@@ -35,7 +35,7 @@
               CONFIG_EVENT_AUTOGENERATE_PAGES   = 'autogenerate_pages',
               CONFIG_EVENT_PAGE_PARENT          = 'parent_page_id',
               CONFIG_EVENT_PAGE_TYPE            = 'event_page_type',
-              CONFIG_ENABLE_MASTER_COLLECTION   = 'enable_master_collection',
+              CONFIG_ENABLE_MULTI_COLLECTIONS   = 'enable_multi_collections',
               CONFIG_MASTER_COLLECTION_ID       = 'master_collection_id';
 
         protected static $configDefaults        = array(
@@ -43,7 +43,7 @@
             self::CONFIG_EVENT_AUTOGENERATE_PAGES   => 0,
             self::CONFIG_EVENT_PAGE_PARENT          => null,
             self::CONFIG_EVENT_PAGE_TYPE            => null,
-            self::CONFIG_ENABLE_MASTER_COLLECTION   => 1,
+            self::CONFIG_ENABLE_MULTI_COLLECTIONS   => 0,
             self::CONFIG_MASTER_COLLECTION_ID       => null
         );
 
@@ -320,8 +320,8 @@
             $this->configSet(self::CONFIG_EVENT_PAGE_PARENT, (int)$_POST[self::CONFIG_EVENT_PAGE_PARENT]);
             $this->configSet(self::CONFIG_DEFAULT_TIMEZONE, $_POST[self::CONFIG_DEFAULT_TIMEZONE]);
             $this->configSet(self::CONFIG_EVENT_PAGE_TYPE, (int)$_POST[self::CONFIG_EVENT_PAGE_TYPE]);
-            $this->configSet(self::CONFIG_ENABLE_MASTER_COLLECTION, (int)$_POST[self::CONFIG_ENABLE_MASTER_COLLECTION]);
-            $this->configSet(self::CONFIG_MASTER_COLLECTION_ID, (int)$_POST[self::CONFIG_MASTER_COLLECTION_ID]);
+            $this->configSet(self::CONFIG_ENABLE_MULTI_COLLECTIONS, (int)$_POST[self::CONFIG_ENABLE_MULTI_COLLECTIONS]);
+            // Note, we don't save CONFIG_MASTER_COLLECTION_ID b/c its not configurable
 
             return $this;
         }
@@ -342,7 +342,7 @@
             // Only run on install
             if( $isInstall ){
                 $this->setupPermissionAccessEntities()
-                     ->setupMasterCollectionIfEnabled();
+                     ->setupMasterCollection();
             }
         }
 
@@ -655,16 +655,15 @@
          * create a collection automatically, and save it as the master collectionID.
          * @return $this
          */
-        private function setupMasterCollectionIfEnabled(){
-            if( (bool) $this->configGet(self::CONFIG_ENABLE_MASTER_COLLECTION) ){
-                $collectionObj = \Concrete\Package\Schedulizer\Src\Collection::create((object) array(
-                    'title'     => 'Approvals',
-                    'ownerID'   => 1, // @todo: might fail on auto-incr systems other than +1
-                    'collectionCalendars' => array()
-                ));
+        private function setupMasterCollection(){
+            $collectionObj = \Concrete\Package\Schedulizer\Src\Collection::create((object) array(
+                'title'     => 'Approvals',
+                'ownerID'   => 1, // @todo: might fail on auto-incr systems other than +1
+                'collectionCalendars' => array()
+            ));
 
-                $this->configSet(self::CONFIG_MASTER_COLLECTION_ID, $collectionObj->getID());
-            }
+            $this->configSet(self::CONFIG_MASTER_COLLECTION_ID, $collectionObj->getID());
+
 
             return $this;
         }

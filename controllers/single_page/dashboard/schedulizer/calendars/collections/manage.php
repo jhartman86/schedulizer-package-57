@@ -16,7 +16,7 @@
                 if( is_object($collectionObj) ){
                     $this->set('collectionObj', $collectionObj);
                     $this->set('pageTitle', $collectionObj->getTitle());
-                    $this->set('isMasterCollection', $this->isMasterCollection());
+                    $this->set('isMasterCollection', $this->isMasterCollection($collectionObj));
                     return;
                 }
                 throw new \Exception('No collection object');
@@ -28,9 +28,13 @@
         /**
          * @return bool
          */
-        private function isMasterCollection(){
-            $packageObj = Package::getByHandle('schedulizer');
-            return (bool) $packageObj->configGet($packageObj::CONFIG_ENABLE_MASTER_COLLECTION);
+        private function isMasterCollection( \Concrete\Package\Schedulizer\Src\Collection $collectionObj ){
+            $packageObj     = Package::getByHandle('schedulizer');
+            $masterCollObj  = Collection::getByID((int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID));
+            if( ! is_object($masterCollObj) ){
+                return false;
+            }
+            return (int)$masterCollObj->getID() === (int)$collectionObj->getID();
         }
 
     }

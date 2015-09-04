@@ -2,6 +2,7 @@
 
     use \DateTime;
     use \DateTimeZone;
+    use \Concrete\Package\Schedulizer\Src\Event;
     use \Concrete\Package\Schedulizer\Src\EventTimeNullify;
     use \Concrete\Package\Schedulizer\Src\Persistable\Contracts\Persistant;
     use \Concrete\Package\Schedulizer\Src\Persistable\Mixins\Crud;
@@ -227,6 +228,27 @@
                 $statement->bindValue(':versionID', $versionID);
                 return $statement;
             });
+        }
+
+
+        /**
+         * The only scenario this should get used is for permissioning.
+         * @return \Concrete\Package\Schedulizer\Src\Event
+         */
+        public function getEventObject(){
+            $eventTimeID = $this->getID();
+
+            $prepared = self::adhocQuery(function( \PDO $connection ) use ($eventTimeID){
+                $statement = $connection->prepare("
+                    SELECT sev.id FROM SchedulizerEvent sev
+                    JOIN SchedulizerEventTime sevTime ON sevTime.eventID = sev.id
+                    WHERE sevTime.id = :eventTimeID
+                ");
+                $statement->bindValue(":eventTimeID", $eventTimeID);
+                return $statement;
+            });
+
+            return Event::getByID($prepared->fetch(\PDO::FETCH_COLUMN));
         }
     }
 

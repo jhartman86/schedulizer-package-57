@@ -13,7 +13,7 @@
             $packageObj = Package::getByHandle('schedulizer');
 
             // First, set "enable master" on package config
-            $packageObj->configSet($packageObj::CONFIG_ENABLE_MASTER_COLLECTION, 1);
+            $packageObj->configSet($packageObj::CONFIG_ENABLE_MULTI_COLLECTIONS, 0);
 
             // Then create it
             $collectionObj = \Concrete\Package\Schedulizer\Src\Collection::create((object) array(

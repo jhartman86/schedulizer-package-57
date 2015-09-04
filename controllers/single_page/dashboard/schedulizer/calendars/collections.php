@@ -9,7 +9,8 @@
 
         public function view(){
             $packageObj = Package::getByHandle('schedulizer');
-            if( (bool) $packageObj->configGet($packageObj::CONFIG_ENABLE_MASTER_COLLECTION) ){
+            // If multiple collections are not enabled (the default), go directly to master
+            if( ! ((bool) $packageObj->configGet($packageObj::CONFIG_ENABLE_MULTI_COLLECTIONS)) ){
                 $masterCollID  = (int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID);
                 // Have to make sure it exists if user had been swapping enabled/disabled master collection
                 $collectionObj = Collection::getByID($masterCollID);

@@ -185,7 +185,7 @@ angular.module('schedulizer.app').
                      * @param resource
                      */
                     $scope.cancelNullifier = function( resource ){
-                        resource.$delete(function( resp ){
+                        resource.$delete(function(){
                             $rootScope.$emit('calendar.refresh');
                             // Because this happens immediately and we want to cut down on the
                             // number of versions a user creates (by hitting save), we just

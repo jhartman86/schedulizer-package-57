@@ -1,8 +1,10 @@
 <?php namespace Concrete\Package\Schedulizer\Src\Api {
 
+    use C5TL\Parser\DynamicItem\PermissionKey;
     use Config;
     use Gettext\Languages\Exporter\Json;
     use User;
+    use Permissions;
     use \Symfony\Component\HttpFoundation\Request;
     use \Symfony\Component\HttpFoundation\JsonResponse;
     use \Concrete\Package\Schedulizer\Src\Api\ApiException;
@@ -145,6 +147,17 @@
                 $this->_currentUser = new User();
             }
             return $this->_currentUser;
+        }
+
+
+        /**
+         * Get generic task permissions object (ie. task permissions)
+         */
+        protected function getGenericTaskPermissionObj(){
+            if( $this->_permissionObj === null ){
+                $this->_permissionObj = new Permissions();
+            }
+            return $this->_permissionObj;
         }
 
     }

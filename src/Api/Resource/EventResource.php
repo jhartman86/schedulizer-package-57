@@ -56,22 +56,21 @@
          * then we're handling updating attributes on an existing entity. Also note,
          * whenever you save an event, the first request that comes through is to create
          * the entity, and a second request will always be issued sending the attributes
-         * AFTER the event is created. C5's attribute system is just... yikes.
-         * @todo: permissions
+         * AFTER the event is created.
          */
         protected function httpPost(){
             // Handle saving attributes
             if( is_array($this->routeParams) && $this->routeParams[0] === 'attributes' ){
                 // $this->getEventByID handles errors if event doesn't exist or is invalid
                 $eventObj = $this->getEventByID($this->routeParams[1]);
-                // Before we update, do a permissions check (not on a per-event basis, but
-                // whether the user can ADD events to the calendar...)
-                if( $eventObj->getCalendarObj()->getPermissions()->canEditEvents() ){
-                    $this->saveAttributesAgainst($eventObj);
-                    $this->setResponseData((object)array('ok' => true));
-                    return;
+                // Does user have permission to work on the calendar?
+                if( ! is_object($eventObj) || ! ($eventObj->getCalendarObj()->getPermissions()->canEditEvents()) ){
+                    throw ApiException::permissionInvalid('You do not have permission to edit events on this Calendar.');
                 }
-                throw ApiException::permissionInvalid('You do not have permission to edit events on this Calendar.');
+                // Save
+                $this->saveAttributesAgainst($eventObj);
+                $this->setResponseCode(Response::HTTP_NO_CONTENT);
+                return;
             }
 
             $data = $this->scrubbedPostData();
@@ -121,26 +120,28 @@
          * @param $id
          * @throws ApiException
          * @throws \Exception
-         * @todo: copy nullifiers from previous version to new version!
          */
         public function httpPut( $id, $subAction = null ){
+            // Get existing event (getEventByID method throws exception on no existence...)
+            $eventObj = $this->getEventByID($id);
+            $data     = $this->scrubbedPostData();
+
+            // Ensure permissions
+            if( ! $eventObj->getCalendarObj()->getPermissions()->canEditEvents() ){
+                throw ApiException::permissionInvalid('You do not have permission to edit events on this Calendar.');
+            }
+
             // So we don't have to go through all the event version creation, we can
             // use a shortcut to update just the isActive property.
             if( $subAction === 'update_active_status' ){
-                $this->getEventByID($id)->setActiveStatusWithoutVersioning( $this->scrubbedPostData()->isActive );
+                $eventObj->setActiveStatusWithoutVersioning( $this->scrubbedPostData()->isActive );
                 $this->setResponseCode(Response::HTTP_NO_CONTENT);
                 return;
             }
 
-            $data = $this->scrubbedPostData();
+            // Is there at least 1 time entity?
             if( empty($data->_timeEntities) ){
                 throw ApiException::generic('At least 1 time setting must be passed in _timeEntities property.');
-            }
-            // Get existing event (getEventByID method throws exception on no existence...)
-            $eventObj = $this->getEventByID($id);
-            // Ensure permissions
-            if( ! $eventObj->getCalendarObj()->getPermissions()->canEditEvents() ){
-                throw ApiException::permissionInvalid('You do not have permission to edit events on this Calendar.');
             }
 
             // Now, update the event...
@@ -184,7 +185,7 @@
             }
 
             $this->setResponseData($eventObj);
-            $this->setResponseCode(Response::HTTP_ACCEPTED);
+            $this->setResponseCode(Response::HTTP_NO_CONTENT);
         }
 
         /**
@@ -198,8 +199,7 @@
                 throw ApiException::permissionInvalid('You do not have permission to delete events on this Calendar.');
             }
             $eventObj->delete();
-            $this->setResponseData((object)array('ok' => true));
-            $this->setResponseCode(Response::HTTP_ACCEPTED);
+            $this->setResponseCode(Response::HTTP_NO_CONTENT);
         }
 
         /**

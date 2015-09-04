@@ -1,7 +1,6 @@
 <?php namespace Concrete\Package\Schedulizer\Src {
 
     use Loader;
-    //use Permissions;
     use \Concrete\Package\Schedulizer\Src\Calendar;
     use \Concrete\Package\Schedulizer\Src\Event AS SchedulizerEvent;
     use \Concrete\Package\Schedulizer\Src\Persistable\Contracts\Persistant;
@@ -143,6 +142,10 @@
         }
 
 
+        /**
+         * When Collection object gets serialized, append an array of calendarIDs.
+         * @return object
+         */
         public function jsonSerialize(){
             $properties = (object) get_object_vars($this);
             // return an array of calendar IDs
@@ -152,9 +155,6 @@
             return $properties;
         }
 
-        /****************************************************************
-         * Fetch Methods
-         ***************************************************************/
 
         /**
          * Get the collection object by its handle.
@@ -304,6 +304,12 @@
             }
         }
 
+
+        /**
+         * Mark a single event as auto-approvable.
+         * @param $eventID
+         * @param $isApprovable
+         */
         public function markEventAutoApprovable( $eventID, $isApprovable ){
             $collectionID = $this->id;
             $eventObj     = SchedulizerEvent::getByID($eventID);
@@ -326,6 +332,7 @@
                 $eventObj->bustPageCache();
             }
         }
+
 
         /**
          * Given a list of eventIDs, this will mark the latest versions as approved for
@@ -359,6 +366,7 @@
             \Core::make('app')->clearCaches();
         }
 
+
         /**
          * "Unapprove" means "delete" all the event approvals from the collection's
          * event records.
@@ -378,6 +386,7 @@
                 return $statement;
             });
         }
+
 
         /**
          * When we're updating a collection (and thus possibly changing calendars which

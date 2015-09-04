@@ -1,6 +1,7 @@
 <?php namespace Concrete\Package\Schedulizer\Src {
 
-    use PageCache,
+    use Page,
+        PageCache,
         Events,
         Package,
         \Concrete\Package\Schedulizer\Src\SystemEvents\EventOnSave AS SystemEventOnSave,
@@ -61,6 +62,7 @@
         /** @return bool|null */
         public function getIsActive(){ return $this->isActive; }
 
+
         /**
          * On after persist is only called after the canonical Event record
          * gets created, never after an EventVersion row gets created.
@@ -76,6 +78,7 @@
             // Fire event
             Events::dispatch(self::EVENT_ON_SAVE, new SystemEventOnSave($this));
         }
+
 
         /**
          * Collections can indicate that an event does not require manual approval to show
@@ -97,6 +100,7 @@
             });
         }
 
+
         /**
          * Schedulizer Configuration settings allow for automatically
          * creating event pages; this takes care of that.
@@ -112,7 +116,7 @@
                 }
 
                 /** @var $root \Concrete\Core\Page\Page */
-                $root = \Concrete\Core\Page\Page::getByID($packageObj->configGet($packageObj::CONFIG_EVENT_PAGE_PARENT));
+                $root = Page::getByID($packageObj->configGet($packageObj::CONFIG_EVENT_PAGE_PARENT));
                 if( $root->isActive() ){
                     $pageType = \Concrete\Core\Page\Type\Type::getByID($packageObj->configGet($packageObj::CONFIG_EVENT_PAGE_TYPE));
                     if( is_object($pageType) ){
@@ -144,7 +148,7 @@
          * Attempt to bust the page cache if the page is... cached.
          */
         public function bustPageCache(){
-            $pageObj = \Concrete\Core\Page\Page::getByID($this->pageID);
+            $pageObj = Page::getByID($this->pageID);
             if( is_object($pageObj) ){
                 PageCache::getLibrary()->purge($pageObj);
             }
@@ -170,6 +174,7 @@
                 return $statement;
             });
         }
+
 
         /**
          * When returning an event, we have to join the SchedulizerEvent
@@ -199,6 +204,7 @@
             });
         }
 
+
         /**
          * Get the Calendar object this event is associated with.
          * @return Calendar
@@ -210,20 +216,24 @@
             return $this->_calendarObj;
         }
 
+
         /** @return array Get all associated event times */
         public function getEventTimes(){
             return (array) EventTime::fetchAllByEventID($this->id, $this->versionID);
         }
+
 
         /** @return array Get all associated tags */
         public function getEventTags(){
             return (array) EventTag::fetchTagsByEventID($this->id, $this->versionID);
         }
 
+
         /** @return array Get all associated tags */
         public function getEventCategories(){
             return (array) EventCategory::fetchCategoriesByEventID($this->id, $this->versionID);
         }
+
 
         /** @return array|mixed */
         public function jsonSerialize(){
@@ -238,6 +248,7 @@
             $properties->_categories    = $this->getEventCategories();
             return $properties;
         }
+
 
         /**
          * Callback from the Persistable stuff, executed before entity gets
@@ -284,9 +295,6 @@
             return $this->_calcdEarliestStartTime;
         }
 
-        /****************************************************************
-         * Fetch Methods
-         ***************************************************************/
 
         /**
          * @param $title
@@ -300,6 +308,7 @@
             });
         }
 
+
         /**
          * @param $ownerID
          * @return array|null [$this, $this]
@@ -311,6 +320,7 @@
                 return $statement;
             });
         }
+
 
         /**
          * Gets full data for an event; (includes serializing _timeEntity sub-resources).
@@ -324,6 +334,7 @@
                 return $statement;
             });
         }
+
 
         /**
          * Return a SIMPLE list of the events (ie. just the records) associated with a calendar.

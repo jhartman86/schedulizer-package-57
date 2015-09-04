@@ -133,22 +133,20 @@
                 $pkDeleteEvents->getPermissionAssignmentObject()->assignPermissionAccess($pa);
             }
 
-            $this->autoAddToMasterCollectionIfConfigured();
+            $this->autoAddToMasterCollection();
         }
 
         /**
          * If using master collection is enabled, auto-add the calendar.
          */
-        private function autoAddToMasterCollectionIfConfigured(){
+        private function autoAddToMasterCollection(){
             /** @var $packageObj \Concrete\Package\Schedulizer\Controller */
-            $packageObj = Package::getByHandle(self::PACKAGE_HANDLE);
-            if( (bool) $packageObj->configGet($packageObj::CONFIG_ENABLE_MASTER_COLLECTION) ){
-                $masterCollID = (int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID);
-                /** @var $collectionObj \Concrete\Package\Schedulizer\Src\Collection */
-                $collectionObj = SchedulizerCollection::getByID($masterCollID);
-                if( is_object($collectionObj) ){
-                    $collectionObj->addOneCalendar($this);
-                }
+            $packageObj     = Package::getByHandle(self::PACKAGE_HANDLE);
+            $masterCollID   = (int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID);
+            /** @var $collectionObj \Concrete\Package\Schedulizer\Src\Collection */
+            $collectionObj = SchedulizerCollection::getByID($masterCollID);
+            if( is_object($collectionObj) ){
+                $collectionObj->addOneCalendar($this);
             }
         }
 

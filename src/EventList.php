@@ -451,13 +451,11 @@
 
             // Are we trying to filter by a master collection?
             if( $this->filterByMasterCollection ){
-                $packageObj = Package::getByHandle('schedulizer');
-                if( (bool) $packageObj->configGet($packageObj::CONFIG_ENABLE_MASTER_COLLECTION) ){
-                    $masterCollID = (int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID);
-                    $collectionObj = \Concrete\Package\Schedulizer\Src\Collection::getByID($masterCollID);
-                    if( is_object($collectionObj) ){
-                        $this->filterByCollectionObject($collectionObj);
-                    }
+                $packageObj     = Package::getByHandle('schedulizer');
+                $masterCollID   = (int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID);
+                $collectionObj  = \Concrete\Package\Schedulizer\Src\Collection::getByID($masterCollID);
+                if( is_object($collectionObj) ){
+                    $this->filterByCollectionObject($collectionObj);
                 }
             }
 

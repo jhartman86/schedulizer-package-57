@@ -55,11 +55,9 @@ foreach($pageTypesList AS $pageTypeObj){ /** @var $pageTypeObj \Concrete\Core\Pa
                 <tr>
                     <td class="config-label"><label>Collections</label></td>
                     <td>
-                        <?php echo $formHelper->checkbox($packageObj::CONFIG_ENABLE_MASTER_COLLECTION, 1, (int)$packageObj->configGet($packageObj::CONFIG_ENABLE_MASTER_COLLECTION)); ?> Enable Master Collection
-                        <?php
-                            // if( $packageObj->getPackageID() )
-                            // OR set options from the settings page controller and show if set
-                        ?>
+                        <span class="checkbox">
+                            <?php echo $formHelper->checkbox($packageObj::CONFIG_ENABLE_MULTI_COLLECTIONS, 1, (int)$packageObj->configGet($packageObj::CONFIG_ENABLE_MULTI_COLLECTIONS)); ?> Enable Multiple Collections
+                        </span>
                     </td>
                 </tr>
             </tbody>

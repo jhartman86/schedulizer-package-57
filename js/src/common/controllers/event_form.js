@@ -2,8 +2,8 @@
 /* gloabl ConcreteFileManager */
 angular.module('schedulizer.app').
 
-    controller('CtrlEventForm', ['$window', '$rootScope', '$scope', '$q', '$filter', '$http', 'Helpers', 'ModalManager', 'API', '_moment',
-        function( $window, $rootScope, $scope, $q, $filter, $http, Helpers, ModalManager, API, _moment ){
+    controller('CtrlEventForm', ['$window', '$rootScope', '$scope', '$q', '$filter', '$http', 'Helpers', 'ModalManager', 'Alerter', 'API', '_moment',
+        function( $window, $rootScope, $scope, $q, $filter, $http, Helpers, ModalManager, Alerter, API, _moment ){
 
             $scope.activeMasterTab = {
                 1: true
@@ -285,10 +285,6 @@ angular.module('schedulizer.app').
                         function( resp ){
                             // Resolves the outer promise (step1) so we know to move on to step2
                             resolve(resp);
-                        },
-                        function(){ // Failure, bail out of the modal
-                            // If its an error, the global $http error handler auto-closes the modal
-                            //ModalManager.classes.open = false;
                         }
                     );
                 });
@@ -299,8 +295,8 @@ angular.module('schedulizer.app').
                         // Serializes all the attributes within [custom-attributes] div
                         _attrs = jQuery('input,select,textarea', '[custom-attributes]').serialize();
 
-                    jQuery.post(_route, _attrs).always(function( resp ){
-                        if( resp.ok ){
+                    jQuery.post(_route, _attrs)
+                        .done(function(){
                             // Need to $apply because we have to use effing jQuery for the post
                             // and this happens in the callback!
                             $scope.$apply(function(){
@@ -308,8 +304,10 @@ angular.module('schedulizer.app').
                                 $rootScope.$emit('calendar.refresh');
                                 ModalManager.classes.open = false;
                             });
-                        }
-                    });
+                        })
+                        .fail(function( resp ){
+                            Alerter.add({msg:resp.responseJSON.error,danger:true});
+                        });
                 });
             };
 
@@ -320,11 +318,7 @@ angular.module('schedulizer.app').
             $scope.deleteEvent = function(){
                 $scope.entity.$delete().then(
                     function( resp ){
-                        if( resp.ok ){
-                            $rootScope.$emit('calendar.refresh');
-                            ModalManager.classes.open = false;
-                        }
-                    }, function(){ // Failure, bail out of the modal
+                        $rootScope.$emit('calendar.refresh');
                         ModalManager.classes.open = false;
                     }
                 );

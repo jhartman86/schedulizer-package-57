@@ -51,6 +51,12 @@
             if( ! $eventTimeObj ){
                 throw ApiException::dependentResourceInvalid('Invalid Event Time resource to apply nullifier for.');
             }
+
+            // Permission check
+            if ( ! $eventTimeObj->getEventObject()->getCalendarObj()->getPermissions()->canEditEvents()){
+                throw ApiException::permissionInvalid('You do not have permission to modify events on this calendar.');
+            }
+
             // Proceed
             $hideOnDate = new DateTime($this->scrubbedPostData()->hideOnDate, new DateTimeZone('UTC'));
             $hideOnDate->setTime(0,0,0);
@@ -69,8 +75,13 @@
          * @throws ApiException
          */
         public function httpDelete( $eventTimeID, $id ){
-            $this->getEventTimeNullifyByID($id)->delete();
-            $this->setResponseData((object)array('ok' => true));
+            $nulliferObj = $this->getEventTimeNullifyByID($id);
+            $eventObj    = $this->getEventTimeNullifyByID($id)->getEventObject();
+            if( ! $eventObj->getCalendarObj()->getPermissions()->canEditEvents() ){
+                throw ApiException::permissionInvalid('You do not have permission to modify events on this calendar.');
+            }
+
+            $nulliferObj->delete();
             $this->setResponseCode(Response::HTTP_ACCEPTED);
         }
 
