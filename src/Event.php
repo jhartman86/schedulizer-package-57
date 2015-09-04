@@ -1,6 +1,7 @@
 <?php namespace Concrete\Package\Schedulizer\Src {
 
-    use Events,
+    use PageCache,
+        Events,
         Package,
         \Concrete\Package\Schedulizer\Src\SystemEvents\EventOnSave AS SystemEventOnSave,
         \Concrete\Package\Schedulizer\Src\Calendar,
@@ -137,6 +138,18 @@
                 }
             }
         }
+
+
+        /**
+         * Attempt to bust the page cache if the page is... cached.
+         */
+        public function bustPageCache(){
+            $pageObj = \Concrete\Core\Page\Page::getByID($this->pageID);
+            if( is_object($pageObj) ){
+                PageCache::getLibrary()->purge($pageObj);
+            }
+        }
+
 
         /**
          * By default, whenever an event gets saved, a new version gets created and kicks off

@@ -285,6 +285,7 @@
          */
         public function approveEventVersion( $eventID, $approvedVersionID ){
             $collectionID = $this->id;
+
             self::adhocQuery(function( \PDO $connection ) use ($collectionID, $eventID, $approvedVersionID){
                 $statement = $connection->prepare("
                 REPLACE INTO SchedulizerCollectionEvents (collectionID,eventID,approvedVersionID,autoApprovable)
@@ -295,11 +296,18 @@
                 $statement->bindValue(":autoApprovable", 0);
                 return $statement;
             });
+
+            // Now try and bust the page cache!
+            $eventObj = SchedulizerEvent::getByID($eventID);
+            if( is_object($eventObj) ){
+                $eventObj->bustPageCache();
+            }
         }
 
         public function markEventAutoApprovable( $eventID, $isApprovable ){
             $collectionID = $this->id;
             $eventObj     = SchedulizerEvent::getByID($eventID);
+
             self::adhocQuery(function( \PDO $connection ) use ($collectionID, $eventObj, $isApprovable){
                 $statement = $connection->prepare("
                     REPLACE INTO SchedulizerCollectionEvents (collectionID,eventID,approvedVersionID,autoApprovable)
@@ -311,6 +319,12 @@
                 $statement->bindValue(":autoApprovable", (int)$isApprovable);
                 return $statement;
             });
+
+            // Now try and bust the page cache!
+            $eventObj = SchedulizerEvent::getByID($eventID);
+            if( is_object($eventObj) ){
+                $eventObj->bustPageCache();
+            }
         }
 
         /**
@@ -340,6 +354,9 @@
                 $statement->bindValue(":collectionID", $collectionID);
                 return $statement;
             });
+
+            // @todo: limit scope fo this cache bust - this is clearing EVERYTHING now
+            \Core::make('app')->clearCaches();
         }
 
         /**
