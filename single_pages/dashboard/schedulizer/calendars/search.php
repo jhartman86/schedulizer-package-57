@@ -11,6 +11,9 @@
 <script type="text/ng-template" id="/event_timing_form">
     <?php Loader::packageElement('templates/event_timing_form', 'schedulizer'); ?>
 </script>
+<script type="text/ng-template" id="/tpl-tooltip">
+    <?php Loader::packageElement('templates/tooltip', 'schedulizer'); ?>
+</script>
 
 <div class="schedulizer-app" ng-controller="CtrlSearchPage">
     <div class="ccm-dashboard-content-full search-page" ng-class="{'search-open':searchOpen}">

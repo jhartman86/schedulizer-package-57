@@ -64,7 +64,7 @@
             if( ! $permissions->canEditCalendar() ){
                 throw ApiException::permissionInvalid('You do not have permission to edit this calendar.');
             }
-            
+
             $calendarObj = $this->getCalendarBy($id);
             $calendarObj->update($this->scrubbedPostData());
             $this->setResponseData($calendarObj);
