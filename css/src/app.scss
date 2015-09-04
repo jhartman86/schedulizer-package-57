@@ -20,6 +20,7 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
 }
 
 .schedulizer-app {margin:0/* -20px;*/;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-moz-font-smoothing:antialiased;
+  @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/tooltip';
   @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/scaffolding';
   @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/normalize';
   @import '../../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/type';
@@ -37,6 +38,7 @@ $icomoon-font-path:         '/packages/schedulizer/css/_fonts';
 
   // Remove highlights
   input, select, textarea, button, a {&:focus {outline:none !important;}}
+  a {cursor:pointer;}
 
   .not-stupid-header-style {padding:1rem 0;background:#f1f1f1;position:relative;z-index:2;
     h3 {margin:0;padding:4px 0;position:relative;cursor:pointer;color:#006699;
@@ -229,6 +231,7 @@ div#ccm-dashboard-content {overflow-y:scroll;
   > header.ccm-dashboard-page-header {margin:0 0 30px;padding:30px;
     h1 {margin:0;}
   }
+  > #ccm-dashboard-result-message {padding-left:30px;padding-right:30px;max-width:768px;margin:0 auto !important;}
   .schedulizer-system-page-wrap {padding-left:30px;padding-right:30px;padding-bottom:100px;max-width:768px;margin:0 auto;
     .ccm-dashboard-header-buttons {top:28px;}
   }

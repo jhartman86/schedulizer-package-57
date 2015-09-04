@@ -32,8 +32,8 @@ $config->set('database.connections.concrete', array(
     'driver'    => 'c5_pdo_mysql',
     'server'    => '127.0.0.1',
     'database'  => 'dev_site',
-    'username'  => 'concrete5',
-    'password'  => 'concrete5',
+    'username'  => 'dev_user',
+    'password'  => 'dev_pass',
     'charset'   => 'utf8'
 ));
 $config->get('concrete');

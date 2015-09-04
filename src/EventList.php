@@ -39,6 +39,8 @@
         protected $eventIDs     = array();
         protected $categoryIDs  = array();
         protected $tagIDs       = array();
+        // "collectionID" refers to a SCHEDULIZER collection, NOT C5 collection!
+        protected $collectionID = null;
         protected $queryDaySpan = self::DAYS_IN_FUTURE;
         protected $fullTextSearch = null;
         protected $fetchColumns = array(
@@ -162,6 +164,20 @@
             array_push($this->categoryIDs, $categoryIDs);
             $this->categoryIDs = array_unique($this->categoryIDs);
             return $this;
+        }
+
+
+        /**
+         * Schedulizer has the notion of "collections", which basically as a method of
+         * de-coupled versioning (so different collections can approve different event
+         * versions).
+         * @param $collectionID
+         */
+        public function setSchedulizerCollectionID( $collectionID ){
+            if( is_null($collectionID) || !((int)$collectionID >= 1) ){
+                return;
+            }
+            $this->collectionID = (int)$collectionID;
         }
 
 
@@ -296,10 +312,18 @@
             return $this->includePagePathInResults;
         }
 
+        /**
+         * Pass an array of attribute key handles to fetch the values.
+         * @param array $attrKeyList
+         */
         public function setAttributesToFetch( $attrKeyList = array() ){
             $this->attributesToFetch = $attrKeyList;
         }
 
+        /**
+         * Used by the resource outputter.
+         * @return array
+         */
         public function getAttributesToFetch(){
             return $this->attributesToFetch;
         }
@@ -314,7 +338,9 @@
         }
 
         /**
-         * Get a list of results but group 'em by day
+         * Get a list of results but group 'em by day.
+         * @todo: this could be dangerously overburdening to run on a large
+         * unpaginated list... meaning, pagination needs to be implemented.
          * @return array
          */
         public function getGroupedByDay(){
@@ -365,11 +391,6 @@
             $this->calendarIDs = array_filter($this->calendarIDs, function( $calID ){
                 return (int)$calID >= 1;
             });
-
-            // Throw exception if no calendarIDs specified
-//            if( empty($this->calendarIDs) ){
-//                throw new Exception("No calendar IDs specified.");
-//            }
 
             // Ensure eventIDs are numeric only
             $this->eventIDs = array_filter($this->eventIDs, function( $eventID ){
@@ -438,7 +459,8 @@
                 'limitTotal'        => (int)$this->limitTotal,
                 'fullTextSearch'    => $this->fullTextSearch,
                 'doEventGrouping'   => $this->doEventGrouping,
-                'filterByIsActive'  => $this->filterByIsActive
+                'filterByIsActive'  => $this->filterByIsActive,
+                'collectionID'      => $this->collectionID
             );
             return (require sprintf("%s/_eventListQuery.php", __DIR__));
         }

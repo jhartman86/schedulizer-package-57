@@ -10,13 +10,14 @@
     use SinglePage; /** @see \Concrete\Core\Page\Single */
     use Route;
     use Router;
-    use \DateTime;
-    use \DateTimeZone;
+    use Group;
+    use PermissionKeyCategory; /** @see \Concrete\Core\Permission\Category */
     use \Concrete\Core\Attribute\Key\Category AS AttributeKeyCategory;
     use \Concrete\Core\Attribute\Type AS AttributeType;
     use \Concrete\Package\Schedulizer\Src\Api\ApiOnStart;
-    use PermissionKeyCategory; /** @see \Concrete\Core\Permission\Category */
     use \Concrete\Core\Permission\Access\Entity\Type AS PermissionAccessEntityType;
+    use \Concrete\Core\Permission\Access\Access AS PermissionAccess;
+    use \Concrete\Core\Permission\Access\Entity\GroupEntity as GroupPermissionAccessEntity;
     use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerKey AS SchedulizerPermissionKey;
     use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerCalendarKey AS SchedulizerCalendarPermissionKey;
     use Events;
@@ -44,7 +45,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '1.05';
+        protected $pkgVersion               = '1.11';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -141,12 +142,11 @@
 
 
         /**
-         * Normal old ajax calls using C5's routing mechanism.
+         *  Note: C5's router fails to implement the full Symfony routing options
+         * (hence why we customize the API stuff above), so to pass an optional parameter
+         * we have to register the route twice :(
          */
         protected function setupC5Routes(){
-            // Note: C5's router fails to implement the full
-            // Symfony routing options (hence why we customize the API stuff above),
-            // so to pass an optional parameter we have to register the route twice :(
             Route::register(
                 Router::route(array('event_attributes_form/{id}', self::PACKAGE_HANDLE)),
                 '\Concrete\Package\Schedulizer\Controller\EventAttributesForm::view'
@@ -189,19 +189,11 @@
         }
 
 
+        /**
+         * @todo: uninstall all associated permission entities?
+         */
         public function uninstall(){
             parent::uninstall();
-
-            // Uninstall permission key categories
-            /** @var $pkc1 \Concrete\Core\Permission\Category */
-//            if( $pkc1 = PermissionKeyCategory::getByHandle('schedulizer') ){
-//                $pkc1->delete();
-//            }
-//
-//            /** @var $pkc2 \Concrete\Core\Permission\Category */
-//            if( $pkc2 = PermissionKeyCategory::getByHandle('schedulizer_calendar') ){
-//                $pkc2->delete();
-//            }
 
             $tables   = array(
                 'btSchedulizer',
@@ -218,7 +210,10 @@
                 'SchedulizerEventSearchIndexAttributes',
                 'SchedulizerCalendarPermissionAssignments',
                 'SchedulizerCategorizedEvents',
-                'SchedulizerEventCategory'
+                'SchedulizerEventCategory',
+                'SchedulizerCollection',
+                'SchedulizerCollectionCalendars',
+                'SchedulizerCollectionEvents'
             );
             try {
                 $database = Loader::db();
@@ -234,7 +229,7 @@
         public function upgrade(){
             if( Src\Install\Support::meetsRequirements() ){
                 parent::upgrade();
-                $this->installAndUpdate();
+                $this->installAndUpdate( false );
                 return;
             }
             throw new Exception("System requirements not met.");
@@ -257,7 +252,7 @@
                 $this->setupClassBindings();
                 $this->_packageObj = parent::install();
                 $this->saveConfigsFromInstallScreen()
-                     ->installAndUpdate();
+                     ->installAndUpdate( true );
                 return;
             }
             throw new Exception("System requirements not met.");
@@ -266,7 +261,7 @@
 
         /**
          * With 5.7.4.1, the use of Doctrine's annotation parser causes major issues
-         * EVEN THOUGH DOCTRINE ISN'T EFFING BEING USED. So override the parent methods
+         * EVEN THOUGH FUCKING DOCTRINE ISN'T BEING USED. So override the parent methods
          * and remove calls to annoation parser.
          */
         public function installDatabase(){
@@ -276,8 +271,9 @@
             }
         }
 
+
         /**
-         * More doctrine shit we have to override...
+         * More doctrine stuff we have to override...
          * @throws \Exception
          */
         public function upgradeDatabase(){
@@ -326,11 +322,9 @@
 
 
         /**
-         * @todo: table ALTER statements cause upgrades not to return properly; figure
-         * out better way of testing if a) the alter statement needs to occur and b) catching
-         * exceptions.
+         * Run all update methods.
          */
-        private function installAndUpdate(){
+        private function installAndUpdate( $isFirstUpdate = false ){
             $this->tryVersionSpecificUpdates()
                  ->setupDatabaseExtra()
                  ->setupBlocks()
@@ -338,6 +332,10 @@
                  ->setupAttributeCategories()
                  ->setupPermissions()
                  ->setupThumbnailTypes();
+
+            if( $isFirstUpdate ){
+                $this->setupPermissionAccessEntities();
+            }
         }
 
 
@@ -367,16 +365,17 @@
 
         /**
          * Handles foreign key setup since not supported w/ db.xml.
+         * @note: updates are logged in case of errors
+         * @todo: what if user doesn't have MySQL permissions to access the information_schema table?
          */
         private function setupDatabaseExtra(){
-            // Logger
             $groupLogger = new \Concrete\Core\Logging\GroupLogger(false, \Monolog\Logger::INFO);
             $groupLogger->write("Monitoring DB upgrade for Schedulizer");
 
             /** @var $connection \PDO :: Setup foreign key associations */
             try {
-                $connection          = Database::connection(Database::getDefaultConnection())->getWrappedConnection();
-                $existing            = $connection->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY'");
+                $connection = Database::connection(Database::getDefaultConnection())->getWrappedConnection();
+                $existing   = $connection->query("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY'");
                 $existing->execute();
                 // = array of existing foreign key names already configured
                 $existingConstraints = $existing->fetchAll(\PDO::FETCH_COLUMN);
@@ -459,6 +458,7 @@
             if(!is_object(BlockType::getByHandle('schedulizer_event'))) {
                 BlockType::installBlockTypeFromPackage('schedulizer_event', $this->packageObject());
             }
+
             return $this;
         }
 
@@ -537,25 +537,29 @@
 
             // Setup keys
             foreach(array(
-                    'create_tag'    => array(
-                        'name'      => t('Create Tags'),
-                        'descr'     => t('Is Allowed To Create New Tags')
-                    ),
-                    'create_calendar' => array(
-                        'name'      => t('Add Calendars'),
-                        'descr'     => t('Is Allowed To Create New Calendars')
-                    ),
-                    'delete_calendar' => array(
-                        'name'      => t('Delete Calendars'),
-                        'descr'     => t('Is Allowed To Delete Calendars')
-                    ),
-                    'manage_calendar_permissions' => array(
-                        'name'      => t('Manage Calendar Permissions'),
-                        'descr'     => t('Can Manage Calendar Permissions')
-                    )
+                'create_tag'    => array(
+                    'name'      => t('Create Tags'),
+                    'descr'     => t('Is Allowed To Create New Tags')
+                ),
+                'create_calendar' => array(
+                    'name'      => t('Add Calendars'),
+                    'descr'     => t('Is Allowed To Create New Calendars')
+                ),
+                'edit_calendar'   => array(
+                    'name'      => t('Edit Calendars'),
+                    'descr'     => t('Is Allowed To Edit Calendars')
+                ),
+                'delete_calendar' => array(
+                    'name'      => t('Delete Calendars'),
+                    'descr'     => t('Is Allowed To Delete Calendars')
+                ),
+                'manage_calendar_permissions' => array(
+                    'name'      => t('Manage Calendar Permissions'),
+                    'descr'     => t('Can Manage Calendar Permissions')
+                )
             ) AS $keyHandle => $keyData){
                 if( ! SchedulizerPermissionKey::getByHandle($keyHandle) ){
-                    SchedulizerPermissionKey::add('schedulizer', $keyHandle, $keyData['name'], $keyData['descr'], 1, 0, $this->packageObject());
+                    SchedulizerPermissionKey::add('schedulizer', $keyHandle, $keyData['name'], $keyData['descr'], 0, 0, $this->packageObject());
                 }
             }
 
@@ -581,7 +585,7 @@
                 )
             ) AS $keyHandle => $keyData){
                 if( ! SchedulizerCalendarPermissionKey::getByHandle($keyHandle) ){
-                    SchedulizerCalendarPermissionKey::add('schedulizer_calendar', $keyHandle, $keyData['name'], $keyData['descr'], 1, 0, $this->packageObject());
+                    SchedulizerCalendarPermissionKey::add('schedulizer_calendar', $keyHandle, $keyData['name'], $keyData['descr'], 0, 0, $this->packageObject());
                 }
             }
 
@@ -600,6 +604,39 @@
                 $type->setHandle('event_thumb');
                 $type->setWidth(740);
                 $type->save();
+            }
+
+            return $this;
+        }
+
+        /**
+         * Only executed on first install; this sets up the defaults for "task" permissions.
+         * @return $this
+         */
+        private function setupPermissionAccessEntities(){
+            foreach(array('create_tag', 'create_calendar', 'edit_calendar', 'delete_calendar', 'manage_calendar_permissions') AS $permKeyHandle){
+                $pkObj = SchedulizerPermissionKey::getByHandle($permKeyHandle);
+                $paObj = $pkObj->getPermissionAccessObject();
+
+                // Standard, assign admin
+                if( !is_object($paObj) ){
+                    // Permission Access Record
+                    $paObj = PermissionAccess::create($pkObj);
+                    // Permissionable Access Entity
+                    $peAdmins = GroupPermissionAccessEntity::getOrCreate(Group::getByID(ADMIN_GROUP_ID));
+                    // Add $peAdmins Entity to $paObj
+                    $paObj->addListItem($peAdmins);
+                    // Save Assignment
+                    $pkObj->getPermissionAssignmentObject()->assignPermissionAccess($paObj);
+                }
+
+                // Since this is once off assigning the calendar owner, we'll do it in the loop
+                if( $permKeyHandle === 'edit_calendar' ){
+                    // We already know the $paObj (Access Record) exists
+                    $peCalendarOwner = \Concrete\Package\Schedulizer\Src\Permission\Access\Entity\CalendarOwnerEntity::getOrCreate();
+                    $paObj->addListItem($peCalendarOwner);
+                    $pkObj->getPermissionAssignmentObject()->assignPermissionAccess($paObj);
+                }
             }
 
             return $this;

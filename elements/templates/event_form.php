@@ -1,5 +1,5 @@
 <?php $permissions = new Permissions(); ?>
-<form class="event container-fluid" ng-controller="CtrlEventForm">
+<form name="frmEventData" class="event container-fluid" ng-controller="CtrlEventForm">
     <?php Loader::packageElement('templates/loading', 'schedulizer'); ?>
 
     <div class="row" ng-show="warnAliased">
@@ -13,9 +13,9 @@
     <div ng-show="(_ready && !warnAliased)">
         <ul class="nav nav-tabs">
             <li ng-click="setMasterTabActive(1)" ng-class="{'active':activeMasterTab[1]}"><a>Basic Info</a></li>
-            <li ng-click="setMasterTabActive(2)" ng-class="{'active':activeMasterTab[2]}"><a>Other</a></li>
+            <li ng-click="setMasterTabActive(2)" ng-class="{'active':activeMasterTab[2]}"><a>Custom Attributes</a></li>
             <li class="pull-right">
-                <button type="button" class="btn btn-success save-entity" ng-click="submitHandler()">
+                <button type="button" class="btn btn-success save-entity" ng-click="submitHandler()" ng-disabled="(frmEventData.$pristine || frmEventData.$invalid)">
                     <span ng-hide="_requesting">Save</span>
                     <img ng-show="_requesting" src="<?php echo SCHEDULIZER_IMAGE_PATH; ?>spinner.svg" />
                 </button>
@@ -42,8 +42,10 @@
                     <div class="col-sm-12">
                         <div class="form-group title-group">
                             <label for="" class="sr-only">Title</label>
-                            <input type="text" class="form-control input-title" placeholder="Title" ng-model="entity.title" />
-                            <span select-wrap ng-class="{'active-true':entity.isActive,'active-false':!entity.isActive}"><select class="form-control" ng-options="opt.value as opt.label for opt in isActiveOptions" ng-model="entity.isActive"></select></span>
+                            <input required name="title" type="text" class="form-control input-title" placeholder="Title (Required)" ng-model="entity.title" />
+                            <span select-wrap ng-class="{'active-true':entity.isActive,'active-false':!entity.isActive}" bs-tooltip="'Important: Changing this trigger an immediate update, but only on the event status. No other changes are saved!'" data-template="/tpl-tooltip" data-placement="left" bs-enabled="(+(entity.id) >= 1)">
+                                <select class="form-control" ng-options="opt.value as opt.label for opt in isActiveOptions" ng-model="entity.isActive"></select>
+                            </span>
                         </div>
                     </div>
                 </div>

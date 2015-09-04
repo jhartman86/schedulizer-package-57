@@ -138,7 +138,7 @@
 
 
         /**
-         * @return User
+         * @return \Concrete\Core\User\User
          */
         protected function currentUser(){
             if( $this->_currentUser === null ){

@@ -39,10 +39,6 @@
             return $targ;
         }
 
-//        public function validate(){
-//            return true;
-//        }
-
     }
 
 }

@@ -216,6 +216,32 @@ angular.module('schedulizer.app').
             });
 
             /**
+             * Watch the isActive value, and if its changed, send request and close the edit
+             * window immediately: every time an event gets saved in full, it creates a new version
+             * along with all associated records. This way we use a special route to change JUST
+             * the active status of the event.
+             */
+            $scope.$watch('entity.isActive', function( newVal, oldVal ){
+                // We do this if check b/c: upon initialization, entity.isActive will be undefined,
+                // then when entity.isActive becomes initialized, we get what the current value is;
+                // but we only want if its *changed* - meaning after 1) undefined, then 2) initial
+                // value has been set. Further, we check if entity.id exists - because it only makes
+                // sense to update active status on an *existing* event.
+                if( typeof(newVal) === 'boolean' && typeof(oldVal) === 'boolean' && $scope.entity.id ){
+                    // this causes the save button be disabled so user can't click 'Save' while the
+                    // call is taking place... if the user were a really fast clicker
+                    $scope.frmEventData.$setPristine();
+                    // Show spinner
+                    $scope._requesting = true;
+                    // Send
+                    $scope.entity.$updateActiveStatus(function(){
+                        $rootScope.$emit('calendar.refresh');
+                        ModalManager.classes.open = false;
+                    });
+                }
+            });
+
+            /**
              * Timezone configuration
              */
             $scope.$watch('calendarObj', function( obj ){

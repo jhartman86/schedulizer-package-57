@@ -1,4 +1,4 @@
-<?php $currentUser = new User(); ?>
+<?php $currentUser = new User(); $permissions = new Permissions(); ?>
 <form class="calendar container-fluid" ng-controller="CtrlCalendarForm" ng-submit="submitHandler()">
     <?php Loader::packageElement('templates/loading', 'schedulizer'); ?>
 
@@ -51,6 +51,7 @@
                 </div>
 
                 <!-- calendar owner -->
+                <?php if($permissions->canAccessUserSearch()): ?>
                 <div class="row">
                     <div class="col-sm-12">
                         <label>Calendar Owner</label>
@@ -72,6 +73,7 @@
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>

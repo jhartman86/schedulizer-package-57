@@ -719,6 +719,94 @@
   /* See Scrollable Menu with Bootstrap 3 http://stackoverflow.com/questions/19227496 */
   /* fix hide/show angular animation */
   /* Mark invalid Bootstrap */ }
+  .schedulizer-app .tooltip {
+    position: absolute;
+    z-index: 1070;
+    display: block;
+    visibility: visible;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 1.4;
+    opacity: 0;
+    filter: alpha(opacity=0); }
+    .schedulizer-app .tooltip.in {
+      opacity: 0.9;
+      filter: alpha(opacity=90); }
+    .schedulizer-app .tooltip.top {
+      margin-top: -3px;
+      padding: 5px 0; }
+    .schedulizer-app .tooltip.right {
+      margin-left: 3px;
+      padding: 0 5px; }
+    .schedulizer-app .tooltip.bottom {
+      margin-top: 3px;
+      padding: 5px 0; }
+    .schedulizer-app .tooltip.left {
+      margin-left: -3px;
+      padding: 0 5px; }
+  .schedulizer-app .tooltip-inner {
+    max-width: 200px;
+    padding: 3px 8px;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    background-color: #000;
+    border-radius: 0; }
+  .schedulizer-app .tooltip-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid; }
+  .schedulizer-app .tooltip.top .tooltip-arrow {
+    bottom: 0;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px 5px 0;
+    border-top-color: #000; }
+  .schedulizer-app .tooltip.top-left .tooltip-arrow {
+    bottom: 0;
+    right: 5px;
+    margin-bottom: -5px;
+    border-width: 5px 5px 0;
+    border-top-color: #000; }
+  .schedulizer-app .tooltip.top-right .tooltip-arrow {
+    bottom: 0;
+    left: 5px;
+    margin-bottom: -5px;
+    border-width: 5px 5px 0;
+    border-top-color: #000; }
+  .schedulizer-app .tooltip.right .tooltip-arrow {
+    top: 50%;
+    left: 0;
+    margin-top: -5px;
+    border-width: 5px 5px 5px 0;
+    border-right-color: #000; }
+  .schedulizer-app .tooltip.left .tooltip-arrow {
+    top: 50%;
+    right: 0;
+    margin-top: -5px;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #000; }
+  .schedulizer-app .tooltip.bottom .tooltip-arrow {
+    top: 0;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 0 5px 5px;
+    border-bottom-color: #000; }
+  .schedulizer-app .tooltip.bottom-left .tooltip-arrow {
+    top: 0;
+    right: 5px;
+    margin-top: -5px;
+    border-width: 0 5px 5px;
+    border-bottom-color: #000; }
+  .schedulizer-app .tooltip.bottom-right .tooltip-arrow {
+    top: 0;
+    left: 5px;
+    margin-top: -5px;
+    border-width: 0 5px 5px;
+    border-bottom-color: #000; }
   .schedulizer-app * {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -3212,6 +3300,8 @@
     border-color: #D44950; }
   .schedulizer-app input:focus, .schedulizer-app select:focus, .schedulizer-app textarea:focus, .schedulizer-app button:focus, .schedulizer-app a:focus {
     outline: none !important; }
+  .schedulizer-app a {
+    cursor: pointer; }
   .schedulizer-app .not-stupid-header-style {
     padding: 1rem 0;
     background: #f1f1f1;
@@ -3631,6 +3721,11 @@ div#ccm-dashboard-content {
     padding: 30px; }
     div#ccm-dashboard-content > header.ccm-dashboard-page-header h1 {
       margin: 0; }
+  div#ccm-dashboard-content > #ccm-dashboard-result-message {
+    padding-left: 30px;
+    padding-right: 30px;
+    max-width: 768px;
+    margin: 0 auto !important; }
   div#ccm-dashboard-content .schedulizer-system-page-wrap {
     padding-left: 30px;
     padding-right: 30px;

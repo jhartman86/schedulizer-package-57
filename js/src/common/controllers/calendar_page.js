@@ -1,7 +1,7 @@
 angular.module('schedulizer.app').
 
-    controller('CtrlCalendarPage', ['$rootScope', '$scope', '$http', '$cacheFactory', 'API',
-        function( $rootScope, $scope, $http, $cacheFactory, API ){
+    controller('CtrlCalendarPage', ['$rootScope', '$scope', '$http', '$cacheFactory', 'API', 'Alerter',
+        function( $rootScope, $scope, $http, $cacheFactory, API, Alerter ){
 
             $scope.updateInProgress     = false;
             $scope.searchOpen           = false;
@@ -149,11 +149,16 @@ angular.module('schedulizer.app').
             $scope.permissionModal = function( _href ){
                 jQuery.fn.dialog.open({
                     title:  'Calendar Permissions',
-                    href:   _href,
+                    href:   _href + '&bustCache=' + Math.random().toString(36).substring(20) + Math.round(Math.random()*100000000000).toString(),
                     modal:  false,
                     width:  500,
                     height: 380
                 });
+            };
+
+            // If the user doesn't have permission to edit calendar events
+            $scope.warnNoPermission = function(){
+                Alerter.add({duration:1500, msg:'You do not have permission to edit.', danger:true});
             };
 
         }

@@ -17,6 +17,9 @@
 <script type="text/ng-template" id="/calendry">
 <?php Loader::packageElement('templates/calendry', 'schedulizer'); ?>
 </script>
+<script type="text/ng-template" id="/tpl-tooltip">
+    <?php Loader::packageElement('templates/tooltip', 'schedulizer'); ?>
+</script>
 
 <!-- Page view -->
 <div class="schedulizer-app" ng-controller="CtrlCalendarPage" ng-init="calendarID = <?php echo $calendarObj->getID(); ?>">
@@ -27,9 +30,15 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="pull-left">
-                            <h3 modalize="/calendar_form" data-using="{calendarID:<?php echo $calendarObj->getID(); ?>}">
-                                <?php echo $pageTitle; ?><i class="icon-config"></i>
-                            </h3>
+                            <?php if($calendarObj->getPermissions()->canEditCalendar()): ?>
+                                <h3 modalize="/calendar_form" data-using="{calendarID:<?php echo $calendarObj->getID(); ?>}">
+                                    <?php echo $pageTitle; ?><i class="icon-config"></i>
+                                </h3>
+                            <?php else: ?>
+                                <h3 ng-click="warnNoPermission()">
+                                    <?php echo $pageTitle; ?><i class="icon-config"></i>
+                                </h3>
+                            <?php endif; ?>
                         </div>
                         <div class="pull-right">
                             <?php if($calendarObj->getPermissions()->canEditEvents()): ?>
@@ -90,9 +99,15 @@
             <div class="calendar-wrap" ng-class="{'updating':updateInProgress}">
                 <!-- Note: transclusion of items *inside* calendry represents the EVENT objects on the day cells. -->
                 <div calendry="instance" ng-cloak>
-                    <a class="event-cell" modalize="/event_form" data-using="{eventObj:eventObj}" ng-class="{'is-active':eventObj.isActive,'is-inactive':!eventObj.isActive}" ng-style="{background:eventObj.eventColor,color:helpers.eventFontColor(eventObj.eventColor)}">
-                        <span class="dt">{{ eventObj.isAllDay ? 'All Day' : eventObj._moment.format('h:mm a')}}</span> {{eventObj.title}}
-                    </a>
+                    <?php if($calendarObj->getPermissions()->canEditEvents()): ?>
+                        <a class="event-cell" modalize="/event_form" data-using="{eventObj:eventObj}" ng-class="{'is-active':eventObj.isActive,'is-inactive':!eventObj.isActive}" ng-style="{background:eventObj.eventColor,color:helpers.eventFontColor(eventObj.eventColor)}">
+                            <span class="dt">{{ eventObj.isAllDay ? 'All Day' : eventObj._moment.format('h:mm a')}}</span> {{eventObj.title}}
+                        </a>
+                    <?php else: // YIKES, calling $parent.$parent to access two-scopes up is bad... This is in the CtrlCalendar controller though for reference ?>
+                        <a ng-click="$parent.$parent.warnNoPermission()" class="event-cell" ng-class="{'is-active':eventObj.isActive,'is-inactive':!eventObj.isActive}" ng-style="{background:eventObj.eventColor,color:helpers.eventFontColor(eventObj.eventColor)}">
+                            <span class="dt">{{ eventObj.isAllDay ? 'All Day' : eventObj._moment.format('h:mm a')}}</span> {{eventObj.title}}
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

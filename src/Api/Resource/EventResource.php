@@ -123,7 +123,15 @@
          * @throws \Exception
          * @todo: copy nullifiers from previous version to new version!
          */
-        public function httpPut( $id ){
+        public function httpPut( $id, $subAction = null ){
+            // So we don't have to go through all the event version creation, we can
+            // use a shortcut to update just the isActive property.
+            if( $subAction === 'update_active_status' ){
+                $this->getEventByID($id)->setActiveStatusWithoutVersioning( $this->scrubbedPostData()->isActive );
+                $this->setResponseCode(Response::HTTP_NO_CONTENT);
+                return;
+            }
+
             $data = $this->scrubbedPostData();
             if( empty($data->_timeEntities) ){
                 throw ApiException::generic('At least 1 time setting must be passed in _timeEntities property.');

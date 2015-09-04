@@ -2,8 +2,14 @@
 ;(function( window, angular, undefined ){ 'use strict';
 
     angular.module('schedulizer', [
-        'ngResource', 'schedulizer.app', 'mgcrea.ngStrap.datepicker', 'mgcrea.ngStrap.timepicker',
-        'calendry', 'ui.select', 'ngSanitize'
+        'ngResource',
+        'schedulizer.app',
+        'mgcrea.ngStrap.datepicker',
+        'mgcrea.ngStrap.timepicker',
+        'mgcrea.ngStrap.tooltip',
+        'calendry',
+        'ui.select',
+        'ngSanitize'
     ]).
 
     /**
@@ -100,7 +106,12 @@
                    saveMultiAutoApprovable: {method:'put', params:{_method:'PUT',subAction:'multi_auto_approve'}}
                })),
                event: $resource(Routes.generate('api.event', [':id', ':subAction']), {id:'@id'}, angular.extend(_methods(), {
-                   image_path: {method:'get', cache:false, params:{subAction:'image_path'}}
+                   image_path: {method:'get', cache:false, params:{subAction:'image_path'}},
+                   updateActiveStatus: {method:'put', params:{_method:'PUT', subAction:'update_active_status'}, transformRequest:function( data ){
+                       return angular.toJson({
+                           isActive: data.isActive
+                       });
+                   }}
                })),
                eventNullify: $resource(Routes.generate('api.eventNullify', [':eventTimeID', ':id']), {eventTimeID:'@eventTimeID',id:'@id'}, angular.extend(_methods(), {
                    // more custom methods

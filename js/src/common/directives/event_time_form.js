@@ -11,8 +11,8 @@ angular.module('schedulizer.app').
             templateUrl:    '/event_timing_form',
             scope:          {_timeEntity:'=eventTimeForm'},
             link:           _link,
-            controller: ['$rootScope', '$scope', '$filter', 'API', 'Helpers', '_moment',
-                function( $rootScope, $scope, $filter, API, Helpers, _moment ){
+            controller: ['$rootScope', '$scope', '$filter', 'API', 'Helpers', 'ModalManager', '_moment',
+                function( $rootScope, $scope, $filter, API, Helpers, ModalManager, _moment ){
                     // Option setters
                     $scope.repeatTypeHandleOptions              = Helpers.repeatTypeHandleOptions();
                     $scope.repeatIndefiniteOptions              = Helpers.repeatIndefiniteOptions();
@@ -187,6 +187,10 @@ angular.module('schedulizer.app').
                     $scope.cancelNullifier = function( resource ){
                         resource.$delete(function( resp ){
                             $rootScope.$emit('calendar.refresh');
+                            // Because this happens immediately and we want to cut down on the
+                            // number of versions a user creates (by hitting save), we just
+                            // close the modal immediately.
+                            ModalManager.classes.open = false;
                         });
                     };
                 }

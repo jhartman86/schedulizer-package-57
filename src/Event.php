@@ -139,6 +139,26 @@
         }
 
         /**
+         * By default, whenever an event gets saved, a new version gets created and kicks off
+         * creating all associated records for that version. Since the isActive status
+         * property is at the EVENT level (not the event VERSION level), this method lets
+         * us set active status without kicking off a full version update.
+         * @param bool $toStatus
+         */
+        public function setActiveStatusWithoutVersioning( $toStatus ){
+            $eventID = $this->getID();
+
+            self::adhocQuery(function( \PDO $connection ) use ($eventID, $toStatus){
+                $statement = $connection->prepare("
+                    UPDATE SchedulizerEvent SET isActive = :isActive WHERE id = :eventID;
+                ");
+                $statement->bindValue(":isActive", (bool)$toStatus);
+                $statement->bindValue(":eventID", $eventID);
+                return $statement;
+            });
+        }
+
+        /**
          * When returning an event, we have to join the SchedulizerEvent
          * with the APPROVED SchedulizerEventVersion
          * @param $id
@@ -150,12 +170,14 @@
                 // Are we getting a specific event version? Append to where clause if so
                 $versionSpecificity = ((int)$versionID > 0) ? "AND sev.versionID = :versionID" : '';
                 // Prepare query
-                $statement = $connection->prepare("SELECT se.*, sev.eventID, sev.versionID,
-                sev.title, sev.description, sev.useCalendarTimezone,
-                sev.timezoneName, sev.eventColor, sev.fileID
-                FROM SchedulizerEvent se LEFT JOIN SchedulizerEventVersion sev
-                ON se.id = sev.eventID
-                WHERE se.id = :id {$versionSpecificity} ORDER BY sev.versionID DESC LIMIT 1");
+                $statement = $connection->prepare("
+                    SELECT se.*, sev.eventID, sev.versionID,
+                    sev.title, sev.description, sev.useCalendarTimezone,
+                    sev.timezoneName, sev.eventColor, sev.fileID
+                    FROM SchedulizerEvent se LEFT JOIN SchedulizerEventVersion sev
+                    ON se.id = sev.eventID
+                    WHERE se.id = :id {$versionSpecificity} ORDER BY sev.versionID DESC LIMIT 1
+                ");
                 $statement->bindValue(':id', $id);
                 if( (int)$versionID > 0 ){
                     $statement->bindValue(':versionID', (int)$versionID);
@@ -319,16 +341,55 @@
                 // Are we getting a specific event version? Append to where clause if so
                 $versionSpecificity = ((int)$versionID > 0) ? "AND sev.versionID = :versionID" : '';
                 // Prepare query
-                $statement = $connection->prepare("SELECT se.*, sev.eventID, sev.versionID,
-                sev.title, sev.description, sev.useCalendarTimezone,
-                sev.timezoneName, sev.eventColor, sev.fileID
-                FROM SchedulizerEvent se LEFT JOIN SchedulizerEventVersion sev
-                ON se.id = sev.eventID
-                WHERE se.pageID = :pageID {$versionSpecificity} ORDER BY sev.versionID DESC LIMIT 1");
+                $statement = $connection->prepare("
+                    SELECT se.*, sev.eventID, sev.versionID,
+                    sev.title, sev.description, sev.useCalendarTimezone,
+                    sev.timezoneName, sev.eventColor, sev.fileID
+                    FROM SchedulizerEvent se LEFT JOIN SchedulizerEventVersion sev
+                    ON se.id = sev.eventID
+                    WHERE se.pageID = :pageID {$versionSpecificity} ORDER BY sev.versionID DESC LIMIT 1
+                ");
                 $statement->bindValue(':pageID', $pageID);
                 if( (int)$versionID > 0 ){
                     $statement->bindValue(':versionID', (int)$versionID);
                 }
+                return $statement;
+            });
+        }
+
+
+        /**
+         * Notice this is NOT a static method; not ideal, but since we getters for
+         * finding an event by both eventID and pageID, this just makes it easier and uses
+         * one more query. Examples:
+         * $event = SchedulizerEvent::getByID(int)->getVersionApprovedByCollection()
+         * $event = SchedulizerEvent::getByPageID(int)->getVersionApprovedByCollection()
+         *
+         * ------------------- IMPORTANT -------------------
+         * This returns a NEW INSTANCE of the event, or NULL if there is no approved version of
+         * the event in the collection.
+         * -------------------------------------------------
+         *
+         * @return \Concrete\Package\Schedulizer\Src\Event | null
+         */
+        public function getVersionApprovedByCollection( $collectionID ){
+            $eventID = $this->getID();
+            return static::fetchOneBy(function( \PDO $connection ) use ($eventID, $collectionID){
+                $statement = $connection->prepare("
+                    SELECT
+                      se.*, sev.eventID, sev.versionID,
+                      sev.title, sev.description, sev.useCalendarTimezone,
+                      sev.timezoneName, sev.eventColor, sev.fileID
+                    FROM SchedulizerEvent se JOIN (
+                      SELECT _eventVersions.* FROM SchedulizerEventVersion _eventVersions
+                      JOIN SchedulizerCollectionEvents _collectionEvents ON _collectionEvents.eventID = _eventVersions.eventID
+                      AND _collectionEvents.approvedVersionID = _eventVersions.versionID
+                      WHERE _collectionEvents.collectionID = :collectionID
+                    ) AS sev ON se.id = sev.eventID
+                    WHERE se.id = :eventID
+                ");
+                $statement->bindValue(":collectionID", $collectionID);
+                $statement->bindValue(":eventID", $eventID);
                 return $statement;
             });
         }

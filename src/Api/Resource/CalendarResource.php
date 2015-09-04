@@ -44,7 +44,7 @@
             // User has permission, proceed...
             $data = $this->scrubbedPostData();
             if( empty($data->ownerID) ){
-                $data->ownerID = 1;
+                $data->ownerID = $this->currentUser()->getUserID();
             }
             $calendarObj = Calendar::create($data);
             $this->setResponseData($calendarObj);
@@ -59,6 +59,12 @@
          * @todo: permission to update?
          */
         public function httpPut( $id ){
+            // Allowed to update a calendar?
+            $permissions = new Permissions();
+            if( ! $permissions->canEditCalendar() ){
+                throw ApiException::permissionInvalid('You do not have permission to edit this calendar.');
+            }
+            
             $calendarObj = $this->getCalendarBy($id);
             $calendarObj->update($this->scrubbedPostData());
             $this->setResponseData($calendarObj);

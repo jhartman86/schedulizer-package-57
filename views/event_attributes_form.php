@@ -1,6 +1,7 @@
 <?php /** @var $eventObj \Concrete\Package\Schedulizer\Src\Event */
 $attrList = \Concrete\Package\Schedulizer\Src\Attribute\Key\SchedulizerEventKey::getList();
-foreach($attrList AS $attrKeyObj){ ?>
+
+if( !empty($attrList) ): foreach($attrList AS $attrKeyObj){ ?>
     <div class="row">
         <div class="col-sm-12">
             <div class="form-group">
@@ -9,4 +10,10 @@ foreach($attrList AS $attrKeyObj){ ?>
             </div>
         </div>
     </div>
-<?php }
+<?php } else: ?>
+    <div class="row">
+        <div class="col-sm-12">
+            <p class="lead text-center">No Custom Attributes Setup Yet</p>
+        </div>
+    </div>
+<?php endif; ?>

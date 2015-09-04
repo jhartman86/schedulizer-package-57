@@ -2,8 +2,14 @@
 ;(function( window, angular, undefined ){ 'use strict';
 
     angular.module('schedulizer', [
-        'ngResource', 'schedulizer.app', 'mgcrea.ngStrap.datepicker', 'mgcrea.ngStrap.timepicker',
-        'calendry', 'ui.select', 'ngSanitize'
+        'ngResource',
+        'schedulizer.app',
+        'mgcrea.ngStrap.datepicker',
+        'mgcrea.ngStrap.timepicker',
+        'mgcrea.ngStrap.tooltip',
+        'calendry',
+        'ui.select',
+        'ngSanitize'
     ]).
 
     /**
@@ -100,7 +106,12 @@
                    saveMultiAutoApprovable: {method:'put', params:{_method:'PUT',subAction:'multi_auto_approve'}}
                })),
                event: $resource(Routes.generate('api.event', [':id', ':subAction']), {id:'@id'}, angular.extend(_methods(), {
-                   image_path: {method:'get', cache:false, params:{subAction:'image_path'}}
+                   image_path: {method:'get', cache:false, params:{subAction:'image_path'}},
+                   updateActiveStatus: {method:'put', params:{_method:'PUT', subAction:'update_active_status'}, transformRequest:function( data ){
+                       return angular.toJson({
+                           isActive: data.isActive
+                       });
+                   }}
                })),
                eventNullify: $resource(Routes.generate('api.eventNullify', [':eventTimeID', ':id']), {eventTimeID:'@eventTimeID',id:'@id'}, angular.extend(_methods(), {
                    // more custom methods
@@ -535,33 +546,41 @@ angular.module('schedulizer.app').
             // returned[1] = object with default timezone from config settings
             // returned[2] = the calendar, OR null
             $q.all(_requests).then(function( returned ){
-                var ownerPickerNode = document.querySelector('[data-calendar-owner-picker]');
+                var ownerPickerNode = document.querySelector('[data-calendar-owner-picker]'),
+                    ownerPickedID   = null;
+
+                // The ownerPickerNode is definitely not always guaranteed to exist since some
+                // users won't have access_user_search (thus we don't render the user picker in the UI)
+                if( ownerPickerNode ){
+                    ownerPickedID = +(ownerPickerNode.getAttribute('data-default-owner-id') || 1);
+                }
 
                 $scope.timezoneOptions = returned[0];
                 $scope.entity = returned[2] || new API.calendar({
                     defaultTimezone: $scope.timezoneOptions[$scope.timezoneOptions.indexOf(returned[1].name)],
-                    ownerID: +(ownerPickerNode.getAttribute('data-default-owner-id') || 1)
+                    ownerID: ownerPickedID
                 });
                 $scope._ready = true;
 
                 /**
                  * Concrete5-specific stuff...
                  */
-                jQuery(ownerPickerNode).dialog().on('click', function(){
-                    var $picker = jQuery(this);
-                    $window['ConcreteEvent'].unsubscribe('UserSearchDialogSelectUser.core');
-                    $window['ConcreteEvent'].unsubscribe('UserSearchDialogAfterSelectUser.core');
-                    $window['ConcreteEvent'].subscribe('UserSearchDialogSelectUser.core', function(e, data){
-                        $picker.text(data.uName);
-                        $scope.$apply(function(){
-                            $scope.entity.ownerID = data.uID;
+                if( ownerPickerNode ){
+                    jQuery(ownerPickerNode).dialog().on('click', function(){
+                        var $picker = jQuery(this);
+                        $window['ConcreteEvent'].unsubscribe('UserSearchDialogSelectUser.core');
+                        $window['ConcreteEvent'].unsubscribe('UserSearchDialogAfterSelectUser.core');
+                        $window['ConcreteEvent'].subscribe('UserSearchDialogSelectUser.core', function(e, data){
+                            $picker.text(data.uName);
+                            $scope.$apply(function(){
+                                $scope.entity.ownerID = data.uID;
+                            });
+                        });
+                        $window['ConcreteEvent'].subscribe('UserSearchDialogAfterSelectUser.core', function(e) {
+                            jQuery.fn.dialog.closeTop();
                         });
                     });
-                    $window['ConcreteEvent'].subscribe('UserSearchDialogAfterSelectUser.core', function(e) {
-                        jQuery.fn.dialog.closeTop();
-                    });
-                });
-
+                }
             }, function( resp ){ // Failure; @todo: proper handling!
                 console.log(resp);
             });
@@ -593,8 +612,8 @@ angular.module('schedulizer.app').
     ]);
 angular.module('schedulizer.app').
 
-    controller('CtrlCalendarPage', ['$rootScope', '$scope', '$http', '$cacheFactory', 'API',
-        function( $rootScope, $scope, $http, $cacheFactory, API ){
+    controller('CtrlCalendarPage', ['$rootScope', '$scope', '$http', '$cacheFactory', 'API', 'Alerter',
+        function( $rootScope, $scope, $http, $cacheFactory, API, Alerter ){
 
             $scope.updateInProgress     = false;
             $scope.searchOpen           = false;
@@ -742,11 +761,16 @@ angular.module('schedulizer.app').
             $scope.permissionModal = function( _href ){
                 jQuery.fn.dialog.open({
                     title:  'Calendar Permissions',
-                    href:   _href,
+                    href:   _href + '&bustCache=' + Math.random().toString(36).substring(20) + Math.round(Math.random()*100000000000).toString(),
                     modal:  false,
                     width:  500,
                     height: 380
                 });
+            };
+
+            // If the user doesn't have permission to edit calendar events
+            $scope.warnNoPermission = function(){
+                Alerter.add({duration:1500, msg:'You do not have permission to edit.', danger:true});
             };
 
         }
@@ -1234,6 +1258,32 @@ angular.module('schedulizer.app').
             });
 
             /**
+             * Watch the isActive value, and if its changed, send request and close the edit
+             * window immediately: every time an event gets saved in full, it creates a new version
+             * along with all associated records. This way we use a special route to change JUST
+             * the active status of the event.
+             */
+            $scope.$watch('entity.isActive', function( newVal, oldVal ){
+                // We do this if check b/c: upon initialization, entity.isActive will be undefined,
+                // then when entity.isActive becomes initialized, we get what the current value is;
+                // but we only want if its *changed* - meaning after 1) undefined, then 2) initial
+                // value has been set. Further, we check if entity.id exists - because it only makes
+                // sense to update active status on an *existing* event.
+                if( typeof(newVal) === 'boolean' && typeof(oldVal) === 'boolean' && $scope.entity.id ){
+                    // this causes the save button be disabled so user can't click 'Save' while the
+                    // call is taking place... if the user were a really fast clicker
+                    $scope.frmEventData.$setPristine();
+                    // Show spinner
+                    $scope._requesting = true;
+                    // Send
+                    $scope.entity.$updateActiveStatus(function(){
+                        $rootScope.$emit('calendar.refresh');
+                        ModalManager.classes.open = false;
+                    });
+                }
+            });
+
+            /**
              * Timezone configuration
              */
             $scope.$watch('calendarObj', function( obj ){
@@ -1602,8 +1652,8 @@ angular.module('schedulizer.app').
             templateUrl:    '/event_timing_form',
             scope:          {_timeEntity:'=eventTimeForm'},
             link:           _link,
-            controller: ['$rootScope', '$scope', '$filter', 'API', 'Helpers', '_moment',
-                function( $rootScope, $scope, $filter, API, Helpers, _moment ){
+            controller: ['$rootScope', '$scope', '$filter', 'API', 'Helpers', 'ModalManager', '_moment',
+                function( $rootScope, $scope, $filter, API, Helpers, ModalManager, _moment ){
                     // Option setters
                     $scope.repeatTypeHandleOptions              = Helpers.repeatTypeHandleOptions();
                     $scope.repeatIndefiniteOptions              = Helpers.repeatIndefiniteOptions();
@@ -1778,6 +1828,10 @@ angular.module('schedulizer.app').
                     $scope.cancelNullifier = function( resource ){
                         resource.$delete(function( resp ){
                             $rootScope.$emit('calendar.refresh');
+                            // Because this happens immediately and we want to cut down on the
+                            // number of versions a user creates (by hitting save), we just
+                            // close the modal immediately.
+                            ModalManager.classes.open = false;
                         });
                     };
                 }

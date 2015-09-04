@@ -1,6 +1,7 @@
 <?php namespace Concrete\Package\Schedulizer\Src {
 
-    use Permissions;
+    use Loader;
+    //use Permissions;
     use \Concrete\Package\Schedulizer\Src\Calendar;
     use \Concrete\Package\Schedulizer\Src\Event AS SchedulizerEvent;
     use \Concrete\Package\Schedulizer\Src\Persistable\Contracts\Persistant;
@@ -25,6 +26,9 @@
         /** @definition({"cast":"string","nullable":true}) */
         protected $title;
 
+        /** @definition({"cast":"string","nullable":false}) */
+        protected $handle;
+
         /** @definition({"cast":"int"}) */
         protected $ownerID;
 
@@ -45,8 +49,19 @@
         /** @return string|null */
         public function getTitle(){ return $this->title; }
 
+        /** @return string|null */
+        public function getHandle(){ return $this->handle; }
+
         /** @return int|null */
         public function getOwnerID(){ return $this->ownerID; }
+
+        /**
+         * Auto-generates the handle (before being saved) so that whenever a create/update
+         * occurs, it will update the handle (if it changed).
+         */
+        protected function onBeforePersist(){
+            $this->handle = Loader::helper('text')->handle($this->title);
+        }
 
         /**
          * This assumes one-to-many calendar associations are passed as
@@ -121,6 +136,20 @@
         /****************************************************************
          * Fetch Methods
          ***************************************************************/
+
+        /**
+         * Get the collection object by its handle.
+         * @params string $handle
+         * @return \Concrete\Package\Schedulizer\Src\Collection
+         */
+        public static function getByHandle( $handle ){
+            return self::fetchOneBy(function( \PDO $connection, $tableName ) use ($handle){
+                $statement = $connection->prepare("SELECT * FROM {$tableName} WHERE handle = :handle");
+                $statement->bindValue(':handle', $handle);
+                return $statement;
+            });
+        }
+
 
         /**
          * Get a list of all collections.

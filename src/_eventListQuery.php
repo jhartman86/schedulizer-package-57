@@ -97,9 +97,40 @@ if( !empty($queryData->fullTextSearch) ){
 }
 
 /**
- * This is effectively the "inner-most" query on top of which everything is joined and filtered
- * against; this is responsible for getting the event and LATEST version info
+ * This "if" statement is super important as it determines the method by which we generated the
+ * inner-most query, on top of which everything else is joined and filtered against. If a collectionID
+ * is being used, then we are getting events that are versioned against that collection. Otherwise, we
+ * just pull the latest event version.
  */
+$schedulizerCollectionID = (int)$queryData->collectionID;
+if( $schedulizerCollectionID >= 1 ){
+// Using a collectionID
+$latestEventRecords = <<<SQL
+    SELECT
+      _events.id,
+      _events.createdUTC,
+      _events.modifiedUTC,
+      _events.calendarID,
+      _events.ownerID,
+      _events.pageID,
+      _events.isActive,
+      _versionInfo.versionID,
+      _versionInfo.title,
+      _versionInfo.description,
+      _versionInfo.useCalendarTimezone,
+      _versionInfo.timezoneName,
+      _versionInfo.eventColor,
+      _versionInfo.fileID
+    FROM SchedulizerEvent _events JOIN (
+      SELECT _eventVersions.* FROM SchedulizerEventVersion _eventVersions
+      JOIN SchedulizerCollectionEvents _collectionEvents ON _collectionEvents.eventID = _eventVersions.eventID
+      AND _collectionEvents.approvedVersionID = _eventVersions.versionID
+      WHERE _collectionEvents.collectionID = $schedulizerCollectionID
+      $fullTextSearch
+    ) AS _versionInfo ON _events.id = _versionInfo.eventID
+SQL;
+}else{
+// Default, just pulling the latest version
 $latestEventRecords = <<<SQL
     SELECT
         _events.id,
@@ -126,6 +157,10 @@ $latestEventRecords = <<<SQL
       $fullTextSearch
     ) AS _versionInfo ON _events.id = _versionInfo.eventID
 SQL;
+}
+
+
+
 
 /****************************************************************
  * Filtering by tags and categories; if either are set, we first append

@@ -24,13 +24,17 @@
         protected function httpGet( $eventTimeID, $id = null ){
             // If $eventTimeID is null, return nothing
             if( empty($eventTimeID) ){
-                $this->setResponseData(null);
+                $this->setResponseCode(Response::HTTP_NO_CONTENT);
                 return;
             }
 
             // If $id is null, we're getting a list of nullifiers associated with an eventTime
             if( empty($id) ){
                 $list = EventTimeNullify::fetchAllByEventTimeID($eventTimeID);
+                if( is_null($list) ){
+                    $this->setResponseCode(Response::HTTP_NO_CONTENT);
+                    return;
+                }
                 $this->setResponseData($list);
                 return;
             }

@@ -22,7 +22,6 @@
         }
 
         /**
-         * @todo make this work...
          * @param PermissionAccess $permissionAccessObj
          * @return bool
          */

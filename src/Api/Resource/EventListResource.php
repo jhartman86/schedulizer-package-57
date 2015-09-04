@@ -19,7 +19,8 @@
         protected function httpGet( $calendarID = null ){
             try {
                 $this->eventListObj = new EventList(array($calendarID));
-                $this->setFullTextSearchOn()
+                $this->setCollectionFilter()
+                     ->setFullTextSearchOn()
                      ->setIncludeInactiveEvents()
                      ->setCalendarIDsOn()
                      ->setFilterByTagsOn()
@@ -36,6 +37,17 @@
             }catch(\Exception $e){
                 throw ApiException::generic($e->getMessage());
             }
+        }
+
+        /**
+         * eg. ?collection=1
+         * @return $this
+         */
+        private function setCollectionFilter(){
+            if( !empty($this->requestParams()->collection) ){
+                $this->eventListObj->setSchedulizerCollectionID($this->requestParams()->collection);
+            }
+            return $this;
         }
 
         /**
