@@ -12,18 +12,18 @@
      * query directly; no idea how to even begin building a query like this in an ORM.
      * @package Concrete\Package\Schedulizer\Src
      */
-    class EventList {
+    class CollectionEventList {
 
         const DATE_FORMAT               = 'Y-m-d',
-              DAYS_IN_FUTURE            = 45, // span 6 weeks for some calendar views
-              DAYS_IN_FUTURE_MAX        = 365,
-              LIMIT_PER_DAY_MAX         = 25,
-              COLUMN_CAST_TIME          = 'time',
-              COLUMN_CAST_TIME_UTC      = 'utc',
-              COLUMN_CAST_TIME_LOCAL    = 'local',
-              COLUMN_CAST_INT           = 'int',
-              COLUMN_CAST_STRING        = 'str',
-              COLUMN_CAST_BOOL          = 'bool';
+            DAYS_IN_FUTURE            = 9999, //45, // span 6 weeks for some calendar views
+            DAYS_IN_FUTURE_MAX        = 10000, //365,
+            LIMIT_PER_DAY_MAX         = 100, //25,
+            COLUMN_CAST_TIME          = 'time',
+            COLUMN_CAST_TIME_UTC      = 'utc',
+            COLUMN_CAST_TIME_LOCAL    = 'local',
+            COLUMN_CAST_INT           = 'int',
+            COLUMN_CAST_STRING        = 'str',
+            COLUMN_CAST_BOOL          = 'bool';
 
         // used by the serializer/parser only
         protected $includeFilePathInResults = false;
@@ -84,6 +84,9 @@
             // THIS IS A SPECIAL COLUMN THAT IS ONLY AVAILABLE WHEN GROUPING HAPPENS.
             // IT'S AUTOMATICALLY SET TO FALSE BEFORE THE QUERY GETS BUILT IF GROUPING = DISABLED
             'occurrences'                   => array(false, self::COLUMN_CAST_INT)
+            // When query for collection status in dashboard!
+            ,'approvedVersionID' => array(true, self::COLUMN_CAST_INT)
+            ,'autoApprovable' => array(true, self::COLUMN_CAST_BOOL)
         );
 
         /**
@@ -442,8 +445,8 @@
                 $daySpan = $this->endDTO->diff($this->startDTO, true)->days + 1;
                 $daySpan = ($daySpan >= self::DAYS_IN_FUTURE_MAX) ? self::DAYS_IN_FUTURE_MAX : $daySpan;
                 $this->queryDaySpan = $daySpan;
-            // endDTO is NOT set, but we know we always have a valid queryDaySpan
-            // into the future, so derive the endDTO by adding startDate + daySpan
+                // endDTO is NOT set, but we know we always have a valid queryDaySpan
+                // into the future, so derive the endDTO by adding startDate + daySpan
             }else{
                 $this->endDTO = clone $this->startDTO;
                 $this->endDTO->modify("+{$this->queryDaySpan} days");
@@ -497,7 +500,7 @@
                 'filterByIsActive'  => $this->filterByIsActive,
                 'collectionID'      => $this->collectionID
             );
-            return (require sprintf("%s/_eventListQuery.php", __DIR__));
+            return (require sprintf("%s/_collectionListQuery.php", __DIR__));
         }
 
     }

@@ -1,6 +1,6 @@
 <?php
 /**
- * @var $queryData stdObject - composed by the EventList and passed into
+ * @var $queryData stdObject - composed by the CollectionEventList and passed into
  * this file.
  * @var $this \Concrete\Package\Schedulizer\Src\EventList
  * @note: this file gets require'd in a method of the EventList object,
@@ -10,7 +10,7 @@
  * this code directly within the method.
  * @todo: why does this installation of the package fail w/out this check? funky autoloading of the src/ directory?
  */
-if( !( $this instanceof \Concrete\Package\Schedulizer\Src\EventList ) ){
+if( !( $this instanceof \Concrete\Package\Schedulizer\Src\CollectionEventList ) ){
     return;
 }
 
@@ -159,34 +159,36 @@ if( !empty($queryData->fullTextSearch) ){
 //SQL;
 //}
 
+// @todo: full text!
 $schedulizerCollectionID = 1;
 $latestEventRecords = <<<SQL
     SELECT
-      _events.id,
-      _events.createdUTC,
-      _events.modifiedUTC,
-      _events.calendarID,
-      _events.ownerID,
-      _events.pageID,
-      _events.isActive,
-      _versionInfo.versionID,
-      _versionInfo.title,
-      _versionInfo.description,
-      _versionInfo.useCalendarTimezone,
-      _versionInfo.timezoneName,
-      _versionInfo.eventColor,
-      _versionInfo.fileID,
-      _versionInfo.approvedVersionID,
-      _versionInfo.autoApprovable
+        _events.id,
+        _events.createdUTC,
+        _events.modifiedUTC,
+        _events.calendarID,
+        _events.ownerID,
+        _events.pageID,
+        _events.isActive,
+        _versionInfo.versionID,
+        _versionInfo.title,
+        _versionInfo.description,
+        _versionInfo.useCalendarTimezone,
+        _versionInfo.timezoneName,
+        _versionInfo.eventColor,
+        _versionInfo.fileID,
+        _versionInfo.approvedVersionID,
+        _versionInfo.autoApprovable
     FROM SchedulizerEvent _events JOIN (
-      SELECT _eventVersions.*, _collectionEvents.approvedVersionID, _collectionEvents.autoApprovable FROM SchedulizerEventVersion _eventVersions
-      INNER JOIN ( SELECT eventID, MAX(versionID) AS maxVersionID FROM SchedulizerEventVersion GROUP BY eventID ) _eventVersions2
-      ON _eventVersions.eventID = _eventVersions2.eventID
-      AND _eventVersions.versionID = _eventVersions2.maxVersionID
-      LEFT JOIN SchedulizerCollectionEvents _collectionEvents ON _collectionEvents.eventID = _eventVersions.eventID
---       AND _collectionEvents.approvedVersionID = _eventVersions.versionID
---       WHERE _collectionEvents.collectionID = $schedulizerCollectionID
-      $fullTextSearch
+    	SELECT _eventVersions.*, _collectionEvents.approvedVersionID, _collectionEvents.autoApprovable FROM SchedulizerEvent _events2
+    	JOIN SchedulizerCollectionCalendars _collCalendars ON _collCalendars.calendarID = _events2.calendarID
+    	JOIN SchedulizerEventVersion _eventVersions
+    	ON _eventVersions.eventID = _events2.id
+    	INNER JOIN ( SELECT eventID, MAX(versionID) AS maxVersionID FROM SchedulizerEventVersion GROUP BY eventID ) _eventVersions2
+    	ON _eventVersions.eventID = _eventVersions2.eventID
+    	AND _eventVersions.versionID = _eventVersions2.maxVersionID
+    	LEFT JOIN SchedulizerCollectionEvents _collectionEvents ON _collectionEvents.eventID = _eventVersions.eventID
+    	WHERE _collCalendars.collectionID = $schedulizerCollectionID
     ) AS _versionInfo ON _events.id = _versionInfo.eventID
 SQL;
 

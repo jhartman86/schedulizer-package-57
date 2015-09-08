@@ -957,15 +957,19 @@ angular.module('schedulizer.app').
 
             $scope.refreshEventList = function(){
                 $http.get(API._routes.generate('api.eventList'), {
+                    cache:false,
                     params: {
+                        dashboard_collection_search:1,
                         //keywords:'hootenanny',
-                        collection_id:1,
+                        //collection_id:1,
                         grouping:true,
                         includeinactives:true,
                         fields:'eventID,versionID,title,calendarTitle,isActive',
-                        start:'2014-01-01',
-                        end:'2016-12-30'
+                        start:'2015-04-01',
+                        end:'2015-12-31'
                     }
+                }).then(function( resp ){
+                    console.log(resp);
                 });
 
                 API.collectionEvent.allEventsList(angular.extend({

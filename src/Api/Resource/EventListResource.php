@@ -4,6 +4,7 @@
     use \DateTime;
     use \DateTimeZone;
     use \Concrete\Package\Schedulizer\Src\EventList;
+    use \Concrete\Package\Schedulizer\Src\CollectionEventList;
     use \Concrete\Package\Schedulizer\Src\Api\ApiException;
 
     class EventListResource extends \Concrete\Package\Schedulizer\Src\Api\ApiDispatcher {
@@ -18,7 +19,8 @@
          */
         protected function httpGet( $calendarID = null ){
             try {
-                $this->eventListObj = new EventList(array($calendarID));
+                $this->eventListObj = $this->listObj($calendarID);
+                //$this->eventListObj = new EventList(array($calendarID));
                 $this->setCollectionFilter()
                      ->setUseMasterCollectionFilter()
                      ->setFullTextSearchOn()
@@ -38,6 +40,24 @@
             }catch(\Exception $e){
                 throw ApiException::generic($e->getMessage());
             }
+        }
+
+        /**
+         * For collections, we extend the default EventList class and add some more defaults
+         * as well as change the query up internally, so we need to first do a check to see
+         * if we should be using the CollectionEventList or just the normal EventList class.
+         * Just keeps it cleaner.
+         * eg. ?dashboard_collection_search=id (just needs to be set)
+         */
+        private function listObj( $calendarID = null ){
+            // If dashboard_collection_search is set, we know we're going to use the CollectionEventList
+            // class, AND whatever ID is passed as that parameter.
+            if( ! empty($this->requestParams()->dashboard_collection_search) ){
+                $list = new CollectionEventList(array($calendarID));
+                $list->setSchedulizerCollectionID($this->requestParams()->dashboard_collection_search);
+                return $list;
+            }
+            return new EventList(array($calendarID));
         }
 
         /**
