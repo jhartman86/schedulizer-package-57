@@ -449,7 +449,9 @@
                 $this->endDTO->modify("+{$this->queryDaySpan} days");
             }
 
-            // Are we trying to filter by a master collection?
+            // Are we trying to filter by a master collection? Note, because we're setting this
+            // later, it'll override any other manually set collectionIDs to filter by (eg. master
+            // always overrides user-defined)
             if( $this->filterByMasterCollection ){
                 $packageObj     = Package::getByHandle('schedulizer');
                 $masterCollID   = (int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID);

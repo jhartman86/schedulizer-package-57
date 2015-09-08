@@ -394,10 +394,12 @@
          * the event in the collection.
          * -------------------------------------------------
          *
+         * @param $mixed int | \Concrete\Package\Schedulizer\Src\Collection
          * @return \Concrete\Package\Schedulizer\Src\Event | null
          */
-        public function getVersionApprovedByCollection( $collectionID ){
-            $eventID = $this->getID();
+        public function getVersionApprovedByCollection( $mixed ){
+            $eventID      = $this->getID();
+            $collectionID = (int) (($mixed instanceof \Concrete\Package\Schedulizer\Src\Collection) ? $mixed->getID() : $mixed);
             return static::fetchOneBy(function( \PDO $connection ) use ($eventID, $collectionID){
                 $statement = $connection->prepare("
                     SELECT

@@ -1,5 +1,6 @@
 <?php namespace Concrete\Package\Schedulizer\Src {
 
+    use Package;
     use Loader;
     use \Concrete\Package\Schedulizer\Src\Calendar;
     use \Concrete\Package\Schedulizer\Src\Event AS SchedulizerEvent;
@@ -124,6 +125,15 @@
             // Now we run normal update on the collection record
             $this->mergePropertiesFrom($data);
             $this->save();
+        }
+
+
+        /**
+         * Return the master collection object
+         */
+        public static function getMasterCollection(){
+            $packageObj = Package::getByHandle(self::PACKAGE_HANDLE);
+            return self::getByID($packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID));
         }
 
 
