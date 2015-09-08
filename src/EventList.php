@@ -16,7 +16,7 @@
 
         const DATE_FORMAT               = 'Y-m-d',
               DAYS_IN_FUTURE            = 45, // span 6 weeks for some calendar views
-              DAYS_IN_FUTURE_MAX        = 365,
+              DAYS_IN_FUTURE_MAX        = 1000, //365,
               LIMIT_PER_DAY_MAX         = 25,
               COLUMN_CAST_TIME          = 'time',
               COLUMN_CAST_TIME_UTC      = 'utc',
@@ -84,6 +84,9 @@
             // THIS IS A SPECIAL COLUMN THAT IS ONLY AVAILABLE WHEN GROUPING HAPPENS.
             // IT'S AUTOMATICALLY SET TO FALSE BEFORE THE QUERY GETS BUILT IF GROUPING = DISABLED
             'occurrences'                   => array(false, self::COLUMN_CAST_INT)
+            // When query for collection status in dashboard!
+            ,'approvedVersionID' => array(true, self::COLUMN_CAST_INT)
+            ,'autoApprovable' => array(true, self::COLUMN_CAST_BOOL)
         );
 
         /**
@@ -497,7 +500,8 @@
                 'filterByIsActive'  => $this->filterByIsActive,
                 'collectionID'      => $this->collectionID
             );
-            return (require sprintf("%s/_eventListQuery.php", __DIR__));
+            return (require sprintf("%s/_collectionListQuery.php", __DIR__));
+            //return (require sprintf("%s/_eventListQuery.php", __DIR__));
         }
 
     }

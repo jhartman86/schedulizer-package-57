@@ -1,7 +1,7 @@
 angular.module('schedulizer.app').
 
-    controller('CtrlCollectionPage', ['$rootScope', '$scope', '$q', 'API',
-        function( $rootScope, $scope, $q, API ){
+    controller('CtrlCollectionPage', ['$rootScope', '$scope', '$q', '$http', 'API',
+        function( $rootScope, $scope, $q, $http, API ){
 
             $scope.collectionID     = null; // set via ng-init
             $scope.checkToggleAll   = false;
@@ -39,6 +39,18 @@ angular.module('schedulizer.app').
             };
 
             $scope.refreshEventList = function(){
+                $http.get(API._routes.generate('api.eventList'), {
+                    params: {
+                        //keywords:'hootenanny',
+                        collection_id:1,
+                        grouping:true,
+                        includeinactives:true,
+                        fields:'eventID,versionID,title,calendarTitle,isActive',
+                        start:'2014-01-01',
+                        end:'2016-12-30'
+                    }
+                });
+
                 API.collectionEvent.allEventsList(angular.extend({
                     collectionID : $scope.collectionID
                 }, $scope.filters), function( resp ){
