@@ -59,11 +59,18 @@
                 return {
                     responseError: function( rejection ){
                         var message = 'An error occurred; your request was not completed.';
-                        if( rejection.data && rejection.data.error ){
-                            message = rejection.data.error;
+                        if( rejection.data ){
+                            if( rejection.data.error ){
+                                message = rejection.data.error;
+                            }
+                            // If its a validation, we want to leave the modal open
+                            // so the user can adjust and retry. Otherwise, we assume
+                            // it should be closed (if open)
+                            if( rejection.data.type !== 'validationError'){
+                                ModalManager.classes.open = false;
+                            }
                         }
                         Alerter.add({msg:message, danger:true});
-                        ModalManager.classes.open = false;
                         return $q.reject(rejection);
                     }
                 };
@@ -92,6 +99,7 @@
                    approvedVersion: {method:'get', cache:false, params:{subAction:'approved_version'}},
                    approveLatestVersions: {method:'post', params:{subAction:'approve_latest_versions'}},
                    unapprove: {method:'delete'},
+                   saveMultiAutoApprovable: {method:'put', params:{_method:'PUT',subAction:'multi_auto_approve'}},
                    saveSingleAutoApprovable: {method:'put', params:{_method:'PUT'}, transformRequest:function( data ){
                        return angular.toJson({
                            eventID: data.eventID,
@@ -99,8 +107,7 @@
                            collectionID: data.collectionID,
                            autoApprovable: data.autoApprovable
                        });
-                   }},
-                   saveMultiAutoApprovable: {method:'put', params:{_method:'PUT',subAction:'multi_auto_approve'}}
+                   }}
                })),
                event: $resource(Routes.generate('api.event', [':id', ':subAction']), {id:'@id'}, angular.extend(_methods(), {
                    image_path: {method:'get', cache:false, params:{subAction:'image_path'}},

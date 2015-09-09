@@ -71,6 +71,9 @@ angular.module('schedulizer.app').
                     function( resp ){
                         $scope._requesting = false;
                         $window.location.href = API._routes.generate('dashboard',['calendars','manage',resp.id]);
+                    },
+                    function(){
+                        $scope._requesting = false;
                     }
                 );
             };

@@ -666,7 +666,6 @@
 
             $this->configSet(self::CONFIG_MASTER_COLLECTION_ID, $collectionObj->getID());
 
-
             return $this;
         }
 

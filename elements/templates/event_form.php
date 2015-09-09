@@ -153,7 +153,7 @@
             </div>
 
             <div class="tab-pane" ng-class="{'active':activeMasterTab[2]}">
-                <div custom-attributes ng-include="attributeForm">
+                <div custom-attributes ng-include="attributeForm" data-onload="decorateAttributes()">
                     <!-- loaded via include -->
                 </div>
             </div>

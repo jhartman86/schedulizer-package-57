@@ -2,8 +2,8 @@
 /* gloabl ConcreteFileManager */
 angular.module('schedulizer.app').
 
-    controller('CtrlEventForm', ['$window', '$rootScope', '$scope', '$q', '$filter', '$http', 'Helpers', 'ModalManager', 'Alerter', 'API', '_moment',
-        function( $window, $rootScope, $scope, $q, $filter, $http, Helpers, ModalManager, Alerter, API, _moment ){
+    controller('CtrlEventForm', ['$window', '$rootScope', '$scope', '$q', '$filter', '$http', 'Helpers', 'ModalManager', 'Alerter', 'API', '_moment', '$compile',
+        function( $window, $rootScope, $scope, $q, $filter, $http, Helpers, ModalManager, Alerter, API, _moment, $compile ){
 
             $scope.activeMasterTab = {
                 1: true
@@ -171,6 +171,41 @@ angular.module('schedulizer.app').
                 'event_attributes_form', ModalManager.data.eventObj.eventID, ('?bustCache=' + Math.random().toString(36).substring(7) + Math.floor(Math.random() * 10000) + 1)
             ]);
 
+            /**
+             * Hackish: in order to work w/ C5's attribute system, we have to include the
+             * attribute form via an include call, and the <input>s that get rendered aren't
+             * bound to the $scope's model watchers. Since we aren't allowing the user to click
+             * save unless the form has changed, we need to bind the inputs loaded via the
+             * include.
+             * Note: even though we store the attribute values in entity._attributes, nothing
+             * is done with that data - its just for change detection in the UI.
+             */
+            $scope.decorateAttributes = function(){
+                var customAttrs = document.querySelector('[custom-attributes]'),
+                    fields      = customAttrs.querySelectorAll('input,select,textarea');
+
+                $scope.entity._attributes = {};
+
+                Array.prototype.slice.call(fields).forEach(function( node, index ){
+                    var _node = angular.element(node);
+
+                    // Special handling for checkboxes
+                    if( _node.get(0).type === 'checkbox' ){
+                        $scope.entity._attributes[index] = _node.attr('checked') ? 1 : null;
+                        _node.attr('ng-model', 'entity._attributes['+index+']');
+                        _node.attr('ng-true-value', 1);
+                        _node.attr('ng-false-value', null);
+                        $compile(_node)($scope);
+                        return;
+                    }
+
+                    // Normal binding process
+                    $scope.entity._attributes[index] = _node.val();
+                    _node.attr('ng-model', 'entity._attributes['+index+']');
+                    $compile(_node)($scope);
+                });
+            };
+
             // Tag selection function (when creating new tags on the fly, this gets called)
             $scope.tagTransform = function( newTagText ){
                 return {
@@ -285,6 +320,9 @@ angular.module('schedulizer.app').
                         function( resp ){
                             // Resolves the outer promise (step1) so we know to move on to step2
                             resolve(resp);
+                        },
+                        function(){ // failure...
+                            $scope._requesting = false;
                         }
                     );
                 });

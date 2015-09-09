@@ -39,11 +39,17 @@
             if( ! $this->getGenericTaskPermissionObj()->canCreateCalendar() ){
                 throw ApiException::permissionInvalid('You do not have permission to create calendars.');
             }
+
             // User has permission, proceed...
             $data = $this->scrubbedPostData();
+
+            // Basic data validations
+            $this->validation($data);
+
             if( empty($data->ownerID) ){
                 $data->ownerID = $this->currentUser()->getUserID();
             }
+
             $calendarObj = Calendar::create($data);
             $this->setResponseData($calendarObj);
             $this->setResponseCode(Response::HTTP_CREATED);
@@ -64,7 +70,13 @@
                 throw ApiException::permissionInvalid('You do not have permission to edit this calendar.');
             }
 
-            $calendarObj->update($this->scrubbedPostData());
+            // User has permission, proceed...
+            $data = $this->scrubbedPostData();
+
+            // Basic data validations
+            $this->validation($data);
+
+            $calendarObj->update($data);
             $this->setResponseData($calendarObj);
             $this->setResponseCode(Response::HTTP_ACCEPTED);
         }
@@ -103,6 +115,19 @@
                 throw ApiException::notFound();
             }
             return $calendarObj;
+        }
+
+        /**
+         * Basic validations when creating/updating an entity.
+         * @param $data
+         * @throws ApiException
+         * @return bool true|false
+         */
+        protected function validation( $data ){
+            // Make sure title is set
+            if( empty($data->title) || $data->title === '' ){
+                throw ApiException::validationError('Title is required.');
+            }
         }
     }
 

@@ -83,10 +83,9 @@
             if( ! $calendarObj->getPermissions()->canEditEvents() ){
                 throw ApiException::permissionInvalid('You do not have permission to edit events on this Calendar.');
             }
-            // Make sure at least 1 time setting exists
-            if( empty($data->_timeEntities) ){
-                throw ApiException::generic('At least 1 time setting must be passed in _timeEntities property.');
-            }
+
+            // Basic data validations
+            $this->validation($data);
 
             // Set
             $data->ownerID = ($this->currentUser()->getUserID() >= 1) ? $this->currentUser()->getUserID() : 0;
@@ -139,10 +138,8 @@
                 return;
             }
 
-            // Is there at least 1 time entity?
-            if( empty($data->_timeEntities) ){
-                throw ApiException::generic('At least 1 time setting must be passed in _timeEntities property.');
-            }
+            // Basic data validations
+            $this->validation($data);
 
             // Now, update the event...
             $eventObj->update($data);
@@ -236,6 +233,33 @@
             $attrList = SchedulizerEventKey::getList();
             foreach($attrList AS $akObj){
                 $akObj->saveAttributeForm($eventObj);
+            }
+        }
+
+        /**
+         * Basic validations when creating/updating an entity.
+         * @param $data
+         * @throws ApiException
+         * @return bool true|false
+         */
+        protected function validation( $data ){
+            // Make sure title is set
+            if( empty($data->title) || $data->title === '' ){
+                throw ApiException::validationError('Title is required.');
+            }
+
+            // Is at least 1 time entity being provided?
+            if( empty($data->_timeEntities) ){
+                throw ApiException::validationError('At least 1 time setting is required.');
+            }
+
+            // If here, we can assume at least 1 _timeEntities exists
+            foreach($data->_timeEntities AS $eventTimeData){
+                if( $eventTimeData->repeatTypeHandle === EventTime::REPEAT_TYPE_HANDLE_WEEKLY ){
+                    if( ! is_array($eventTimeData->weeklyDays) || empty($eventTimeData->weeklyDays) ){
+                        throw ApiException::validationError('Having an event repeat weekly requires at least 1 weekday to be chosen.');
+                    }
+                }
             }
         }
     }

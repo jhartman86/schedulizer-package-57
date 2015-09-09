@@ -1,6 +1,7 @@
 <?php namespace Concrete\Package\Schedulizer\Src\Api {
 
     use C5TL\Parser\DynamicItem\PermissionKey;
+    use Concrete\Core\Permission\Response\Response;
     use Config;
     use Gettext\Languages\Exporter\Json;
     use User;
@@ -60,10 +61,23 @@
                     throw ApiException::httpMethodNotSupported(sprintf('No match for HTTP method %s at this route.', $this->requestObj->getMethod()));
                 }
             }catch( \Exception $e ){
-                $this->responseObj->setStatusCode(JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
-                $this->responseObj->setdata((object)array(
+
+                // If specifically an ApiException, we know it has status code set and potentially other data
+                if($e instanceof ApiException){
+                    $this->responseObj->setStatusCode($e->getCode());
+                    $this->responseObj->setData((object) array(
+                        'error' => $e->getMessage(),
+                        'type'  => $e->getType()
+                    ));
+                    return $this->responseObj;
+                }
+
+                // Generic exception
+                $this->responseObj->setStatusCode(JsonResponse::HTTP_NOT_ACCEPTABLE);
+                $this->responseObj->setData((object) array(
                     'error' => $e->getMessage()
                 ));
+                return $this->responseObj;
             }
 
             return $this->responseObj;
