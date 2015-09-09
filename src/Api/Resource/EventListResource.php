@@ -53,8 +53,8 @@
             // If dashboard_collection_search is set, we know we're going to use the CollectionEventList
             // class, AND whatever ID is passed as that parameter.
             if( ! empty($this->requestParams()->dashboard_collection_search) ){
-                $list = new CollectionEventList(array($calendarID));
-                $list->setSchedulizerCollectionID($this->requestParams()->dashboard_collection_search);
+                $list = new CollectionEventList($this->requestParams()->dashboard_collection_search);
+                $list->setFilterByDiscrepancies(isset($this->requestParams()->discrepancies));
                 return $list;
             }
             return new EventList(array($calendarID));

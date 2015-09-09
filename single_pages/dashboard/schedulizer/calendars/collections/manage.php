@@ -5,6 +5,9 @@
 <script type="text/ng-template" id="/collection_event_form">
     <?php Loader::packageElement('templates/collection_event_form', 'schedulizer'); ?>
 </script>
+<script type="text/ng-template" id="/tpl-datepicker">
+    <?php Loader::packageElement('templates/datepicker', 'schedulizer'); ?>
+</script>
 <script type="text/ng-template" id="/tpl-tooltip">
     <?php Loader::packageElement('templates/tooltip', 'schedulizer'); ?>
 </script>
@@ -31,8 +34,12 @@
                                 <button type="button" class="btn btn-success" ng-click="makeAutoApprovable()" bs-tooltip="'When auto-approvable, saving an event updates the approved version immediately. This immediately approves all latest event versions.'" data-template="/tpl-tooltip" data-placement="bottom">Make Auto-Approvable</button>
                             </div>
                             <div ng-hide="boxesAreChecked">
-                                <span select-wrap><select class="form-control" ng-change="refreshEventList()" ng-options="opt.id as opt.title for opt in calendarList" ng-model="filters.calendarID"></select></span>
-                                <button type="button" class="btn btn-default" ng-class="{'btn-success':filters.discrepancies}" ng-click="toggleDiscrepanciesFilter()" bs-tooltip="'Filter to only show events where the Approved version does not equal the Latest'" data-template="/tpl-tooltip" data-placement="bottom">Approval Discrepancies</button>
+                                <span select-wrap><select class="form-control" ng-change="refreshEventList()" ng-options="opt.id as opt.title for opt in calendarList" ng-model="filters.calendars"></select></span>
+                                <div class="time-widgets inline">
+                                    <input type="text" class="form-control date-selector" placeholder="Start" ng-change="refreshEventList()"  bs-datepicker ng-model="searchStart" data-autoclose="1" data-template="/tpl-datepicker" data-icon-left="icon-angle-left" data-icon-right="icon-angle-right" data-placement="bottom-right" />
+                                    <input type="text" class="form-control date-selector" placeholder="End" ng-change="refreshEventList()"  bs-datepicker ng-model="searchEnd" data-autoclose="1" data-min-date="{{searchStart}}" data-template="/tpl-datepicker" data-icon-left="icon-angle-left" data-icon-right="icon-angle-right" data-placement="bottom-right" />
+                                </div>
+                                <button type="button" class="btn btn-default" ng-class="{'btn-success':filters.discrepancies}" ng-click="toggleDiscrepanciesFilter()" bs-tooltip="'Filter to only show events where the Approved version does not equal the Latest'" data-template="/tpl-tooltip" data-placement="bottom">Discrepancies</button>
                             </div>
                         </div>
                     </div>
@@ -59,7 +66,7 @@
                 <tbody ng-show="eventList.length">
                     <tr ng-repeat="event in eventList">
                         <td checkbox-wrap><input type="checkbox" ng-model="checkboxes[event.eventID]" ng-init="checkboxes[event.eventID] = false" /></td>
-                        <td class="event-title"><a modalize="/collection_event_form" data-using="{collectionID:collectionID,eventID:event.eventID}">{{ event.eventTitle }}</a></td>
+                        <td class="event-title"><a modalize="/collection_event_form" data-using="{collectionID:collectionID,eventID:event.eventID}">{{ event.title }}</a></td>
                         <td><span>{{ event.calendarTitle }}</span></td>
                         <td class="text-center"><span class="active-status" ng-class="{'active':event.isActive,'inactive':!event.isActive}"></span></td>
                         <td class="text-center"><span>{{ event.versionID }}</span></td>

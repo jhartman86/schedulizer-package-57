@@ -1,6 +1,6 @@
 <?php
 /**
- * @var $queryData stdObject - composed by the CollectionEventList and passed into
+ * @var $queryData stdObject - composed by the EventList and passed into
  * this file.
  * @var $this \Concrete\Package\Schedulizer\Src\EventList
  * @note: this file gets require'd in a method of the EventList object,
@@ -10,7 +10,7 @@
  * this code directly within the method.
  * @todo: why does this installation of the package fail w/out this check? funky autoloading of the src/ directory?
  */
-if( !( $this instanceof \Concrete\Package\Schedulizer\Src\CollectionEventList ) ){
+if( !( $this instanceof \Concrete\Package\Schedulizer\Src\EventList ) ){
     return;
 }
 
@@ -85,6 +85,14 @@ if( $queryData->filterByIsActive === true ){ // this is the default set in event
 }
 
 /**
+ * Specifically for CollectionListQuery - this sets it up so that we only return events in
+ * the collection that are not approved at their latest event versions.
+ */
+if( $queryData->filterByDiscrepancies === true ){
+    $restrictor .= " AND (sev.versionID != sev.approvedVersionID || sev.approvedVersionID IS NULL) ";
+}
+
+/**
  * Full text search? This is NOT part of the restrictor, but instead gets run on
  * the $latestEventRecords join below.
  */
@@ -96,71 +104,11 @@ if( !empty($queryData->fullTextSearch) ){
     );
 }
 
-/**
- * This "if" statement is super important as it determines the method by which we generated the
- * inner-most query, on top of which everything else is joined and filtered against. If a collectionID
- * is being used, then we are getting events that are versioned against that collection. Otherwise, we
- * just pull the latest event version.
- */
-//$schedulizerCollectionID = (int)$queryData->collectionID;
-//if( $schedulizerCollectionID >= 1 ){
-//// Using a collectionID
-//$latestEventRecords = <<<SQL
-//    SELECT
-//      _events.id,
-//      _events.createdUTC,
-//      _events.modifiedUTC,
-//      _events.calendarID,
-//      _events.ownerID,
-//      _events.pageID,
-//      _events.isActive,
-//      _versionInfo.versionID,
-//      _versionInfo.title,
-//      _versionInfo.description,
-//      _versionInfo.useCalendarTimezone,
-//      _versionInfo.timezoneName,
-//      _versionInfo.eventColor,
-//      _versionInfo.fileID
-//    FROM SchedulizerEvent _events JOIN (
-//      SELECT _eventVersions.* FROM SchedulizerEventVersion _eventVersions
-//      JOIN SchedulizerCollectionEvents _collectionEvents ON _collectionEvents.eventID = _eventVersions.eventID
-//      AND _collectionEvents.approvedVersionID = _eventVersions.versionID
-//      WHERE _collectionEvents.collectionID = $schedulizerCollectionID
-//      $fullTextSearch
-//    ) AS _versionInfo ON _events.id = _versionInfo.eventID
-//SQL;
-//}else{
-//// Default, just pulling the latest version
-//$latestEventRecords = <<<SQL
-//    SELECT
-//        _events.id,
-//        _events.createdUTC,
-//        _events.modifiedUTC,
-//        _events.calendarID,
-//        _events.ownerID,
-//        _events.pageID,
-//        _events.isActive,
-//        _versionInfo.versionID,
-//        _versionInfo.title,
-//        _versionInfo.description,
-//        _versionInfo.useCalendarTimezone,
-//        _versionInfo.timezoneName,
-//        _versionInfo.eventColor,
-//        _versionInfo.fileID
-//    FROM SchedulizerEvent _events LEFT JOIN (
-//      SELECT _eventVersions.* FROM SchedulizerEventVersion _eventVersions
-//      INNER JOIN (
-//         SELECT eventID, MAX(versionID) AS highestVersionID FROM SchedulizerEventVersion GROUP BY eventID
-//      ) _eventVersions2
-//      ON _eventVersions.eventID = _eventVersions2.eventID
-//      AND _eventVersions.versionID = _eventVersions2.highestVersionID
-//      $fullTextSearch
-//    ) AS _versionInfo ON _events.id = _versionInfo.eventID
-//SQL;
-//}
 
-// @todo: full text!
-$schedulizerCollectionID = 1;
+/**
+ * THIS is where we're doing the bulk customization for the collection query.
+ */
+$schedulizerCollectionID = (int)$queryData->collectionID;
 $latestEventRecords = <<<SQL
     SELECT
         _events.id,
@@ -178,9 +126,10 @@ $latestEventRecords = <<<SQL
         _versionInfo.eventColor,
         _versionInfo.fileID,
         _versionInfo.approvedVersionID,
-        _versionInfo.autoApprovable
+        _versionInfo.autoApprovable,
+        _versionInfo.collectionID
     FROM SchedulizerEvent _events JOIN (
-    	SELECT _eventVersions.*, _collectionEvents.approvedVersionID, _collectionEvents.autoApprovable FROM SchedulizerEvent _events2
+    	SELECT _eventVersions.*, _collCalendars.collectionID, _collectionEvents.approvedVersionID, _collectionEvents.autoApprovable FROM SchedulizerEvent _events2
     	JOIN SchedulizerCollectionCalendars _collCalendars ON _collCalendars.calendarID = _events2.calendarID
     	JOIN SchedulizerEventVersion _eventVersions
     	ON _eventVersions.eventID = _events2.id
@@ -189,9 +138,9 @@ $latestEventRecords = <<<SQL
     	AND _eventVersions.versionID = _eventVersions2.maxVersionID
     	LEFT JOIN SchedulizerCollectionEvents _collectionEvents ON _collectionEvents.eventID = _eventVersions.eventID
     	WHERE _collCalendars.collectionID = $schedulizerCollectionID
+    	$fullTextSearch
     ) AS _versionInfo ON _events.id = _versionInfo.eventID
 SQL;
-
 
 
 
@@ -308,7 +257,8 @@ $sql = <<<SQL
               sevt.repeatMonthlyOrdinalWeekday,
               sevtwd.repeatWeeklyday,
               sev.approvedVersionID,
-              sev.autoApprovable
+              sev.autoApprovable,
+              sev.collectionID
             FROM SchedulizerCalendar sec
               /*
                 Previously: JOIN SchedulizerEvent sev ON sev.calendarID = sec.id

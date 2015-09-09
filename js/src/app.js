@@ -86,11 +86,8 @@
                calendarList: $resource(Routes.generate('api.calendarList'), {}, {
                    get: {isArray:true, cache:true}
                }),
-               collection: $resource(Routes.generate('api.collection', [':id', ':subAction']), {id:'@id'}, angular.extend(_methods(), {
-                   //allEventsList: {method:'get', isArray:true, cache:false, params:{subAction:'all_events_list'}}
-               })),
+               collection: $resource(Routes.generate('api.collection', [':id', ':subAction']), {id:'@id'}, {}),
                collectionEvent: $resource(Routes.generate('api.collectionEvent', [':subAction']), {}, angular.extend(_methods(), {
-                   allEventsList: {method:'get', isArray:true, cache:false, params:{subAction:'all_events_list'}},
                    versionList: {method:'get', isArray:true, cache:false, params:{subAction:'version_list'}},
                    approvedVersion: {method:'get', cache:false, params:{subAction:'approved_version'}},
                    approveLatestVersions: {method:'post', params:{subAction:'approve_latest_versions'}},

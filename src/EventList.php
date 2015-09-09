@@ -453,9 +453,7 @@
             // later, it'll override any other manually set collectionIDs to filter by (eg. master
             // always overrides user-defined)
             if( $this->filterByMasterCollection ){
-                $packageObj     = Package::getByHandle('schedulizer');
-                $masterCollID   = (int) $packageObj->configGet($packageObj::CONFIG_MASTER_COLLECTION_ID);
-                $collectionObj  = \Concrete\Package\Schedulizer\Src\Collection::getByID($masterCollID);
+                $collectionObj = \Concrete\Package\Schedulizer\Src\Collection::getMasterCollection();
                 if( is_object($collectionObj) ){
                     $this->filterByCollectionObject($collectionObj);
                 }

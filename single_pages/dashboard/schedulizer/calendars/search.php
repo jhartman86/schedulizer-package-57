@@ -29,7 +29,7 @@
                             <span select-wrap><select class="form-control" ng-change="sendSearch()" ng-options="opt.value as opt.label for opt in groupingOptions" ng-model="doGrouping"></select></span>
                             <div class="time-widgets inline">
                                 <input type="text" class="form-control date-selector" placeholder="Start" ng-change="sendSearch()"  bs-datepicker ng-model="searchStart" data-autoclose="1" data-template="/tpl-datepicker" data-icon-left="icon-angle-left" data-icon-right="icon-angle-right" data-placement="bottom-right" />
-                                <input type="text" class="form-control date-selector" placeholder="End" ng-change="sendSearch()"  bs-datepicker ng-model="searchEnd" data-autoclose="1" data-min-date="{{searchFields.start}}" data-template="/tpl-datepicker" data-icon-left="icon-angle-left" data-icon-right="icon-angle-right" data-placement="bottom-right" />
+                                <input type="text" class="form-control date-selector" placeholder="End" ng-change="sendSearch()"  bs-datepicker ng-model="searchEnd" data-autoclose="1" data-min-date="{{searchStart}}" data-template="/tpl-datepicker" data-icon-left="icon-angle-left" data-icon-right="icon-angle-right" data-placement="bottom-right" />
                             </div>
                             <button type="button" class="btn btn-default" ng-click="toggleSearch()" ng-class="{'btn-success':searchFiltersSet}"><i class="icon-search"></i></button>
                         </div>

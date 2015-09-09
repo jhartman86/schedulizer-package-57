@@ -26,6 +26,8 @@
      * Class Controller
      * @package Concrete\Package\Schedulizer
      * Make Doctrine suck less: http://labs.octivi.com/mastering-symfony2-performance-doctrine/
+     * @todo: come up with job that deletes stranded events where event times set to "weekly"
+     * repeat aren't saved with any weekdays (see events 61,62,63 - Gyrokenesis on Dancer's Workshop)
      */
     class Controller extends \Concrete\Core\Package\Package {
 

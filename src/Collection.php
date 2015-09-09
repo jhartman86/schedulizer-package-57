@@ -201,54 +201,6 @@
 
 
         /**
-         * Get all events available to the collection, optionally filtered by a
-         * calendarID.
-         * @param null $calendarID
-         * @return mixed
-         */
-        public function fetchAllAvailableEvents( $calendarID = null, $discrepancies = false ){
-            $collectionID = $this->id;
-            $query = self::adhocQuery(function( \PDO $connection ) use ($collectionID, $calendarID, $discrepancies){
-                $calendarFilter     = $calendarID ? sprintf("AND _calendars.id = %s", (int)$calendarID) : '';
-                $discrepancyFilter  = $discrepancies ? "AND (_versionInfo.versionID != _collectionEvents.approvedVersionID || _collectionEvents.approvedVersionID IS NULL)" : '';
-
-                $statement = $connection->prepare("
-                    SELECT
-                      _events.id AS eventID,
-                      _versionInfo.versionID,
-                      _events.isActive,
-                      _versionInfo.title AS eventTitle,
-                      _calendars.title AS calendarTitle,
-                      _collectionCalendars.collectionID,
-                      _collectionEvents.approvedVersionID,
-                      _collectionEvents.autoApprovable
-                    FROM SchedulizerEvent _events
-                    LEFT JOIN (
-                      SELECT _eventVersions.*
-                      FROM SchedulizerEventVersion _eventVersions
-                      INNER JOIN ( SELECT eventID, MAX(versionID) AS maxVersionID FROM SchedulizerEventVersion GROUP BY eventID ) _eventVersions2
-                      ON _eventVersions.eventID = _eventVersions2.eventID
-                      AND _eventVersions.versionID = _eventVersions2.maxVersionID
-                    )
-                    AS _versionInfo ON _events.id = _versionInfo.eventID
-                    JOIN SchedulizerCalendar _calendars ON _calendars.id = _events.calendarID
-                    JOIN SchedulizerCollectionCalendars _collectionCalendars ON _collectionCalendars.calendarID = _events.calendarID
-                    LEFT JOIN SchedulizerCollectionEvents _collectionEvents
-                      ON _collectionEvents.collectionID = _collectionCalendars.collectionID
-                      AND _collectionEvents.eventID = _events.id
-                    WHERE _collectionCalendars.collectionID = :collectionID
-                    $discrepancyFilter
-                    $calendarFilter
-                    ORDER BY _versionInfo.title ASC");
-
-                $statement->bindValue(':collectionID', $collectionID);
-                return $statement;
-            });
-            return $query->fetchAll(\PDO::FETCH_OBJ);
-        }
-
-
-        /**
          * Get all the version records for a given event.
          * @param $eventID
          * @return mixed

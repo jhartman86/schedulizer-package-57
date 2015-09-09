@@ -1,15 +1,20 @@
 angular.module('schedulizer.app').
 
-    controller('CtrlCollectionPage', ['$rootScope', '$scope', '$q', '$http', 'API',
-        function( $rootScope, $scope, $q, $http, API ){
+    controller('CtrlCollectionPage', ['$rootScope', '$scope', '$q', '$http', 'API', '_moment',
+        function( $rootScope, $scope, $q, $http, API, _moment ){
 
             $scope.collectionID     = null; // set via ng-init
             $scope.checkToggleAll   = false;
             $scope.checkboxes       = {};
             $scope.eventList        = [];
+            $scope.searchStart      = _moment();
+            $scope.searchEnd        = _moment().add(1, 'month');
             $scope.filters          = {
-                calendarID: null,
-                discrepancies: null
+                grouping:           true,
+                includeinactives:   true,
+                calendars:          null,
+                discrepancies:      null,
+                fields:             'eventID,versionID,title,calendarTitle,isActive'
             };
 
             function checkedEventIDs(){
@@ -41,29 +46,22 @@ angular.module('schedulizer.app').
             $scope.refreshEventList = function(){
                 $http.get(API._routes.generate('api.eventList'), {
                     cache:false,
-                    params: {
-                        dashboard_collection_search:1,
-                        //keywords:'hootenanny',
-                        //collection_id:1,
-                        grouping:true,
-                        includeinactives:true,
-                        fields:'eventID,versionID,title,calendarTitle,isActive',
-                        start:'2015-04-01',
-                        end:'2015-12-31'
-                    }
+                    params: angular.extend({
+                        start:  _moment($scope.searchStart).format('YYYY-MM-DD'),
+                        end:    _moment($scope.searchEnd).format('YYYY-MM-DD'),
+                        dashboard_collection_search: $scope.collectionID
+                    }, $scope.filters)
                 }).then(function( resp ){
-                    console.log(resp);
-                });
-
-                API.collectionEvent.allEventsList(angular.extend({
-                    collectionID : $scope.collectionID
-                }, $scope.filters), function( resp ){
                     $scope.checkboxes = {};
-                    $scope.eventList = resp;
+                    $scope.eventList = resp.data;
                     $scope.checkToggleAll = false;
                 });
             };
 
+            /**
+             * Acts "statically"; doesn't work on a stateful resource, but instead
+             * take existing stateful info from the UI and build the calls on the fly.
+             */
             $scope.approveLatest = function(){
                 API.collectionEvent.approveLatestVersions({
                     collectionID: $scope.collectionID,
@@ -74,6 +72,10 @@ angular.module('schedulizer.app').
 
             };
 
+            /**
+             * Acts "statically"; doesn't work on a stateful resource, but instead
+             * take existing stateful info from the UI and build the calls on the fly.
+             */
             $scope.unapprove = function(){
                 API.collectionEvent.unapprove({
                     collectionID: $scope.collectionID,
@@ -83,6 +85,12 @@ angular.module('schedulizer.app').
                 });
             };
 
+            /**
+             * Since ng-init doesn't set the value of collectionID on the scope BEFORE
+             * everything gets instantiated, we have to do this ugly watch and unbind
+             * timing stuff.
+             * @type {*|function()}
+             */
             var unbindAfterOneCycle = $scope.$watch('collectionID', function( val ){
                 if( val ){
                     unbindAfterOneCycle();
@@ -103,6 +111,9 @@ angular.module('schedulizer.app').
                 }
             });
 
+            /**
+             * When emitted on rootScope, refresh the event list
+             */
             $rootScope.$on('collection:refreshEventList', $scope.refreshEventList);
 
 
@@ -112,16 +123,18 @@ angular.module('schedulizer.app').
             ];
 
             /**
-             * Change the autoApprovable setting for a SINGLE event
+             * Change the autoApprovable setting for a SINGLE event. Note, the event argument
+             * is NOT a resource, since we're using the standard event_list query via standard
+             * $http call.
              * @param eventResource
              */
-            $scope.updateEventApproval = function( eventResource ){
-                eventResource.$saveSingleAutoApprovable(function(resource){
+            $scope.updateEventApproval = function( event ){
+                API.collectionEvent.saveSingleAutoApprovable(event, function(){
                     // Since the response from the server is just an HTTP header code, the resource
                     // in this callback isn't an "updated" version. But to fake an update to the user,
                     // we can just set approvedVersionID to the versionID property (which should be
                     // accurate anyways)
-                    resource.approvedVersionID = resource.versionID;
+                    event.approvedVersionID = event.versionID;
                 });
             };
 

@@ -7,37 +7,13 @@
 
     class CollectionEventResource extends \Concrete\Package\Schedulizer\Src\Api\ApiDispatcher {
 
-        const SUBACTION_GET_ALL_EVENTS_LIST = 'all_events_list',
-              SUBACTION_GET_VERSION_LIST = 'version_list',
+        const SUBACTION_GET_VERSION_LIST = 'version_list',
               SUBACTION_GET_APPROVED_EVENT_VERSION = 'approved_version',
               SUBACTION_POST_APPROVE_LATEST_VERSIONS = 'approve_latest_versions',
               SUBACTION_PUT_APPROVE_MULTI_AUTOAPPROVABLE = 'multi_auto_approve';
 
         protected function httpGet($subAction = null) {
             switch ($subAction):
-                case self::SUBACTION_GET_ALL_EVENTS_LIST:
-                    $castedTypes = array();
-                    /** @var $collectionObj Collection */
-                    $collectionObj = Collection::getByID((int)$_REQUEST['collectionID']);
-                    $calendarID = ((int)$_REQUEST['calendarID'] >= 1) ? (int)$_REQUEST['calendarID'] : null;
-                    $discrepancies = (bool)$_REQUEST['discrepancies'];
-                    $eventsList = $collectionObj->fetchAllAvailableEvents($calendarID, $discrepancies);
-                    foreach ($eventsList AS $row) {
-                        array_push($castedTypes, (object)array(
-                            'approvedVersionID' => $row->approvedVersionID ? (int)$row->approvedVersionID : null,
-                            'calendarTitle' => $row->calendarTitle,
-                            'eventID' => (int)$row->eventID,
-                            // If event hasn't been approved (ie, no record exists) this will be null!
-                            'collectionID' => $row->collectionID ? (int)$row->collectionID : null,
-                            'eventTitle' => $row->eventTitle,
-                            'isActive' => (bool)(int)$row->isActive,
-                            'versionID' => (int)$row->versionID,
-                            'autoApprovable' => (bool)(int)$row->autoApprovable
-                        ));
-                    }
-                    $this->setResponseData($castedTypes);
-                    break;
-
                 // Get all versions of the given event
                 case self::SUBACTION_GET_VERSION_LIST:
                     $eventID = (int)$_REQUEST['eventID'];
