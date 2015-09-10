@@ -98,7 +98,7 @@ $eventCellBgHover:      #e1e1e1;
   // Main calendar content
   .calendry-body {
     .calendar-render {line-height:0;font-size:0;}
-    .day-node {display:block;position:relative;font-size:$calendryFontSizeBase;padding:0 $calendarDaySpacing $calendarDaySpacing;min-height:45px;border-top:$calendarBorder;
+    .day-node {vertical-align:top;display:block;position:relative;font-size:$calendryFontSizeBase;padding:0 $calendarDaySpacing $calendarDaySpacing;min-height:45px;border-top:$calendarBorder;
       &.month-excl {display:none;}
       &.is-today .date-num {background:$dateNumTodayBg;color:#112233;}
     }

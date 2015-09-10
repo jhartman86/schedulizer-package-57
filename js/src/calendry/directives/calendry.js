@@ -56,7 +56,7 @@
                 this.calendarDayCount   = Math.abs(this.calendarEnd.diff(this.calendarStart, 'days'));
                 this.calendarDays       = (function( daysInCalendar, calendarStart, _array ){
                     for( var _i = 0; _i <= daysInCalendar; _i++ ){
-                        _array.push(momentJS(calendarStart).add('days', _i));
+                        _array.push(momentJS(calendarStart).add({days:_i}));
                     }
                     return _array;
                 })( this.calendarDayCount, this.calendarStart, []);
@@ -201,7 +201,7 @@
                         weekRows  = Math.ceil( monthMap.calendarDayCount / 7 );
 
                     // Set row classes on calendar-body
-                    angular.element($element[0].querySelector('.calendry-body'))
+                    angular.element($element.get(0).querySelector('.calendry-body'))
                         .removeClass('week-rows-4 week-rows-5 week-rows-6')
                         .addClass('week-rows-' + weekRows);
 
@@ -211,7 +211,7 @@
 
                     // DECORATE EVERY DAY ELEMENT WITH A _moment PROPERTY VIA .data()
                     Array.prototype.slice.call(fragment.childNodes).forEach(function(node, index){
-                        fragment.childNodes[index] = angular.element(node).data('_moment', monthMap.calendarDays[index]);
+                        angular.element(node).data('_moment', monthMap.calendarDays[index]);
                     });
 
                     $renderTo.empty().append(fragment);
@@ -264,7 +264,7 @@
                     $scope.instance.monthMap.calendarDays.forEach(function( dayMoment ){
                         var eventsForDay = mapped[dayMoment.format(_eventMapKey)];
                         if( eventsForDay ){
-                            var $dayNode = angular.element($element[0].querySelector('#' + getDayCellID(dayMoment)));
+                            var $dayNode = angular.element($element.get(0).querySelector('#' + getDayCellID(dayMoment)));
                             if( $dayNode ){
                                 for(var _i = 0, _len = eventsForDay.length; _i < _len; _i++){
                                     var $newScope       = $scope.$new(/*true*/);

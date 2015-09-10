@@ -181,29 +181,32 @@ angular.module('schedulizer.app').
              * is done with that data - its just for change detection in the UI.
              */
             $scope.decorateAttributes = function(){
-                var customAttrs = document.querySelector('[custom-attributes]'),
-                    fields      = customAttrs.querySelectorAll('input,select,textarea');
+                var customAttrs = document.querySelector('[custom-attributes]');
 
-                $scope.entity._attributes = {};
+                if( customAttrs ){
+                    var fields = customAttrs.querySelectorAll('input,select,textarea');
 
-                Array.prototype.slice.call(fields).forEach(function( node, index ){
-                    var _node = angular.element(node);
+                    $scope.entity._attributes = {};
 
-                    // Special handling for checkboxes
-                    if( _node.get(0).type === 'checkbox' ){
-                        $scope.entity._attributes[index] = _node.attr('checked') ? 1 : null;
+                    Array.prototype.slice.call(fields).forEach(function( node, index ){
+                        var _node = angular.element(node);
+
+                        // Special handling for checkboxes
+                        if( _node.get(0).type === 'checkbox' ){
+                            $scope.entity._attributes[index] = _node.attr('checked') ? 1 : null;
+                            _node.attr('ng-model', 'entity._attributes['+index+']');
+                            _node.attr('ng-true-value', 1);
+                            _node.attr('ng-false-value', null);
+                            $compile(_node)($scope);
+                            return;
+                        }
+
+                        // Normal binding process
+                        $scope.entity._attributes[index] = _node.val();
                         _node.attr('ng-model', 'entity._attributes['+index+']');
-                        _node.attr('ng-true-value', 1);
-                        _node.attr('ng-false-value', null);
                         $compile(_node)($scope);
-                        return;
-                    }
-
-                    // Normal binding process
-                    $scope.entity._attributes[index] = _node.val();
-                    _node.attr('ng-model', 'entity._attributes['+index+']');
-                    $compile(_node)($scope);
-                });
+                    });
+                }
             };
 
             // Tag selection function (when creating new tags on the fly, this gets called)

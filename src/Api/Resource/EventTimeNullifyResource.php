@@ -31,7 +31,8 @@
             // If $id is null, we're getting a list of nullifiers associated with an eventTime
             if( empty($id) ){
                 $list = EventTimeNullify::fetchAllByEventTimeID($eventTimeID);
-                if( is_null($list) ){
+                if( is_null($list) || empty($list) ){
+                    $this->setResponseData(array());
                     $this->setResponseCode(Response::HTTP_NO_CONTENT);
                     return;
                 }

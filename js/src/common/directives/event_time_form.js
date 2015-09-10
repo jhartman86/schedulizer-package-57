@@ -172,13 +172,15 @@ angular.module('schedulizer.app').
                      * Nullifiers
                      */
                     $scope.showNullifiers = false;
-                    API.eventNullify.query({eventTimeID:$scope._timeEntity.id}, function( resp ){
-                        $scope.hasNullifiers = resp.length >= 1;
-                        angular.forEach(resp, function( resource ){
-                            resource._moment = _moment.utc(resource.hideOnDate);
+                    if( $scope._timeEntity.id ){
+                        API.eventNullify.query({eventTimeID:$scope._timeEntity.id}, function( resp ){
+                            $scope.hasNullifiers = resp.length >= 1;
+                            angular.forEach(resp, function( resource ){
+                                resource._moment = _moment.utc(resource.hideOnDate);
+                            });
+                            $scope.configuredNullifiers = resp;
                         });
-                        $scope.configuredNullifiers = resp;
-                    });
+                    }
 
                     /**
                      * Delete an existing nullifer record.
