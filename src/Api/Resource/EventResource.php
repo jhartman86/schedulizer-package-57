@@ -182,7 +182,7 @@
             }
 
             $this->setResponseData($eventObj);
-            $this->setResponseCode(Response::HTTP_NO_CONTENT);
+            $this->setResponseCode(Response::HTTP_OK);
         }
 
         /**
