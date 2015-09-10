@@ -16,8 +16,14 @@
             switch ($subAction):
                 // Get all versions of the given event
                 case self::SUBACTION_GET_VERSION_LIST:
-                    $eventID = (int)$_REQUEST['eventID'];
-                    $this->setResponseData(Collection::fetchEventVersionList($eventID));
+                    $eventID     = (int)$_REQUEST['eventID'];
+                    $versions    = Collection::fetchEventVersionList($eventID);
+                    $versionList = array();
+                    foreach($versions AS $record){
+                        $record->description = htmlspecialchars_decode($record->description);
+                        array_push($versionList, $record);
+                    }
+                    $this->setResponseData($versionList);
                     break;
 
                 // What is the APPROVED event version for the given collection?

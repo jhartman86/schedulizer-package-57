@@ -58,7 +58,7 @@
         public function getTitle(){ return $this->title; }
 
         /** @return string|null */
-        public function getDescription(){ return $this->description; }
+        public function getDescription(){ return htmlspecialchars_decode($this->description); }
 
         /** @return bool|null */
         public function getUseCalendarTimezone(){ return $this->useCalendarTimezone; }
