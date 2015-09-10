@@ -62,6 +62,12 @@
         /** @return bool|null */
         public function getIsActive(){ return $this->isActive; }
 
+        /**
+         * Make sure $description property is html encoded.
+         */
+        protected function onBeforePersist(){
+            $this->description = htmlspecialchars($this->description);
+        }
 
         /**
          * On after persist is only called after the canonical Event record
@@ -243,6 +249,7 @@
                 return $properties;
             }
             $properties                 = (object) get_object_vars($this);
+            $properties->description    = htmlspecialchars_decode($this->description);
             $properties->_timeEntities  = $this->getEventTimes();
             $properties->_tags          = $this->getEventTags();
             $properties->_categories    = $this->getEventCategories();
