@@ -123,6 +123,7 @@
                 $eventObj   = $dispatchedEvent->getEventObj();
                 $mailHelper = Loader::helper('mail');
                 // Compose
+                $mailHelper->to('anne@jhcenterforthearts.org');
                 $mailHelper->to('arik@focus-43.com');
                 $mailHelper->to('jon@focus-43.com');
                 $mailHelper->from('website@jhcenterforthearts.org', 'Website :: Schedulizer');
