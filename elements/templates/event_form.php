@@ -14,12 +14,28 @@
         <ul class="nav nav-tabs">
             <li ng-click="setMasterTabActive(1)" ng-class="{'active':activeMasterTab[1]}"><a>Basic Info</a></li>
             <li ng-click="setMasterTabActive(2)" ng-class="{'active':activeMasterTab[2]}"><a>Custom Attributes</a></li>
-            <li class="pull-right">
-                <button type="button" class="btn btn-success save-entity" ng-click="submitHandler()" ng-disabled="(frmEventData.$pristine || frmEventData.$invalid)">
-                    <span ng-hide="_requesting">Save</span>
-                    <img ng-show="_requesting" src="<?php echo SCHEDULIZER_IMAGE_PATH; ?>spinner.svg" />
-                </button>
-            </li>
+
+            <?php if( $permissions->canManageCollections() ): ?>
+                <li class="pull-right">
+                    <button type="button" class="btn btn-primary save-entity" ng-click="submitHandler()" ng-disabled="(frmEventData.$pristine || frmEventData.$invalid)">
+                        <span ng-hide="_requesting">Save</span>
+                        <img ng-show="_requesting" src="<?php echo SCHEDULIZER_IMAGE_PATH; ?>spinner.svg" />
+                    </button>
+                </li>
+            <?php else: ?>
+                <li class="pull-right" ng-hide="(_requestingApproval || _requesting)">
+                    <button type="button" class="btn btn-success save-entity" ng-click="submitForApprovalHandler()" ng-disabled="(frmEventData.$pristine || frmEventData.$invalid)">
+                        <span>Submit For Approval</span>
+                    </button>
+                </li>
+                <li class="pull-right">
+                    <button type="button" class="btn btn-primary save-entity" ng-click="submitHandler()" ng-disabled="(frmEventData.$pristine || frmEventData.$invalid)">
+                        <span ng-hide="_requesting">Save Version</span>
+                        <img ng-show="_requesting" src="<?php echo SCHEDULIZER_IMAGE_PATH; ?>spinner.svg" />
+                    </button>
+                </li>
+            <?php endif; ?>
+
             <li class="pull-right delete-entity" ng-show="entity.id">
                 <button type="button" class="btn btn-warning" ng-click="confirmDelete = !confirmDelete" ng-hide="confirmDelete">
                     Delete Event

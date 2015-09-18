@@ -2,8 +2,6 @@
 $attrList = \Concrete\Package\Schedulizer\Src\Attribute\Key\SchedulizerEventKey::getList();
 $chunked  = array_chunk($attrList, 2);
 
-
-
 if( !empty($attrList) ): foreach($chunked AS $pair): ?>
     <div class="row">
         <?php foreach($pair AS $attrKeyObj){ /** @var $attrKeyObj \Concrete\Core\Attribute\Key\Key */ ?>

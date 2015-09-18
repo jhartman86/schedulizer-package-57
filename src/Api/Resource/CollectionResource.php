@@ -13,6 +13,8 @@
          * @param null $subAction
          */
         protected function httpGet( $collectionID, $subAction = null ){
+            $this->manageCollectionPermissionCheck();
+
             $collectionObj = Collection::getByID($collectionID);
             $this->setResponseData($collectionObj);
         }
@@ -22,6 +24,8 @@
          * @todo: permissioning?; fail if no calendars set
          */
         protected function httpPost(){
+            $this->manageCollectionPermissionCheck();
+
             $data = $this->scrubbedPostData();
             $data->ownerID = 1;
 //            if( empty($data->ownerID) ){
@@ -39,6 +43,8 @@
          * @throws ApiException
          */
         protected function httpPut( $id ){
+            $this->manageCollectionPermissionCheck();
+
             $data = $this->scrubbedPostData();
             if( empty($data->collectionCalendars) ){
                 throw ApiException::generic('Collections must have at least one calendar');
@@ -52,6 +58,8 @@
 
 
         protected function httpDelete( $collectionID ){
+            $this->manageCollectionPermissionCheck();
+
             $collectionObj = Collection::getByID((int)$collectionID);
             if( $collectionObj ){
                 $collectionObj->delete();
@@ -59,6 +67,16 @@
                 return;
             }
             throw ApiException::generic('Collection no longer exists.');
+        }
+
+
+        /**
+         * @throws ApiException
+         */
+        protected function manageCollectionPermissionCheck(){
+            if( ! $this->getGenericTaskPermissionObj()->canManageCollections() ){
+                throw ApiException::permissionInvalid("You do not have permission to do anything with collections.");
+            }
         }
 
     }

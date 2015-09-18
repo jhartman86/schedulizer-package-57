@@ -11,6 +11,7 @@
     use Route;
     use Router;
     use Group;
+    use Events; // **Concrete5 System Events**
     use PermissionKeyCategory; /** @see \Concrete\Core\Permission\Category */
     use \Concrete\Core\Attribute\Key\Category AS AttributeKeyCategory;
     use \Concrete\Core\Attribute\Type AS AttributeType;
@@ -20,7 +21,6 @@
     use \Concrete\Core\Permission\Access\Entity\GroupEntity as GroupPermissionAccessEntity;
     use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerKey AS SchedulizerPermissionKey;
     use \Concrete\Package\Schedulizer\Src\Permission\Key\SchedulizerCalendarKey AS SchedulizerCalendarPermissionKey;
-    use Events;
 
     /**
      * Class Controller
@@ -51,7 +51,7 @@
 
         protected $pkgHandle                = self::PACKAGE_HANDLE;
         protected $appVersionRequired       = '5.7.3.2';
-        protected $pkgVersion               = '1.12';
+        protected $pkgVersion               = '1.14';
 
         public function getPackageName(){ return t('Schedulizer'); }
         public function getPackageDescription(){ return t('Schedulizer Calendar Package'); }
@@ -80,6 +80,7 @@
 
             // These have to occur in a specific order!
             $this->setupClassBindings()
+                 ->bindSchedulizerSystemEventHandlers()
                  ->setupApiRoutes()
                  ->setupC5Routes();
         }
@@ -107,6 +108,31 @@
             // here
 
             return $this;
+        }
+
+
+        /**
+         * Hook into C5's dispatchable system events and bind appropriate handlers;
+         * used for things like mail notifications if/when a user is requesting
+         * approval of an event version.
+         */
+        private function bindSchedulizerSystemEventHandlers(){
+            // When a user without 'manage_collections' permission requests approval
+            Events::addListener('schedulizer.request_approval', function( $dispatchedEvent ){
+                $userObj    = new \Concrete\Core\User\User();
+                $eventObj   = $dispatchedEvent->getEventObj();
+                $mailHelper = Loader::helper('mail');
+                // Compose
+                $mailHelper->to('arik@focus-43.com');
+                $mailHelper->to('jon@focus-43.com');
+                $mailHelper->from('website@jhcenterforthearts.org', 'Website :: Schedulizer');
+                $mailHelper->addParameter('eventObj', $eventObj);
+                $mailHelper->addParameter('userInfoObj', \Concrete\Core\User\UserInfo::getByID($userObj->getUserID()));
+                $mailHelper->load('request_approval', self::PACKAGE_HANDLE);
+                $mailHelper->sendMail();
+            });
+
+           return $this;
         }
 
 
@@ -566,6 +592,10 @@
                 'manage_calendar_permissions' => array(
                     'name'      => t('Manage Calendar Permissions'),
                     'descr'     => t('Can Manage Calendar Permissions')
+                ),
+                'manage_collections' => array(
+                    'name'      => t('Manage Collections'),
+                    'descr'     => t('Can Manage Collections')
                 )
             ) AS $keyHandle => $keyData){
                 if( ! SchedulizerPermissionKey::getByHandle($keyHandle) ){
@@ -624,7 +654,7 @@
          * @return $this
          */
         private function setupPermissionAccessEntities(){
-            foreach(array('create_tag', 'create_calendar', 'edit_calendar', 'delete_calendar', 'manage_calendar_permissions') AS $permKeyHandle){
+            foreach(array('create_tag', 'create_calendar', 'edit_calendar', 'delete_calendar', 'manage_calendar_permissions', 'manage_collections') AS $permKeyHandle){
                 $pkObj = SchedulizerPermissionKey::getByHandle($permKeyHandle);
                 $paObj = $pkObj->getPermissionAccessObject();
 

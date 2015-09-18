@@ -13,6 +13,8 @@
               SUBACTION_PUT_APPROVE_MULTI_AUTOAPPROVABLE = 'multi_auto_approve';
 
         protected function httpGet($subAction = null) {
+            $this->manageCollectionPermissionCheck();
+
             switch ($subAction):
                 // Get all versions of the given event
                 case self::SUBACTION_GET_VERSION_LIST:
@@ -56,6 +58,8 @@
          * @param null $subAction
          */
         protected function httpPost($subAction = null) {
+            $this->manageCollectionPermissionCheck();
+
             switch ($subAction) {
                 // Approve the latest versions for the given eventIDs in the collection
                 case self::SUBACTION_POST_APPROVE_LATEST_VERSIONS:
@@ -79,6 +83,8 @@
          * are setting the autoApprovable directly on the event record itself.
          */
         protected function httpPut( $subAction = null ) {
+            $this->manageCollectionPermissionCheck();
+
             /** @var $collectionObj Collection */
             $data = $this->scrubbedPostData();
             $collectionObj = Collection::getByID($data->collectionID);
@@ -103,9 +109,20 @@
          * an array
          */
         protected function httpDelete() {
+            $this->manageCollectionPermissionCheck();
+
             $collectionObj = Collection::getByID((int)$_REQUEST['collectionID']);
             $collectionObj->unapproveCollectionEvents(explode(',', $_REQUEST['events']));
             $this->setResponseCode(Response::HTTP_ACCEPTED);
+        }
+
+        /**
+         * @throws ApiException
+         */
+        protected function manageCollectionPermissionCheck(){
+            if( ! $this->getGenericTaskPermissionObj()->canManageCollections() ){
+                throw ApiException::permissionInvalid("You do not have permission to do anything with collections.");
+            }
         }
 
     }

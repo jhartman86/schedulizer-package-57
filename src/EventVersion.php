@@ -72,6 +72,15 @@
         /** @return int|null */
         public function getFileID(){ return $this->fileID; }
 
+        /** @return string|null */
+        public function getImageThumbnailPath(){
+            if( empty($this->fileID) ){ return; }
+            $fileObj = \Concrete\Core\File\File::getByID($this->fileID);
+            if( is_object($fileObj) ){
+                return $fileObj->getThumbnailURL('event_thumb');
+            }
+        }
+
         /**
          * Mark the current entity as the approved one
          */

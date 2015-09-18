@@ -41,6 +41,7 @@ angular.module('schedulizer.app').
             // Set default scope variables
             $scope._ready               = false;
             $scope._requesting          = false;
+            $scope._requestingApproval  = false;
             $scope.eventColorOptions    = Helpers.eventColorOptions();
             $scope.timingTabs           = [];
             $scope.eventTagList         = [];
@@ -350,6 +351,21 @@ angular.module('schedulizer.app').
                             Alerter.add({msg:resp.responseJSON.error,danger:true});
                         });
                 });
+            };
+
+            /**
+             * For versioning: users without 'manage_collections' permission level
+             * are given a submit for approval button, in which case we just add to
+             * the event data then run the normal submit method.
+             */
+            $scope.submitForApprovalHandler = function(){
+                // Set special property that denotes to the API the user wants this
+                // submitted to the approval queue.
+                $scope.entity.__requestApproval = true;
+                // UI
+                $scope._requestingApproval      = true;
+                // Submit that biznass
+                $scope.submitHandler();
             };
 
             /**

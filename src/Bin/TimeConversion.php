@@ -1,7 +1,7 @@
 <?php namespace Concrete\Package\Schedulizer\Src\Bin {
 
-    use DateTime;
-    use DateTimeZone;
+    use \DateTime;
+    use \DateTimeZone;
 
     class TimeConversion {
 

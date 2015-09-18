@@ -1,5 +1,6 @@
 <?php namespace Concrete\Package\Schedulizer\Src\Api\Resource {
 
+    use Events; // Concrete5 Sysstem Events!
     use File;
     use Permissions;
     use \Concrete\Package\Schedulizer\Src\Bin\EntityCloner;
@@ -11,6 +12,7 @@
     use \Concrete\Package\Schedulizer\Src\EventCategory;
     use \Concrete\Package\Schedulizer\Src\Attribute\Key\SchedulizerEventKey;
     use \Concrete\Package\Schedulizer\Src\Api\ApiException;
+    use \Concrete\Package\Schedulizer\Src\SystemEvents\EventOnSave AS SystemEventOnSave;
     use \Symfony\Component\HttpFoundation\Response;
 
     /**
@@ -110,6 +112,11 @@
                 $categoryObj->categorizeEvent($eventObj);
             }
 
+            // Are we firing a request for approval email?
+            if( (bool) $this->scrubbedPostData()->__requestApproval ){
+                Events::dispatch('schedulizer.request_approval', new SystemEventOnSave($eventObj));
+            }
+
             $this->setResponseData($eventObj);
             $this->setResponseCode(Response::HTTP_CREATED);
         }
@@ -179,6 +186,11 @@
                 /** @var $categoryEntityData EventCategory */
                 $categoryObj = EventCategory::createOrGetExisting($categoryEntityData);
                 $categoryObj->categorizeEvent($eventObj);
+            }
+
+            // Are we firing a request for approval email?
+            if( (bool) $this->scrubbedPostData()->__requestApproval ){
+                Events::dispatch('schedulizer.request_approval', new SystemEventOnSave($eventObj));
             }
 
             $this->setResponseData($eventObj);
