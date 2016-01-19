@@ -80,3 +80,5 @@
         </div>
     </div>
 </div>
+
+<?php Loader::packageElement('browser_unsupported', 'schedulizer');
