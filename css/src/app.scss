@@ -261,3 +261,14 @@ html.schedulizer-modal {overflow-y:hidden;}
     &.type-success {background:$alert-success-bg;color:$alert-success-text;}
   }
 }
+
+// Browser support stuff : hides the entire UI and shows a message if things aren't supported.
+// @note: this has to be done on a feature-by-feature basis, and coordinated with the checks
+//        run by Modernizr
+#browser-not-supported {display:none;width:100%;height:100%;
+  .inner {display:table-cell;width:100%;height:100%;vertical-align:middle;text-align:left;padding:12%;}
+}
+html.no-mutationobserver {
+  .schedulizer-app {display:none !important;}
+  #browser-not-supported {display:table;}
+}

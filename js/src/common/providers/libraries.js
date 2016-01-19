@@ -12,4 +12,12 @@ angular.module('schedulizer.app').
                 return $window['moment'] || ($log.warn('MomentJS unavailable!'), false);
             }
         ];
+    }).
+
+    provider('_modernizr', function(){
+        this.$get = ['$window', '$log',
+            function( $window, $log ){
+                return $window['Modernizr'] || ($log.warn('Modernizr unavailable!'), false);
+            }
+        ];
     });

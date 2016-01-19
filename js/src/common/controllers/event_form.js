@@ -2,8 +2,8 @@
 /* gloabl ConcreteFileManager */
 angular.module('schedulizer.app').
 
-    controller('CtrlEventForm', ['$window', '$rootScope', '$scope', '$q', '$filter', '$http', 'Helpers', 'ModalManager', 'Alerter', 'API', '_moment', '$compile',
-        function( $window, $rootScope, $scope, $q, $filter, $http, Helpers, ModalManager, Alerter, API, _moment, $compile ){
+    controller('CtrlEventForm', ['$window', '$rootScope', '$scope', '$q', '$filter', '$http', '$compile', 'Helpers', 'ModalManager', 'Alerter', 'API', '_moment',
+        function( $window, $rootScope, $scope, $q, $filter, $http, $compile, Helpers, ModalManager, Alerter, API, _moment ){
 
             $scope.activeMasterTab = {
                 1: true
@@ -69,6 +69,63 @@ angular.module('schedulizer.app').
             ];
 
             /**
+             * Double sad face :(. Because the Concrete5 file picker JS api
+             * doesn't allow passing in event hooks (like onFileSelected or
+             * something), and it mutates the DOM every time (thus eliminating
+             * the chance to setup event listeners on the <input /> for the
+             * chosen FileID, we have to do this gnarly mutation observer on
+             * the parent node and watch for changes by hand. This is all in
+             * place so we can trigger the 'Save' button to not be in a
+             * disabled state if the user updates the selected file.
+             */
+            function _filePickerMutationObserver(){
+                var _lastSelectedFileID  = +($scope.entity.fileID || 0), // cast to int, or undefined to 0
+                    _ignoreFirstMutation = _lastSelectedFileID > 0 ? true : false,
+                    _observedCount       = 0;
+
+                function _applySetDirty(){
+                    $scope.frmEventData.$setDirty();
+                }
+
+                var observer = new MutationObserver(function(mutations){
+                    // Because the event object is loaded asynchronously, we need
+                    // a way to ensure that when the val changes from 0 to the previously
+                    // saved fileID, we *do not* count it as a "change"
+                    if( _ignoreFirstMutation && (_observedCount === 0) ){
+                        _observedCount++;
+                        return;
+                    }
+
+                    mutations.forEach(function(mutation){
+                        if( mutation.addedNodes.length ){
+                            for(var i = 0, l = mutation.addedNodes.length; i < l; i++){
+                                var children = mutation.addedNodes[i].children;
+                                for(var ii = 0, ll = children.length; ii < ll; ii++){
+                                    if( children[ii].name === 'fileID' ){
+                                        var chosenFID = +(children[ii].value);
+                                        if( chosenFID !== _lastSelectedFileID ){
+                                            $scope.$apply(_applySetDirty);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+
+                // Observe the parent that contains all the file selector nodes
+                // handled by the C5 javascript
+                observer.observe(document.querySelector('[data-file-selector]'), {
+                    childList: true
+                });
+
+                // Nuke the bound observer to prevent mem leaks
+                $scope.$on('$destroy', function(){
+                    observer.disconnect();
+                });
+            }
+
+            /**
              * Workaround C5's horrendous error handling. The concreteFileSelector
              * call w/in this $http call hits the SAME path, but if (and there frequently will be)
              * an error gets thrown because the file no longer exists and C5 doesn't catch
@@ -80,6 +137,8 @@ angular.module('schedulizer.app').
              * @return void
              */
             function setupFilePicker( fileID ){
+                _filePickerMutationObserver();
+
                 var _always = {
                     'inputName': 'fileID',
                     'filters': [{"field":"type","type":1}]

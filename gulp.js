@@ -39,7 +39,8 @@ module.exports = function( gulp ){
                     _pathTo('bower_components/angular-strap/dist/modules/datepicker.js'),
                     _pathTo('bower_components/angular-strap/dist/modules/timepicker.js'),
                     // Angular-ui select module
-                    _pathTo('bower_components/angular-ui-select/dist/select.js')
+                    _pathTo('bower_components/angular-ui-select/dist/select.js'),
+                    _pathTo('js/3rd_party/*.js')
                 ],
                 app: [
                     _pathTo('js/src/**/*.js')
