@@ -125,7 +125,7 @@
                 // Compose
                 $mailHelper->to('anne@jhcenterforthearts.org');
                 $mailHelper->to('arik@focus-43.com');
-                $mailHelper->to('jon@focus-43.com');
+//                $mailHelper->to('jon@focus-43.com');
                 $mailHelper->from('website@jhcenterforthearts.org', 'Website :: Schedulizer');
                 $mailHelper->addParameter('eventObj', $eventObj);
                 $mailHelper->addParameter('userInfoObj', \Concrete\Core\User\UserInfo::getByID($userObj->getUserID()));
